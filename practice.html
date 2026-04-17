@@ -219,7 +219,7 @@
     <div class="controls">
       <button class="btn btn-secondary" id="btn-open" onclick="openOneCard()">🔓 開卡</button>
       <button class="btn btn-primary" id="btn-dice" onclick="rollDice()" disabled>🎲 擲骰</button>
-      <button class="btn btn-gold" id="btn-ping" onclick="triggerPingAn()">🏠 平安包</button>
+      <button class="btn btn-gold" id="btn-sb" onclick="triggerSquareBun()">🎤 平方包</button>
       <button class="btn btn-ghost" id="btn-confirm" onclick="confirmPicks()" disabled>✓ 確認</button>
     </div>
   </div>
@@ -229,7 +229,7 @@
       <h2>📖 遊戲規則</h2>
       <div class="modal-rule"><div class="modal-rule-icon">1️⃣</div><div class="modal-rule-text">開卡：按「開卡」按鈕，一張一張揭開卡牌。所有卡揭開後才能擲骰。</div></div>
       <div class="modal-rule"><div class="modal-rule-icon">2️⃣</div><div class="modal-rule-text">擲骰：擲出兩粒骰子，目標是找出<strong>可被骰子數字整除</strong>的卡牌。</div></div>
-      <div class="modal-rule"><div class="modal-rule-icon">🏠</div><div class="modal-rule-text"><strong>平安包</strong>：任何階段都可按，選擇一張<strong>平方數卡（1,4,9,16...）</strong>，直接收走得分。</div></div>
+      <div class="modal-rule"><div class="modal-rule-icon">🎤</div><div class="modal-rule-text"><strong>平方包</strong>：擲骰後可隨時按，選擇一張<strong>平方數卡（1,4,9,16...）</strong>，直接收走得分。</div></div>
       <div class="modal-rule"><div class="modal-rule-icon">🖐️</div><div class="modal-rule-text">揀卡：<strong>最多選擇 2 張卡</strong>（兩隻手）。選擇可被整除的卡。</div></div>
       <div class="modal-rule"><div class="modal-rule-icon">➕</div><div class="modal-rule-text">補卡：確認後卡牌自動補充<strong>一張</strong>。</div></div>
       <div class="modal-rule"><div class="modal-rule-icon">✅</div><div class="modal-rule-text">結算：揀啱加分，揀錯扣分。如果冇啱嘅卡，直接確認跳過。平方包卡自動得分。</div></div>
@@ -247,7 +247,7 @@
     function getDivisors(n){const d=[];for(let i=1;i<=n;i++)if(n%i===0)d.push(i);return d;}
     const ALL_CARDS=[];for(let i=1;i<=88;i++){ALL_CARDS.push({n:i,divs:getDivisors(i),sq:SQUARES.has(i)});}
     let cardCount=4,mode='free',deck=[],table=[],revealed=[],selected=new Set(),dice=[null,null],score=0;
-    let phase='closed',pingAnMode=false,maxSelect=2;
+    let phase='closed',sbMode=false,maxSelect=2;
 
     function adjustCount(delta){cardCount=Math.max(2,Math.min(6,cardCount+delta));document.getElementById('count-val').textContent=cardCount;}
     function selectMode(m){
@@ -268,12 +268,12 @@
 
     function startRound(){
       deck=shuffle(ALL_CARDS);table=deck.splice(0,cardCount);revealed=new Array(cardCount).fill(false);
-      selected.clear();dice=[null,null];phase='closed';pingAnMode=false;
+      selected.clear();dice=[null,null];phase='closed';sbMode=false;
       document.getElementById('dice1').textContent='?';document.getElementById('dice2').textContent='?';
       document.getElementById('target-badge').textContent='開卡後擲骰';document.getElementById('target-badge').className='target-badge disabled';
       document.getElementById('status-bar').textContent='請按「開卡」揭開卡牌';document.getElementById('status-bar').className='status-bar';
       document.getElementById('btn-open').disabled=false;document.getElementById('btn-dice').disabled=true;
-      document.getElementById('btn-ping').className='btn btn-gold';document.getElementById('btn-ping').textContent='🏠 平安包';
+      document.getElementById('btn-sb').className='btn btn-gold';document.getElementById('btn-sb').textContent='🎤 平方包';
       document.getElementById('btn-confirm').disabled=true;
       renderOpenDots();renderCards();
     }
@@ -310,7 +310,7 @@
         grid.appendChild(el);
       });
       // Highlight hint in ping-an mode
-      if(pingAnMode){
+      if(sbMode){
         document.querySelectorAll('.p-card').forEach((el,i)=>{
           if(revealed[i]&&table[i].sq&&!selected.has(i))el.classList.add('hint');
         });
@@ -320,10 +320,10 @@
     function handleCardClick(i){
       if(!revealed[i]||phase==='result')return;
 
-      if(pingAnMode){
+      if(sbMode){
         // Ping-an mode: must select square card
         if(!table[i].sq){
-          setStatus('平安包只能揀平方數卡！','danger');return;
+          setStatus('🎤 平方包模式：只能揀平方數卡！','danger');return;
         }
         if(selected.has(i)){selected.delete(i);}else{selected.clear();selected.add(i);}
         renderCards();updateConfirmBtn();return;
@@ -345,7 +345,7 @@
       if(phase==='closed')setStatus('請先開卡','');
       else if(phase==='open')setStatus('請擲骰','');
       else if(phase==='dice-rolled'){
-        if(pingAnMode)setStatus('🏠 平安包模式：選擇一張平方數卡','');
+        if(sbMode)setStatus('🎤 平方包模式：選擇一張平方數卡','');
         else setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`已揭 ${revealed.filter(Boolean).length} 張，揀啱就確認`,selected.size>0?'gold':'');
       }
     }
@@ -373,17 +373,17 @@
       if(mode==='hint'){setTimeout(highlightHintCards,600);}
     }
 
-    function triggerPingAn(){
+    function triggerSquareBun(){
       if(phase!=='dice-rolled')return;
-      pingAnMode=!pingAnMode;
-      if(pingAnMode){
+      sbMode=!sbMode;
+      if(sbMode){
         selected.clear();
-        document.getElementById('btn-ping').className='btn btn-primary';
-        document.getElementById('btn-ping').textContent='✕ 取消';
-        setStatus('🏠 平安包：選擇一張平方數卡','');
+        document.getElementById('btn-sb').className='btn btn-primary';
+        document.getElementById('btn-sb').textContent='✕ 取消';
+        setStatus('🎤 平方包：選擇一張平方數卡','');
       }else{
-        document.getElementById('btn-ping').className='btn btn-gold';
-        document.getElementById('btn-ping').textContent='🏠 平安包';
+        document.getElementById('btn-sb').className='btn btn-gold';
+        document.getElementById('btn-sb').textContent='🎤 平方包';
         setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`請選擇卡牌`,'');
       }
       renderCards();
@@ -452,7 +452,7 @@
       // Remove from table
       table=table.filter((_,i)=>!toRemove.has(i));
       revealed=revealed.filter((_,i)=>!toRemove.has(i));
-      selected.clear();pingAnMode=false;
+      selected.clear();sbMode=false;
       // Replenish to cardCount
       while(table.length<cardCount&&deck.length>0){table.push(deck.pop());revealed.push(false);}
       if(table.length===0&&deck.length===0){deck=shuffle(ALL_CARDS);while(table.length<cardCount){table.push(deck.pop());revealed.push(false);}}
@@ -460,7 +460,7 @@
       document.getElementById('dice1').textContent='?';document.getElementById('dice2').textContent='?';
       document.getElementById('target-badge').textContent='開卡後擲骰';document.getElementById('target-badge').className='target-badge disabled';
       document.getElementById('btn-open').disabled=false;document.getElementById('btn-dice').disabled=true;
-      document.getElementById('btn-ping').className='btn btn-gold';document.getElementById('btn-ping').textContent='🏠 平安包';
+      document.getElementById('btn-sb').className='btn btn-gold';document.getElementById('btn-sb').textContent='🎤 平方包';
       document.getElementById('btn-confirm').disabled=true;
       setStatus('請按「開卡」揭開新一回合','');
       renderOpenDots();renderCards();
