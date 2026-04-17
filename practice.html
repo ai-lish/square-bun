@@ -269,7 +269,7 @@
     }
     function showRules(){document.getElementById('rules-modal').classList.add('show');}
     function closeRules(){document.getElementById('rules-modal').classList.remove('show');}
-    function shuffle(a){const r=[...a];for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
+    function shuffle(a){const r=Array.from(a);for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
 
     function startGame(){
       document.getElementById('setup-screen').style.display='none';
@@ -430,7 +430,7 @@
           score+=selected.size;
           document.getElementById('score').textContent=score;
           showFlash('gold','🎤 平方包！',`+${selected.size} 分`);
-          setTimeout(()=>doNextRound([...selected]),1200);
+          setTimeout(()=>doNextRound(Array.from(selected)),1200);
         },500);
         return;
       }
@@ -458,7 +458,7 @@
             score+=correctCards.length;
             document.getElementById('score').textContent=score;
             showFlash('success',`✓ 全對！`,`+${correctCards.length} 分`);
-            setTimeout(()=>doNextRound([...selected]),1200);
+            setTimeout(()=>doNextRound(Array.from(selected)),1200);
           }
         },500);
         return;
