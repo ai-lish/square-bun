@@ -163,12 +163,12 @@
     /* ===== RESULT FLASH ===== */
     .result-flash { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
     .result-flash.show { opacity: 1; }
-    .result-flash.success { background: rgba(0,200,83,0.9); }
-    .result-flash.danger { background: rgba(255,59,92,0.9); }
-    .result-flash.gold { background: rgba(245,166,35,0.9); }
-    .result-flash.skip { background: rgba(0,151,167,0.9); }
-    .result-flash .flash-text { font-size: 30px; font-weight: 900; color: white; }
-    .result-flash .flash-sub { font-size: 16px; color: rgba(255,255,255,0.95); margin-top: 6px; }
+    .result-flash.success { background: rgba(0,200,83,0.95); }
+    .result-flash.danger { background: rgba(220,20,60,0.95); }
+    .result-flash.gold { background: rgba(245,166,35,0.95); }
+    .result-flash.skip { background: rgba(0,151,167,0.95); }
+    .result-flash .flash-text { font-size: 34px; font-weight: 900; color: white; letter-spacing: 2px; }
+    .result-flash .flash-sub { font-size: 18px; color: rgba(255,255,255,0.95); margin-top: 6px; font-weight: 700; }
 
     @media (min-width: 400px) { .cards-grid { max-width: 360px; gap: 11px; } .p-card { min-height: 80px; } .card-num { font-size: 28px; } }
   </style>
@@ -275,7 +275,7 @@
       document.getElementById('btn-open').disabled=false;document.getElementById('btn-dice').disabled=true;
       document.getElementById('btn-sb').className='btn btn-gold';document.getElementById('btn-sb').textContent='🎤 平方包';
       document.getElementById('btn-confirm').disabled=true;
-      renderOpenDots();renderCards();
+      renderOpenDots();renderCards(false);
     }
 
     function renderOpenDots(){
@@ -286,7 +286,7 @@
 
     function openOneCard(){
       const ni=revealed.findIndex(r=>!r);if(ni===-1)return;
-      revealed[ni]=true;renderOpenDots();renderCards();
+      revealed[ni]=true;renderOpenDots();renderCards(false);
       if(revealed.every(Boolean)){
         phase='open';
         document.getElementById('btn-open').disabled=true;document.getElementById('btn-dice').disabled=false;
@@ -296,21 +296,21 @@
       }
     }
 
-    function renderCards(){
+    function renderCards(showDivs){
       const grid=document.getElementById('cards-grid');grid.innerHTML='';
       table.forEach((card,i)=>{
         const el=document.createElement('div');let cls='p-card';
         if(!revealed[i]){cls+=' face-down';}else{if(card.sq)cls+=' square-bun-card';if(selected.has(i))cls+=' selected';}
         el.className=cls;
         if(!revealed[i]){el.innerHTML='<div class="card-back">?</div>';}else{
-          el.innerHTML=`<div class="card-num">${card.n}</div><div class="card-divs">${card.divs.slice(0,3).join(', ')}${card.divs.length>3?'...':''}</div>`;
+          const divsHtml=showDivs?`<div class="card-divs">${card.divs.slice(0,3).join(', ')}${card.divs.length>3?'...':''}</div>`:'';
+          el.innerHTML=`<div class="card-num">${card.n}</div>${divsHtml}`;
           el.onclick=()=>handleCardClick(i);
         }
         if(card._new){el.classList.add('adding');card._new=false;}
         grid.appendChild(el);
       });
-      // Highlight hint in ping-an mode
-      if(sbMode){
+      if(sbMode&&!showDivs){
         document.querySelectorAll('.p-card').forEach((el,i)=>{
           if(revealed[i]&&table[i].sq&&!selected.has(i))el.classList.add('hint');
         });
@@ -326,13 +326,13 @@
           setStatus('🎤 平方包模式：只能揀平方數卡！','danger');return;
         }
         if(selected.has(i)){selected.delete(i);}else{selected.clear();selected.add(i);}
-        renderCards();updateConfirmBtn();return;
+        renderCards(false);updateConfirmBtn();return;
       }
 
       // Normal mode: max 2 selections
       if(!selected.has(i)&&selected.size>=maxSelect){setStatus('最多揀2張！','danger');return;}
       if(selected.has(i)){selected.delete(i);}else{selected.add(i);}
-      renderCards();updateConfirmBtn();updateStatusForPhase();
+      renderCards(false);updateConfirmBtn();updateStatusForPhase();
     }
 
     function updateConfirmBtn(){
@@ -386,7 +386,7 @@
         document.getElementById('btn-sb').textContent='🎤 平方包';
         setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`請選擇卡牌`,'');
       }
-      renderCards();
+      renderCards(false);
     }
 
     function highlightHintCards(){
@@ -408,7 +408,6 @@
     function confirmPicks(){
       if(phase!=='dice-rolled')return;
 
-      // Check if any selected card is wrong (only if cards selected)
       if(selected.size>0){
         const targets=getTargetSet();
         const wrongCards=[];
@@ -417,32 +416,36 @@
           if(targets.has(table[i].n))correctCards.push(i);
           else wrongCards.push(i);
         });
-        if(wrongCards.length>0){
-          // Show wrong feedback then skip
+        phase='result';
+        renderCards(true); // show divisors first
+        setTimeout(()=>{
           const cards=document.querySelectorAll('.p-card');
-          wrongCards.forEach(i=>cards[i].classList.add('wrong'));
-          phase='result';
-          score=Math.max(0,score-wrongCards.length);
-          document.getElementById('score').textContent=score;
-          showFlash('danger',`答錯 ${wrongCards.length} 張`,`-${wrongCards.length} 分`);
-          setTimeout(()=>doNextRound(wrongCards.concat(correctCards)),1200);
-          return;
-        }
-        // All correct!
-        score+=selected.size;
-        document.getElementById('score').textContent=score;
-        const cards=document.querySelectorAll('.p-card');
-        selected.forEach(i=>cards[i].classList.add('correct'));
-        showFlash('success','✅ 全對！',`+${selected.size} 分`);
-        setTimeout(()=>doNextRound([...selected]),1200);
+          if(wrongCards.length>0){
+            wrongCards.forEach(i=>cards[i].classList.add('wrong'));
+            score=Math.max(0,score-wrongCards.length);
+            document.getElementById('score').textContent=score;
+            showFlash('danger',`✗ 答錯！`,`-${wrongCards.length} 分`);
+            setTimeout(()=>doNextRound(wrongCards.concat(correctCards)),1200);
+          }else{
+            correctCards.forEach(i=>cards[i].classList.add('correct'));
+            score+=correctCards.length;
+            document.getElementById('score').textContent=score;
+            showFlash('success',`✓ 全對！`,`+${correctCards.length} 分`);
+            setTimeout(()=>doNextRound([...selected]),1200);
+          }
+        },500);
         return;
       }
 
-      // No cards selected — skip this round
-      showFlash('skip','⏭️ 跳過',`無啱卡，扣1分`);
-      score=Math.max(0,score-1);
-      document.getElementById('score').textContent=score;
-      setTimeout(()=>doNextRound([]),1200);
+      // No cards selected — show divisors briefly then skip
+      phase='result';
+      renderCards(true); // show divisors so player can see why
+      setTimeout(()=>{
+        showFlash('skip','⏭️ 跳過','-1 分');
+        score=Math.max(0,score-1);
+        document.getElementById('score').textContent=score;
+        setTimeout(()=>doNextRound([]),1000);
+      },800);
     }
 
     function doNextRound(removeIndices){
@@ -463,7 +466,7 @@
       document.getElementById('btn-sb').className='btn btn-gold';document.getElementById('btn-sb').textContent='🎤 平方包';
       document.getElementById('btn-confirm').disabled=true;
       setStatus('請按「開卡」揭開新一回合','');
-      renderOpenDots();renderCards();
+      renderOpenDots();renderCards(false);
     }
 
     function showFlash(type,text,sub){
