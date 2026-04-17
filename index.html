@@ -1,12 +1,580 @@
-<!doctype html>
-<html lang="zh-HK">
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Square‑Bun — 立即遊玩</title>
-  <meta http-equiv="refresh" content="0; url=play.html">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>平方包 (Square Bun) - 練習模式</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a365d;
+      --accent: #ed8936;
+      --accent-light: #f6ad55;
+      --square-bun: #dd6b20;
+      --square-bun-bg: linear-gradient(135deg, #ed8936, #c05621);
+      --card-bg: #ffffff;
+      --text: #1a202c;
+      --bg: #0f2744;
+      --radius: 12px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans HK', sans-serif;
+      background: var(--bg);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      color: var(--accent);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    /* Setup Screen */
+    #setup {
+      text-align: center;
+      max-width: 400px;
+    }
+
+    #setup label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+
+    #setup select {
+      padding: 10px 20px;
+      font-size: 18px;
+      border-radius: var(--radius);
+      border: 2px solid var(--accent);
+      background: var(--primary);
+      color: white;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      font-size: 18px;
+      font-weight: 700;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 12px rgba(237, 137, 54, 0.4);
+    }
+
+    .btn-square-bun {
+      background: var(--square-bun-bg);
+      color: white;
+      font-size: 22px;
+      padding: 15px 30px;
+      box-shadow: 0 4px 16px rgba(221, 107, 32, 0.5);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 4px 16px rgba(221, 107, 32, 0.5); }
+      50% { box-shadow: 0 4px 24px rgba(221, 107, 32, 0.8); }
+    }
+
+    /* Game Area */
+    #game {
+      display: none;
+      width: 100%;
+      max-width: 800px;
+      text-align: center;
+    }
+
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .score {
+      background: var(--primary);
+      padding: 10px 20px;
+      border-radius: var(--radius);
+      font-size: 18px;
+    }
+
+    .dice-area {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .dice {
+      width: 60px;
+      height: 60px;
+      background: white;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .target {
+      background: var(--accent);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 700;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 15px 0;
+    }
+
+    /* Cards */
+    .cards-container {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      height: 400px;
+      margin: 20px auto;
+    }
+
+    .card {
+      position: absolute;
+      width: 80px;
+      height: 110px;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      user-select: none;
+    }
+
+    .card:hover {
+      transform: scale(1.1);
+      z-index: 10;
+    }
+
+    .card.selected {
+      background: #90cdf4;
+      box-shadow: 0 0 0 4px var(--accent);
+    }
+
+    .card.square-bun {
+      background: linear-gradient(135deg, #ed8936, #c05621);
+      color: white;
+    }
+
+    .card.square-bun .card-number {
+      color: white;
+    }
+
+    .card-number {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .card-divisors {
+      font-size: 10px;
+      color: #718096;
+      margin-top: 4px;
+    }
+
+    .card.square-bun .card-divisors {
+      color: rgba(255,255,255,0.8);
+    }
+
+    /* Message */
+    #message {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--primary);
+      padding: 30px 50px;
+      border-radius: var(--radius);
+      font-size: 24px;
+      font-weight: 700;
+      z-index: 100;
+      display: none;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+
+    #message.show {
+      display: block;
+      animation: popIn 0.3s ease;
+    }
+
+    @keyframes popIn {
+      from { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+      to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+
+    /* End Screen */
+    #end-screen {
+      display: none;
+      text-align: center;
+    }
+
+    #end-screen h2 {
+      color: var(--accent);
+      font-size: 32px;
+      margin-bottom: 20px;
+    }
+
+    #end-screen .final-score {
+      font-size: 48px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 30px;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .card {
+        width: 60px;
+        height: 85px;
+      }
+      .card-number {
+        font-size: 20px;
+      }
+      .card-divisors {
+        font-size: 8px;
+      }
+      .cards-container {
+        height: 300px;
+      }
+      .btn-square-bun {
+        font-size: 18px;
+        padding: 12px 24px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <p>正在跳轉到 <a href="play.html">play.html</a> …</p>
+  <h1>平方包 Square Bun</h1>
+
+  <!-- Setup Screen -->
+  <div id="setup">
+    <label for="player-count">選擇人數（決定桌面卡數）</label>
+    <select id="player-count">
+      <option value="2">2 人</option>
+      <option value="3">3 人</option>
+      <option value="4" selected>4 人</option>
+      <option value="5">5 人</option>
+      <option value="6">6 人</option>
+    </select>
+    <br>
+    <button class="btn btn-primary" onclick="startGame()">開始遊戲</button>
+  </div>
+
+  <!-- Game Area -->
+  <div id="game">
+    <div class="game-header">
+      <div class="score">目前得分：<span id="score">0</span> 張</div>
+      <div class="dice-area">
+        <div class="dice" id="dice1">?</div>
+        <span style="font-size:24px">/</span>
+        <div class="dice" id="dice2">?</div>
+        <span class="target">目標：可被 <span id="target-display">?</span> 整除</span>
+      </div>
+      <button class="btn btn-square-bun" onclick="callSquareBun()">🎤 平方包！</button>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-primary" onclick="rollDice()">🎲 擲骰</button>
+      <button class="btn btn-primary" onclick="confirmSelection()">✓ 確認</button>
+      <button class="btn btn-primary" onclick="endGame()">結束遊戲</button>
+    </div>
+
+    <div class="cards-container" id="cards-container"></div>
+  </div>
+
+  <!-- Message -->
+  <div id="message"></div>
+
+  <!-- End Screen -->
+  <div id="end-screen">
+    <h2>🏆 包山王誕生！</h2>
+    <div class="final-score"><span id="final-score">0</span> 張</div>
+    <button class="btn btn-primary" onclick="restartGame()">再玩一次</button>
+  </div>
+
+  <script>
+    // ============ CARD DATA ============
+    const SQUARE_NUMBERS = new Set([1, 4, 9, 16, 25, 36, 49, 64, 81]);
+
+    function getDivisors(n) {
+      const divisors = [];
+      for (let i = 1; i <= n; i++) {
+        if (n % i === 0) divisors.push(i);
+      }
+      return divisors;
+    }
+
+    // Generate all 88 cards
+    const cards = [];
+    for (let i = 1; i <= 88; i++) {
+      cards.push({
+        number: i,
+        divisors: getDivisors(i),
+        isSquare: SQUARE_NUMBERS.has(i)
+      });
+    }
+
+    // ============ GAME STATE ============
+    let playerCount = 4;
+    let score = 0;
+    let deck = [];
+    let tableCards = [];
+    let selectedCards = [];
+    let dice = [null, null];
+    let gameActive = false;
+
+    // ============ GAME FUNCTIONS ============
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function startGame() {
+      playerCount = parseInt(document.getElementById('player-count').value);
+      score = 0;
+      deck = shuffle(cards);
+      tableCards = [];
+      selectedCards = [];
+      gameActive = true;
+
+      document.getElementById('setup').style.display = 'none';
+      document.getElementById('game').style.display = 'block';
+      document.getElementById('end-screen').style.display = 'none';
+      document.getElementById('score').textContent = score;
+
+      drawCards(playerCount);
+      showMessage('🎲 請擲骰！');
+    }
+
+    function drawCards(count) {
+      tableCards = [];
+      for (let i = 0; i < count && deck.length > 0; i++) {
+        tableCards.push(deck.pop());
+      }
+      renderCards();
+    }
+
+    function renderCards() {
+      const container = document.getElementById('cards-container');
+      container.innerHTML = '';
+
+      const count = tableCards.length;
+      const centerX = container.offsetWidth / 2 || 250;
+      const centerY = container.offsetHeight / 2 || 200;
+      const radius = Math.min(centerX, centerY) - 60;
+
+      tableCards.forEach((card, index) => {
+        const angle = (index / count) * 2 * Math.PI - Math.PI / 2;
+        const x = centerX + radius * Math.cos(angle) - 40;
+        const y = centerY + radius * Math.sin(angle) - 55;
+
+        const cardEl = document.createElement('div');
+        cardEl.className = 'card' + (card.isSquare ? ' square-bun' : '') + (selectedCards.includes(index) ? ' selected' : '');
+        cardEl.style.left = x + 'px';
+        cardEl.style.top = y + 'px';
+        cardEl.innerHTML = `
+          <span class="card-number">${card.number}</span>
+          <span class="card-divisors">${card.divisors.slice(0, 4).join(', ')}${card.divisors.length > 4 ? '...' : ''}</span>
+        `;
+        cardEl.onclick = () => toggleCard(index);
+        container.appendChild(cardEl);
+      });
+    }
+
+    function toggleCard(index) {
+      if (!gameActive) return;
+      const idx = selectedCards.indexOf(index);
+      if (idx === -1) {
+        selectedCards.push(index);
+      } else {
+        selectedCards.splice(idx, 1);
+      }
+      renderCards();
+    }
+
+    function rollDice() {
+      if (!gameActive) return;
+      dice = [Math.floor(Math.random() * 6) + 1, Math.floor(Math.random() * 6) + 1];
+      document.getElementById('dice1').textContent = dice[0];
+      document.getElementById('dice2').textContent = dice[1];
+      document.getElementById('target-display').textContent = `${dice[0]} 或 ${dice[1]}`;
+      showMessage(`目標：可被 ${dice[0]} 或 ${dice[1]} 整除！`);
+    }
+
+    function confirmSelection() {
+      if (!gameActive) return;
+      if (dice[0] === null) {
+        showMessage('請先擲骰！');
+        return;
+      }
+      if (selectedCards.length === 0) {
+        showMessage('請選擇卡牌！');
+        return;
+      }
+
+      const targetSet = new Set();
+      for (const d of dice) {
+        for (let i = 1; i <= 88; i++) {
+          if (i % d === 0) targetSet.add(i);
+        }
+      }
+
+      let correct = 0;
+      let wrong = [];
+
+      for (const idx of selectedCards) {
+        if (targetSet.has(tableCards[idx].number)) {
+          correct++;
+        } else {
+          wrong.push(idx);
+        }
+      }
+
+      // Process correct cards
+      score += correct;
+      document.getElementById('score').textContent = score;
+
+      // Process wrong cards - return to deck
+      if (wrong.length > 0) {
+        const wrongCards = wrong.map(idx => tableCards[idx]);
+        deck.push(...shuffle(wrongCards));
+        score = Math.max(0, score - wrong.length);
+        document.getElementById('score').textContent = score;
+        showMessage(`答錯 ${wrong.length} 張！扣 ${wrong.length} 分`);
+      } else {
+        showMessage(`正確！+${correct} 張`);
+      }
+
+      // Remove all selected cards from table
+      tableCards = tableCards.filter((_, idx) => !selectedCards.includes(idx));
+      selectedCards = [];
+      dice = [null, null];
+      document.getElementById('dice1').textContent = '?';
+      document.getElementById('dice2').textContent = '?';
+      document.getElementById('target-display').textContent = '?';
+
+      // Check if deck can refill
+      if (deck.length === 0 || (tableCards.length === 0 && deck.length < playerCount)) {
+        endGame();
+        return;
+      }
+
+      // Draw new cards
+      const needed = playerCount - tableCards.length;
+      for (let i = 0; i < needed && deck.length > 0; i++) {
+        tableCards.push(deck.pop());
+      }
+
+      renderCards();
+
+      // Check if game should end
+      if (deck.length === 0 && tableCards.length === 0) {
+        endGame();
+      }
+    }
+
+    function callSquareBun() {
+      if (!gameActive) return;
+      const squareOnTable = tableCards.filter(c => c.isSquare);
+
+      if (squareOnTable.length > 0) {
+        // Correct call
+        const count = squareOnTable.length;
+        score += count;
+        document.getElementById('score').textContent = score;
+        showMessage(`平方包！+${count} 張`);
+
+        // Remove square cards from table
+        tableCards = tableCards.filter(c => !c.isSquare);
+        selectedCards = [];
+
+        // Draw replacement cards
+        const needed = playerCount - tableCards.length;
+        for (let i = 0; i < needed && deck.length > 0; i++) {
+          tableCards.push(deck.pop());
+        }
+
+        renderCards();
+      } else {
+        showMessage('沒有平方數！扣 1 分');
+        score = Math.max(0, score - 1);
+        document.getElementById('score').textContent = score;
+      }
+    }
+
+    function showMessage(text) {
+      const msg = document.getElementById('message');
+      msg.textContent = text;
+      msg.classList.add('show');
+      setTimeout(() => msg.classList.remove('show'), 1500);
+    }
+
+    function endGame() {
+      gameActive = false;
+      document.getElementById('game').style.display = 'none';
+      document.getElementById('end-screen').style.display = 'block';
+      document.getElementById('final-score').textContent = score;
+    }
+
+    function restartGame() {
+      document.getElementById('setup').style.display = 'block';
+      document.getElementById('end-screen').style.display = 'none';
+    }
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      if (tableCards.length > 0) renderCards();
+    });
+  </script>
 </body>
 </html>
