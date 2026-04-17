@@ -426,7 +426,7 @@
         renderCards(true); // show divisors
         setTimeout(()=>{
           const cards=document.querySelectorAll('.p-card');
-          cards[...selected][0].classList.add('correct');
+          const selectedIdx=selected.values().next().value;cards[selectedIdx].classList.add('correct');
           score+=selected.size;
           document.getElementById('score').textContent=score;
           showFlash('gold','🎤 平方包！',`+${selected.size} 分`);
