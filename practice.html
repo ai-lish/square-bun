@@ -1,12 +1,343 @@
-<!doctype html>
-<html lang="zh-HK">
+<!DOCTYPE html>
+<html lang="zh-Hant">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Square‑Bun — 練習</title>
-  <meta http-equiv="refresh" content="0; url=play.html">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>平方包 - 練習模式</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1a1a2e; --accent: #e94560; --accent2: #0f3460; --gold: #f5a623;
+      --card-bg: #16213e; --card-front: #1f4068; --text: #ffffff; --text-dim: #8892b0;
+      --success: #00d26a; --danger: #ff4757;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; touch-action: manipulation; }
+    body { font-family: 'Noto Sans HK', sans-serif; background: var(--primary); color: var(--text); display: flex; flex-direction: column; height: 100dvh; }
+    .header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--primary); flex-shrink: 0; }
+    .header-title { font-size: 17px; font-weight: 900; background: linear-gradient(135deg, var(--accent), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .score-badge { background: var(--card-bg); border: 2px solid var(--accent); border-radius: 20px; padding: 5px 12px; font-size: 13px; font-weight: 700; }
+    .score-badge span { color: var(--accent); }
+    .rules-btn { background: transparent; border: none; color: var(--text-dim); font-size: 20px; cursor: pointer; padding: 4px 8px; font-family: 'Noto Sans HK', sans-serif; }
+    .rules-btn:active { opacity: 0.7; }
+    .dice-zone { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 10px 14px; background: var(--card-bg); flex-shrink: 0; }
+    .dice-pair { display: flex; align-items: center; gap: 8px; }
+    .dice { width: 44px; height: 44px; background: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; color: var(--primary); box-shadow: 0 3px 10px rgba(0,0,0,0.3); transition: transform 0.2s; }
+    .dice.rolling { animation: diceRoll 0.5s ease-out; }
+    @keyframes diceRoll { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(0.8); } 100% { transform: rotate(360deg) scale(1); } }
+    .dice-slash { font-size: 22px; color: var(--text-dim); font-weight: 300; }
+    .target-badge { background: linear-gradient(135deg, var(--accent), #c23a51); border-radius: 10px; padding: 7px 12px; font-size: 13px; font-weight: 700; min-width: 90px; text-align: center; }
+    .target-badge.disabled { background: var(--card-front); opacity: 0.5; }
+    .card-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; overflow: hidden; position: relative; }
+    .open-status { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px; min-height: 32px; }
+    .open-status-text { font-size: 12px; color: var(--text-dim); }
+    .open-dots { display: flex; gap: 4px; }
+    .open-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--card-front); border: 1px solid var(--text-dim); transition: background 0.2s, border-color 0.2s; }
+    .open-dot.revealed { background: var(--accent); border-color: var(--accent); }
+    .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; max-width: 300px; }
+    .p-card { aspect-ratio: 3/4; background: var(--card-front); border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.12s, box-shadow 0.12s, background 0.12s, border-color 0.12s; box-shadow: 0 3px 8px rgba(0,0,0,0.3); border: 2px solid transparent; min-height: 70px; position: relative; }
+    .p-card:active { transform: scale(0.95); }
+    .p-card.face-down { background: var(--card-front); cursor: default; }
+    .p-card.face-down:active { transform: none; }
+    .p-card.face-down .card-back { font-size: 28px; color: var(--text-dim); font-weight: 900; }
+    .p-card.selected { background: var(--accent); border-color: white; transform: scale(1.05); box-shadow: 0 5px 14px rgba(233,69,96,0.5); }
+    .p-card.correct { background: var(--success); animation: correctPop 0.4s ease; }
+    .p-card.wrong { background: var(--danger); animation: wrongShake 0.4s ease; }
+    .p-card.hint { background: rgba(0,210,106,0.15); border-color: var(--success); }
+    .p-card.hint::after { content: '✓'; position: absolute; top: 2px; right: 4px; font-size: 10px; color: var(--success); }
+    .p-card.square-bun-card { background: linear-gradient(135deg, var(--accent), #c23a51); animation: sbPulse 1.5s infinite; }
+    @keyframes sbPulse { 0%, 100% { box-shadow: 0 3px 10px rgba(233,69,96,0.4); } 50% { box-shadow: 0 3px 18px rgba(233,69,96,0.8); } }
+    .p-card.square-bun-card .card-num { color: white; }
+    .p-card.square-bun-card.selected { background: var(--gold); animation: none; box-shadow: 0 5px 14px rgba(245,166,35,0.6); }
+    @keyframes correctPop { 0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); } }
+    @keyframes wrongShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+    .card-num { font-size: 24px; font-weight: 900; color: white; }
+    .card-divs { font-size: 8px; color: var(--text-dim); margin-top: 2px; text-align: center; line-height: 1.2; padding: 0 3px; }
+    .p-card.selected .card-divs, .p-card.correct .card-divs, .p-card.wrong .card-divs { color: rgba(255,255,255,0.8); }
+    .sb-prompt { display: none; flex-direction: column; align-items: center; gap: 8px; margin-top: 12px; }
+    .sb-prompt.show { display: flex; }
+    .sb-prompt-text { font-size: 13px; font-weight: 700; color: var(--gold); text-align: center; }
+    .sb-btn { background: linear-gradient(135deg, var(--gold), #d4910e); color: #1a1a2e; border: none; border-radius: 18px; padding: 10px 24px; font-size: 15px; font-weight: 900; cursor: pointer; font-family: 'Noto Sans HK', sans-serif; animation: sbBtnPulse 1s infinite; box-shadow: 0 4px 14px rgba(245,166,35,0.5); }
+    @keyframes sbBtnPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+    .sb-btn:active { animation: none; transform: scale(0.96); }
+    .p-card.adding { animation: cardAdd 0.4s ease-out; }
+    @keyframes cardAdd { 0% { transform: scale(0) rotate(-20deg); opacity: 0; } 60% { transform: scale(1.1) rotate(5deg); opacity: 1; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+    .status-bar { text-align: center; padding: 7px 14px; font-size: 13px; font-weight: 700; color: var(--text-dim); flex-shrink: 0; min-height: 36px; display: flex; align-items: center; justify-content: center; }
+    .status-bar.success { color: var(--success); }
+    .status-bar.danger { color: var(--danger); }
+    .status-bar.gold { color: var(--gold); }
+    .controls { display: flex; gap: 7px; padding: 9px 12px; padding-bottom: max(9px, env(safe-area-inset-bottom)); background: var(--card-bg); flex-shrink: 0; }
+    .btn { flex: 1; padding: 13px 5px; font-size: 13px; font-weight: 700; border: none; border-radius: 10px; cursor: pointer; transition: transform 0.1s; font-family: 'Noto Sans HK', sans-serif; min-height: 46px; }
+    .btn:active { transform: scale(0.95); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn:disabled:active { transform: none; }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-secondary { background: var(--accent2); color: white; }
+    .btn-ghost { background: rgba(255,255,255,0.08); color: var(--text-dim); }
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: var(--card-bg); border-radius: 16px; padding: 24px; max-width: 340px; width: 100%; max-height: 80vh; overflow-y: auto; }
+    .modal h2 { font-size: 20px; font-weight: 900; color: var(--accent); margin-bottom: 16px; text-align: center; }
+    .modal-rule { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+    .modal-rule-icon { font-size: 20px; flex-shrink: 0; width: 28px; text-align: center; }
+    .modal-rule-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+    .modal-rule-text strong { color: var(--gold); }
+    .modal-close { width: 100%; margin-top: 16px; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans HK', sans-serif; }
+    #setup-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 24px 20px; gap: 22px; }
+    .setup-logo { text-align: center; }
+    .setup-logo h1 { font-size: 32px; font-weight: 900; background: linear-gradient(135deg, var(--accent), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 5px; }
+    .setup-logo p { color: var(--text-dim); font-size: 14px; }
+    .setup-card-count { width: 100%; max-width: 260px; }
+    .setup-card-count label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 7px; text-align: center; }
+    .count-selector { display: flex; align-items: center; justify-content: center; gap: 12px; }
+    .count-btn { width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--accent); background: transparent; color: var(--accent); font-size: 20px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans HK', sans-serif; transition: all 0.15s; }
+    .count-btn:active { background: var(--accent); color: white; }
+    .count-display { font-size: 30px; font-weight: 900; width: 46px; text-align: center; }
+    .count-display span { font-size: 12px; font-weight: 400; color: var(--text-dim); }
+    .setup-btns { display: flex; gap: 10px; width: 100%; max-width: 260px; }
+    .setup-btn { flex: 1; padding: 14px 10px; border-radius: 12px; border: 2px solid var(--card-front); background: var(--card-bg); color: var(--text); font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; transition: all 0.15s; font-family: 'Noto Sans HK', sans-serif; }
+    .setup-btn:active { border-color: var(--accent); background: rgba(233,69,96,0.1); }
+    .setup-btn .btn-label { font-size: 14px; margin-bottom: 2px; }
+    .setup-btn .btn-desc { font-size: 10px; color: var(--text-dim); font-weight: 400; }
+    .setup-rules-link { color: var(--text-dim); font-size: 13px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+    .setup-rules-link:active { color: var(--accent); }
+    .start-btn { width: 100%; max-width: 260px; padding: 15px; font-size: 16px; background: linear-gradient(135deg, var(--accent), #c23a51); color: white; border: none; border-radius: 12px; font-weight: 900; cursor: pointer; font-family: 'Noto Sans HK', sans-serif; box-shadow: 0 5px 18px rgba(233,69,96,0.4); transition: transform 0.15s; }
+    .start-btn:active { transform: scale(0.97); }
+    .result-flash { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+    .result-flash.show { opacity: 1; }
+    .result-flash.success { background: rgba(0,210,106,0.88); }
+    .result-flash.danger { background: rgba(255,71,87,0.88); }
+    .result-flash.gold { background: rgba(245,166,35,0.88); }
+    .result-flash .flash-text { font-size: 28px; font-weight: 900; color: white; }
+    .result-flash .flash-sub { font-size: 15px; color: rgba(255,255,255,0.9); margin-top: 5px; }
+    @media (min-width: 400px) { .cards-grid { max-width: 360px; gap: 10px; } .p-card { min-height: 82px; } .card-num { font-size: 28px; } }
+  </style>
 </head>
 <body>
-  <p>正在跳轉到 <a href="play.html">play.html</a> …</p>
+  <div id="setup-screen">
+    <div class="setup-logo">
+      <h1>🎯 平方包</h1>
+      <p>練習模式 · 獨自修煉</p>
+    </div>
+    <div class="setup-card-count">
+      <label>桌面卡數（2–6張）</label>
+      <div class="count-selector">
+        <button class="count-btn" onclick="adjustCount(-1)">−</button>
+        <div class="count-display"><span id="count-val">4</span><span> 張</span></div>
+        <button class="count-btn" onclick="adjustCount(1)">+</button>
+      </div>
+    </div>
+    <div class="setup-btns">
+      <button class="setup-btn" onclick="selectMode('free')">
+        <div class="btn-label">自由練習</div>
+        <div class="btn-desc">慢慢揀，冇限時</div>
+      </button>
+      <button class="setup-btn" onclick="selectMode('hint')">
+        <div class="btn-label">提示模式</div>
+        <div class="btn-desc">顯示正確答案</div>
+      </button>
+    </div>
+    <div class="setup-rules-link" onclick="showRules()">📖 查看遊戲規則</div>
+    <button class="start-btn" onclick="startGame()">開始練習 🎲</button>
+  </div>
+
+  <div id="game-screen" style="display:none; height:100%; display:flex; flex-direction:column;">
+    <div class="header">
+      <div class="header-title">🎯 平方包</div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="score-badge">得分 <span id="score">0</span></div>
+        <button class="rules-btn" onclick="showRules()">📖</button>
+      </div>
+    </div>
+    <div class="dice-zone">
+      <div class="dice-pair">
+        <div class="dice" id="dice1">?</div>
+        <span class="dice-slash">/</span>
+        <div class="dice" id="dice2">?</div>
+      </div>
+      <div class="target-badge" id="target-badge">開卡後擲骰</div>
+    </div>
+    <div class="card-area">
+      <div class="open-status">
+        <span class="open-status-text" id="open-status-text">已開 0 / 4 張</span>
+        <div class="open-dots" id="open-dots"></div>
+      </div>
+      <div class="cards-grid" id="cards-grid"></div>
+      <div class="sb-prompt" id="sb-prompt">
+        <div class="sb-prompt-text">🎤 平方包！有卡可以claim！</div>
+        <button class="sb-btn" onclick="triggerSquareBun()">🎤 平方包！</button>
+      </div>
+    </div>
+    <div class="status-bar" id="status-bar">請先開卡</div>
+    <div class="controls">
+      <button class="btn btn-secondary" id="btn-open" onclick="openOneCard()">🔓 開卡</button>
+      <button class="btn btn-primary" id="btn-dice" onclick="rollDice()" disabled>🎲 擲骰</button>
+      <button class="btn btn-ghost" id="btn-confirm" onclick="confirmPicks()" disabled>✓ 確認</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="rules-modal">
+    <div class="modal">
+      <h2>📖 遊戲規則</h2>
+      <div class="modal-rule"><div class="modal-rule-icon">1️⃣</div><div class="modal-rule-text">開卡：按「開卡」按鈕，一張一張揭開卡牌。所有卡揭開後才能擲骰。</div></div>
+      <div class="modal-rule"><div class="modal-rule-icon">2️⃣</div><div class="modal-rule-text">擲骰：擲出兩粒骰子，目標是找出<strong>可被骰子數字整除</strong>的卡牌。</div></div>
+      <div class="modal-rule"><div class="modal-rule-icon">🖐️</div><div class="modal-rule-text">揀卡：<strong>最多選擇 2 張卡</strong>（兩隻手）。選擇可被整除的卡。</div></div>
+      <div class="modal-rule"><div class="modal-rule-icon">🎤</div><div class="modal-rule-text">平方包：橙紅色卡是<strong>平方數（1,4,9,16...）</strong>。如有平方包卡可claim，需先按<strong>🎤 平方包！</strong>按鈕，再揀卡。</div></div>
+      <div class="modal-rule"><div class="modal-rule-icon">➕</div><div class="modal-rule-text">補卡：確認後卡牌自動補充<strong>一張</strong>。有新平方包卡時記得claim！</div></div>
+      <div class="modal-rule"><div class="modal-rule-icon">✅</div><div class="modal-rule-text">結算：揀啱加分，揀錯扣分。正確的卡會被收走，錯誤的卡返回卡堆。</div></div>
+      <button class="modal-close" onclick="closeRules()">知道了！</button>
+    </div>
+  </div>
+
+  <div class="result-flash" id="result-flash">
+    <div class="flash-text" id="flash-text"></div>
+    <div class="flash-sub" id="flash-sub"></div>
+  </div>
+
+  <script>
+    const SQUARES = new Set([1,4,9,16,25,36,49,64,81]);
+    function getDivisors(n) { const d = []; for (let i=1; i<=n; i++) if (n%i===0) d.push(i); return d; }
+    const ALL_CARDS = []; for (let i=1; i<=88; i++) { ALL_CARDS.push({ n:i, divs:getDivisors(i), sq: SQUARES.has(i) }); }
+    let cardCount = 4, mode = 'free', deck = [], table = [], revealed = [], selected = new Set(), dice = [null,null], score = 0;
+    let phase = 'closed', squareBunAvailable = false, squareBunCards = new Set(), maxSelect = 2;
+
+    function adjustCount(delta) { cardCount = Math.max(2, Math.min(6, cardCount + delta)); document.getElementById('count-val').textContent = cardCount; }
+    function selectMode(m) { mode = m; document.querySelectorAll('.setup-btn').forEach(b => { b.style.borderColor = 'var(--card-front)'; b.style.background = 'var(--card-bg)'; }); event.currentTarget.style.borderColor = 'var(--accent)'; event.currentTarget.style.background = 'rgba(233,69,96,0.15)'; }
+    function showRules() { document.getElementById('rules-modal').classList.add('show'); }
+    function closeRules() { document.getElementById('rules-modal').classList.remove('show'); }
+
+    function shuffle(arr) { const a=[...arr]; for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+    function startGame() {
+      document.getElementById('setup-screen').style.display = 'none';
+      document.getElementById('game-screen').style.display = 'flex';
+      score = 0; document.getElementById('score').textContent = score;
+      deck = shuffle(ALL_CARDS); table = deck.splice(0, cardCount); revealed = new Array(cardCount).fill(false);
+      selected.clear(); dice = [null,null]; phase = 'closed'; squareBunAvailable = false; squareBunCards.clear();
+      document.getElementById('dice1').textContent = '?'; document.getElementById('dice2').textContent = '?';
+      document.getElementById('target-badge').textContent = '開卡後擲骰'; document.getElementById('target-badge').classList.add('disabled');
+      document.getElementById('sb-prompt').classList.remove('show');
+      document.getElementById('status-bar').textContent = '請按「開卡」揭開卡牌'; document.getElementById('status-bar').className = 'status-bar';
+      document.getElementById('btn-open').disabled = false; document.getElementById('btn-dice').disabled = true; document.getElementById('btn-confirm').disabled = true;
+      renderOpenDots(); renderCards();
+    }
+
+    function renderOpenDots() {
+      const dots = document.getElementById('open-dots'); dots.innerHTML = '';
+      for (let i=0; i<cardCount; i++) { const dot = document.createElement('div'); dot.className = 'open-dot' + (revealed[i] ? ' revealed' : ''); dots.appendChild(dot); }
+      document.getElementById('open-status-text').textContent = `已開 ${revealed.filter(Boolean).length} / ${cardCount} 張`;
+    }
+
+    function openOneCard() {
+      const nextIdx = revealed.findIndex(r => !r); if (nextIdx === -1) return;
+      revealed[nextIdx] = true; renderOpenDots(); renderCards();
+      if (revealed.every(Boolean)) {
+        phase = 'open';
+        document.getElementById('btn-open').disabled = true; document.getElementById('btn-dice').disabled = false;
+        document.getElementById('status-bar').textContent = '所有卡已揭開，可以擲骰！'; document.getElementById('status-bar').className = 'status-bar gold';
+      } else {
+        const left = revealed.filter(r => !r).length;
+        document.getElementById('status-bar').textContent = `再揭 ${left} 張卡`; document.getElementById('status-bar').className = 'status-bar';
+      }
+    }
+
+    function renderCards() {
+      const grid = document.getElementById('cards-grid'); grid.innerHTML = '';
+      table.forEach((card, i) => {
+        const el = document.createElement('div'); let cls = 'p-card';
+        if (!revealed[i]) { cls += ' face-down'; } else { if (card.sq) cls += ' square-bun-card'; if (selected.has(i)) cls += ' selected'; }
+        el.className = cls;
+        if (!revealed[i]) { el.innerHTML = '<div class="card-back">?</div>'; } else { el.innerHTML = `<div class="card-num">${card.n}</div><div class="card-divs">${card.divs.slice(0,3).join(', ')}${card.divs.length>3?'...':''}</div>`; el.onclick = () => handleCardClick(i); }
+        if (card._new) { el.classList.add('adding'); card._new = false; }
+        grid.appendChild(el);
+      });
+    }
+
+    function handleCardClick(i) {
+      if (!revealed[i] || phase === 'result') return;
+      if (!selected.has(i) && selected.size >= maxSelect) { setStatus('最多揀2張！', 'danger'); return; }
+      if (phase === 'square-bun' && !table[i].sq) { setStatus('平方包階段只能揀平方包卡！', 'danger'); return; }
+      if (selected.has(i)) { selected.delete(i); } else { selected.add(i); }
+      renderCards(); updateConfirmBtn(); updateStatusForPhase();
+    }
+
+    function updateConfirmBtn() { document.getElementById('btn-confirm').disabled = !(phase === 'dice-rolled' || phase === 'square-bun') || selected.size === 0; }
+    function updateStatusForPhase() {
+      if (phase === 'closed') setStatus('請先開卡', '');
+      else if (phase === 'open') setStatus('請擲骰', '');
+      else if (phase === 'dice-rolled') setStatus(selected.size > 0 ? `已選 ${selected.size}/${maxSelect} 張` : '請選擇卡牌', selected.size > 0 ? 'gold' : '');
+      else if (phase === 'square-bun') setStatus(`🎤 平方包模式：已選 ${selected.size}/${maxSelect} 張`, 'gold');
+    }
+    function setStatus(msg, cls) { const el = document.getElementById('status-bar'); el.textContent = msg; el.className = 'status-bar' + (cls ? ' ' + cls : ''); }
+
+    function rollDice() {
+      if (phase !== 'open') return;
+      dice = [Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1];
+      const d1 = document.getElementById('dice1'), d2 = document.getElementById('dice2');
+      d1.classList.add('rolling'); d2.classList.add('rolling');
+      setTimeout(() => { d1.textContent = dice[0]; d2.textContent = dice[1]; d1.classList.remove('rolling'); d2.classList.remove('rolling'); }, 500);
+      document.getElementById('target-badge').textContent = `可被 ${dice[0]} 或 ${dice[1]} 整除`; document.getElementById('target-badge').classList.remove('disabled');
+      squareBunCards.clear(); const targets = getTargetSet();
+      table.forEach((card, i) => { if (revealed[i] && card.sq && targets.has(card.n)) squareBunCards.add(i); });
+      if (squareBunCards.size > 0) {
+        squareBunAvailable = true; phase = 'dice-rolled';
+        if (mode === 'hint') {
+          setTimeout(() => { phase = 'square-bun'; document.getElementById('sb-prompt').classList.add('show'); highlightHintCards(); updateStatusForPhase(); updateConfirmBtn(); }, 600);
+        } else { document.getElementById('sb-prompt').classList.add('show'); phase = 'dice-rolled'; setStatus(`${squareBunCards.size}張平方包卡可claim！`, 'gold'); }
+      } else { squareBunAvailable = false; phase = 'dice-rolled'; document.getElementById('sb-prompt').classList.remove('show'); setStatus('請選擇卡牌', ''); }
+      updateConfirmBtn();
+    }
+
+    function triggerSquareBun() {
+      if (!squareBunAvailable) return;
+      phase = 'square-bun'; selected.clear(); document.getElementById('sb-prompt').classList.remove('show');
+      highlightHintCards(); setStatus('🎤 平方包模式！只可揀平方包卡', 'gold'); updateConfirmBtn(); renderCards();
+    }
+
+    function highlightHintCards() {
+      if (mode !== 'hint') return;
+      const targets = getTargetSet();
+      document.querySelectorAll('.p-card').forEach((el, i) => {
+        if (!revealed[i]) return;
+        if (targets.has(table[i].n)) el.classList.add('hint'); else el.classList.remove('hint');
+      });
+    }
+
+    function getTargetSet() {
+      const s = new Set();
+      if (dice[0] === null) return s;
+      for (const d of dice) for (let i=1; i<=88; i++) if (i%d===0) s.add(i);
+      return s;
+    }
+
+    function confirmPicks() {
+      if (phase !== 'dice-rolled' && phase !== 'square-bun') return;
+      if (selected.size === 0) { setStatus('請先選擇卡牌！', 'danger'); return; }
+      if (phase === 'square-bun') { for (const i of selected) if (!table[i].sq) { setStatus('平方包階段只能揀平方包卡！', 'danger'); return; } }
+      phase = 'result'; const targets = getTargetSet(); const cards = document.querySelectorAll('.p-card');
+      let correct = 0, wrong = [];
+      table.forEach((card, i) => { if (!selected.has(i)) return; if (targets.has(card.n)) { cards[i].classList.add('correct'); correct++; } else { cards[i].classList.add('wrong'); wrong.push(i); } });
+      if (wrong.length > 0) { score = Math.max(0, score - wrong.length); showFlash('danger', `答錯 ${wrong.length} 張！`, `-${wrong.length} 分`); }
+      else { score += correct; showFlash(phase === 'square-bun' ? 'gold' : 'success', phase === 'square-bun' ? '🎤 平方包！' : '✅ 全對！', `+${correct} 張`); }
+      document.getElementById('score').textContent = score;
+      setTimeout(() => {
+        wrong.forEach(i => deck.push(shuffle([table[i]])[0]));
+        const collectedOrWrong = new Set([...selected, ...wrong]);
+        table = table.filter((_, i) => !collectedOrWrong.has(i)); revealed = revealed.filter((_, i) => !collectedOrWrong.has(i));
+        selected.clear(); squareBunAvailable = false; squareBunCards.clear(); document.getElementById('sb-prompt').classList.remove('show');
+        while (table.length < cardCount && deck.length > 0) { table.push(deck.pop()); revealed.push(false); }
+        if (table.length === 0 && deck.length === 0) { deck = shuffle(ALL_CARDS); while (table.length < cardCount) { table.push(deck.pop()); revealed.push(false); } }
+        phase = 'closed'; dice = [null,null]; document.getElementById('dice1').textContent = '?'; document.getElementById('dice2').textContent = '?'; document.getElementById('target-badge').textContent = '開卡後擲骰'; document.getElementById('target-badge').classList.add('disabled');
+        document.getElementById('btn-open').disabled = false; document.getElementById('btn-dice').disabled = true; document.getElementById('btn-confirm').disabled = true;
+        setStatus('請按「開卡」揭開新一回合', ''); renderOpenDots(); renderCards();
+      }, 1200);
+    }
+
+    function showFlash(type, text, sub) {
+      const flash = document.getElementById('result-flash'); flash.className = `result-flash ${type} show`;
+      document.getElementById('flash-text').textContent = text; document.getElementById('flash-sub').textContent = sub;
+      setTimeout(() => flash.classList.remove('show'), 1100);
+    }
+  </script>
 </body>
 </html>
