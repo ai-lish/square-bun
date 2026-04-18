@@ -139,6 +139,7 @@
     .btn-secondary { background: #f0f0f5; color: var(--primary); }
     .btn-ghost { background: #f5f5f5; color: var(--text-dim); }
     .btn-gold { background: linear-gradient(135deg, var(--gold), #e09000); color: white; box-shadow: 0 3px 8px rgba(245,166,35,0.4); }
+    .btn-red { background: linear-gradient(135deg, #e53e3e, #c53030); color: white; box-shadow: 0 3px 8px rgba(229,62,62,0.4); }
 
     /* ===== RULES MODAL ===== */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
@@ -232,7 +233,7 @@
     <div class="controls">
       <button class="btn btn-secondary" id="btn-open" onclick="openOneCard()">🔓 開卡</button>
       <button class="btn btn-primary" id="btn-dice" onclick="rollDice()" disabled>🎲 擲骰</button>
-      <button class="btn btn-ghost" id="btn-confirm" onclick="confirmPicks()" disabled>✓ 確認</button>
+      <button class="btn btn-ghost" id="btn-confirm" onclick="confirmPicks()" disabled>✓ 核對</button>
     </div>
   </div>
 
@@ -345,14 +346,22 @@
     }
 
     function updateConfirmBtn(){
-      document.getElementById('btn-confirm').disabled=!(phase==='dice-rolled'||phase==='squarebun');
+      const btn=document.getElementById('btn-confirm');
+      btn.disabled=!(phase==='dice-rolled'||phase==='squarebun');
+      if(phase==='squarebun'){
+        btn.className='btn btn-gold';
+      }else if(phase==='dice-rolled'){
+        btn.className='btn btn-red';
+      }else{
+        btn.className='btn btn-ghost';
+      }
     }
 
     function updateStatusForPhase(){
       if(phase==='closed')setStatus('請先開卡','');
       else if(phase==='open')setStatus('可以擲骰，或直接用平方包！','');
       else if(phase==='dice-rolled'){
-        setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`揀啱就確認，或直接確認跳過`,selected.size>0?'gold':'');
+        setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`揀啱就核對，或直接核對跳過`,selected.size>0?'gold':'');
       }else if(phase==='squarebun'){
         setStatus('🎤 平方包：選擇一張平方數卡','');
       }
@@ -377,7 +386,7 @@
       }
       phase='dice-rolled';
       document.getElementById('btn-sb').disabled=false;
-      setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`揀啱就確認，或直接確認跳過`,'');
+      setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`揀啱就核對，或直接核對跳過`,'');
       updateConfirmBtn();
       if(mode==='hint'){setTimeout(highlightHintCards,600);}
     }
@@ -483,7 +492,7 @@
         document.getElementById('btn-confirm').disabled=false;
         setTimeout(()=>{
           renderCards(false);
-          setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`揀啱就確認，或直接確認跳過`,'');
+          setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`揀啱就核對，或直接核對跳過`,'');
         },500);
       },800);
     }
