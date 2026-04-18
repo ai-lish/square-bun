@@ -393,6 +393,9 @@
       const wasClosed=phase==='closed';
       sbMode=!sbMode;
       if(sbMode){
+        // Bug fix 1: 必須桌上有已揭開的平方數卡才能用
+        const anySquare=revealed.some((r,i)=>r&&table[i].sq);
+        if(!anySquare){setStatus('🎤 桌上有冇平方數卡先？先開卡！','danger');sbMode=false;return;}
         selected.clear();
         document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice active';
         document.getElementById('btn-sb').textContent='✕ 取消';
@@ -471,14 +474,17 @@
         return;
       }
 
-      // No cards selected — show divisors briefly then skip
+      // No cards selected — let player re-roll instead of penalty
       phase='result';
       renderCards(true); // show divisors so player can see why
       setTimeout(()=>{
-        showFlash('skip','⏭️ 跳過','-1 分');
-        score=Math.max(0,score-1);
-        document.getElementById('score').textContent=score;
-        setTimeout(()=>doNextRound([]),1000);
+        showFlash('skip','⏭️ 冇夾到！','可再擲骰');
+        phase='dice-rolled';
+        document.getElementById('btn-confirm').disabled=false;
+        setTimeout(()=>{
+          renderCards(false);
+          setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`揀啱就確認，或直接確認跳過`,'');
+        },500);
       },800);
     }
 
