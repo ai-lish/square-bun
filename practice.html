@@ -138,6 +138,7 @@
     .btn-primary { background: var(--accent); color: white; box-shadow: 0 3px 8px rgba(233,69,96,0.3); }
     .btn-secondary { background: #f0f0f5; color: var(--primary); }
     .btn-ghost { background: #f5f5f5; color: var(--text-dim); }
+    .btn-green { background: linear-gradient(135deg, #38a169, #276749); color: white; box-shadow: 0 3px 8px rgba(56,161,105,0.4); }
     .btn-gold { background: linear-gradient(135deg, var(--gold), #e09000); color: white; box-shadow: 0 3px 8px rgba(245,166,35,0.4); }
     .btn-red { background: linear-gradient(135deg, #e53e3e, #c53030); color: white; box-shadow: 0 3px 8px rgba(229,62,62,0.4); }
 
@@ -285,9 +286,10 @@
       document.getElementById('dice1').textContent='?';document.getElementById('dice2').textContent='?';
       document.getElementById('target-badge').textContent='開卡後擲骰';document.getElementById('target-badge').className='target-badge disabled';
       document.getElementById('status-bar').textContent='請按「開卡」揭開卡牌';document.getElementById('status-bar').className='status-bar';
-      document.getElementById('btn-open').disabled=false;document.getElementById('btn-dice').disabled=true;
+      document.getElementById('btn-open').disabled=false;document.getElementById('btn-open').className='btn btn-green';
+      document.getElementById('btn-dice').disabled=true;document.getElementById('btn-dice').className='btn btn-ghost';
       document.getElementById('btn-sb').disabled=false;document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';document.getElementById('btn-sb').textContent='🎤 平方包';
-      document.getElementById('btn-confirm').disabled=true;
+      document.getElementById('btn-confirm').disabled=true;document.getElementById('btn-confirm').className='btn btn-ghost';
       renderOpenDots();renderCards(false);
     }
 
@@ -302,9 +304,12 @@
       revealed[ni]=true;renderOpenDots();renderCards(false);
       if(revealed.every(Boolean)){
         phase='open';
-        document.getElementById('btn-open').disabled=true;document.getElementById('btn-dice').disabled=false;
+        document.getElementById('btn-open').disabled=true;document.getElementById('btn-open').className='btn btn-ghost';
+        document.getElementById('btn-dice').disabled=false;document.getElementById('btn-dice').className='btn btn-green';
         document.getElementById('status-bar').textContent='可以擲骰，或直接用平方包！';document.getElementById('status-bar').className='status-bar gold';
       }else{
+        document.getElementById('btn-open').className='btn btn-green';
+        document.getElementById('btn-dice').className='btn btn-ghost';
         document.getElementById('status-bar').textContent=`再揭 ${revealed.filter(r=>!r).length} 張卡`;
         document.getElementById('status-bar').className='status-bar';
       }
@@ -351,7 +356,7 @@
       if(phase==='squarebun'){
         btn.className='btn btn-gold';
       }else if(phase==='dice-rolled'){
-        btn.className='btn btn-red';
+        btn.className='btn btn-green';
       }else{
         btn.className='btn btn-ghost';
       }
@@ -385,6 +390,7 @@
         document.getElementById('target-badge').classList.remove('gold-bg');
       }
       phase='dice-rolled';
+      document.getElementById('btn-dice').className='btn btn-ghost';
       document.getElementById('btn-sb').disabled=false;
       setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`揀啱就核對，或直接核對跳過`,'');
       updateConfirmBtn();
@@ -489,7 +495,7 @@
       setTimeout(()=>{
         showFlash('skip','⏭️ 冇夾到！','可再擲骰');
         phase='dice-rolled';
-        document.getElementById('btn-confirm').disabled=false;
+        updateConfirmBtn();
         setTimeout(()=>{
           renderCards(false);
           setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`揀啱就核對，或直接核對跳過`,'');
@@ -511,9 +517,10 @@
       phase='closed';dice=[null,null];
       document.getElementById('dice1').textContent='?';document.getElementById('dice2').textContent='?';
       document.getElementById('target-badge').textContent='開卡後擲骰';document.getElementById('target-badge').className='target-badge disabled';
-      document.getElementById('btn-open').disabled=false;document.getElementById('btn-dice').disabled=true;
+      document.getElementById('btn-open').disabled=false;document.getElementById('btn-open').className='btn btn-green';
+      document.getElementById('btn-dice').disabled=true;document.getElementById('btn-dice').className='btn btn-ghost';
       document.getElementById('btn-sb').disabled=false;document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';document.getElementById('btn-sb').textContent='🎤 平方包';
-      document.getElementById('btn-confirm').disabled=true;
+      document.getElementById('btn-confirm').disabled=true;document.getElementById('btn-confirm').className='btn btn-ghost';
       setStatus('請按「開卡」揭開新一回合','');
       renderOpenDots();renderCards(false);
     }
