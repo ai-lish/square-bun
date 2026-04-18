@@ -285,7 +285,7 @@
       document.getElementById('target-badge').textContent='開卡後擲骰';document.getElementById('target-badge').className='target-badge disabled';
       document.getElementById('status-bar').textContent='請按「開卡」揭開卡牌';document.getElementById('status-bar').className='status-bar';
       document.getElementById('btn-open').disabled=false;document.getElementById('btn-dice').disabled=true;
-      document.getElementById('btn-sb').disabled=true;document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';document.getElementById('btn-sb').textContent='🎤 平方包';
+      document.getElementById('btn-sb').disabled=false;document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';document.getElementById('btn-sb').textContent='🎤 平方包';
       document.getElementById('btn-confirm').disabled=true;
       renderOpenDots();renderCards(false);
     }
@@ -299,18 +299,13 @@
     function openOneCard(){
       const ni=revealed.findIndex(r=>!r);if(ni===-1)return;
       revealed[ni]=true;renderOpenDots();renderCards(false);
-      const anySquare=revealed.some((r,i)=>r&&table[i].sq);
       if(revealed.every(Boolean)){
         phase='open';
         document.getElementById('btn-open').disabled=true;document.getElementById('btn-dice').disabled=false;
-        document.getElementById('btn-sb').disabled=false;
         document.getElementById('status-bar').textContent='可以擲骰，或直接用平方包！';document.getElementById('status-bar').className='status-bar gold';
       }else{
-        document.getElementById('btn-sb').disabled=!anySquare;
-        document.getElementById('status-bar').textContent=anySquare
-          ?'🎤 看見平方數！可以立即用平方包，或繼續開卡'
-          :`再揭 ${revealed.filter(r=>!r).length} 張卡`;
-        document.getElementById('status-bar').className='status-bar'+(anySquare?' gold':'');
+        document.getElementById('status-bar').textContent=`再揭 ${revealed.filter(r=>!r).length} 張卡`;
+        document.getElementById('status-bar').className='status-bar';
       }
     }
 
@@ -339,7 +334,6 @@
       if(!revealed[i]||phase==='result')return;
 
       if(sbMode){
-        if(!table[i].sq){setStatus('🎤 只能揀平方數卡！','danger');return;}
         if(selected.has(i)){selected.delete(i);}else{selected.clear();selected.add(i);}
         renderCards(false);updateConfirmBtn();return;
       }
@@ -393,14 +387,11 @@
       const wasClosed=phase==='closed';
       sbMode=!sbMode;
       if(sbMode){
-        // Bug fix 1: 必須桌上有已揭開的平方數卡才能用
-        const anySquare=revealed.some((r,i)=>r&&table[i].sq);
-        if(!anySquare){setStatus('🎤 桌上有冇平方數卡先？先開卡！','danger');sbMode=false;return;}
         selected.clear();
         document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice active';
         document.getElementById('btn-sb').textContent='✕ 取消';
         phase='squarebun';
-        setStatus('🎤 平方包：選擇一張平方數卡','');
+        setStatus('🎤 平方包：選擇一張卡牌','');
       }else{
         document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';
         document.getElementById('btn-sb').textContent='🎤 平方包';
@@ -431,15 +422,23 @@
       if(phase!=='dice-rolled'&&phase!=='squarebun')return;
 
       if(phase==='squarebun'){
-        // Square bun claim — any selected square card is valid
         phase='result';
         renderCards(true); // show divisors
         setTimeout(()=>{
           const cards=document.querySelectorAll('.p-card');
-          const selectedIdx=selected.values().next().value;cards[selectedIdx].classList.add('correct');
-          score+=selected.size;
-          document.getElementById('score').textContent=score;
-          showFlash('gold','🎤 平方包！',`+${selected.size} 分`);
+          const selectedIdx=selected.values().next().value;
+          const isSquare=table[selectedIdx].sq;
+          if(isSquare){
+            cards[selectedIdx].classList.add('correct');
+            score+=selected.size;
+            document.getElementById('score').textContent=score;
+            showFlash('gold','🎤 平方包！',`+${selected.size} 分`);
+          }else{
+            cards[selectedIdx].classList.add('wrong');
+            score=Math.max(0,score-selected.size);
+            document.getElementById('score').textContent=score;
+            showFlash('danger','✗ 唔係平方數！',`-${selected.size} 分`);
+          }
           setTimeout(()=>doNextRound(Array.from(selected)),1200);
         },500);
         return;
@@ -503,7 +502,7 @@
       document.getElementById('dice1').textContent='?';document.getElementById('dice2').textContent='?';
       document.getElementById('target-badge').textContent='開卡後擲骰';document.getElementById('target-badge').className='target-badge disabled';
       document.getElementById('btn-open').disabled=false;document.getElementById('btn-dice').disabled=true;
-      document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';document.getElementById('btn-sb').textContent='🎤 平方包';
+      document.getElementById('btn-sb').disabled=false;document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';document.getElementById('btn-sb').textContent='🎤 平方包';
       document.getElementById('btn-confirm').disabled=true;
       setStatus('請按「開卡」揭開新一回合','');
       renderOpenDots();renderCards(false);
