@@ -139,6 +139,7 @@
     .btn-secondary { background: #f0f0f5; color: var(--primary); }
     .btn-ghost { background: #f5f5f5; color: var(--text-dim); }
     .btn-gold { background: linear-gradient(135deg, var(--gold), #e09000); color: white; box-shadow: 0 3px 8px rgba(245,166,35,0.4); }
+    .btn-danger { background: #e53e3e; color: white; box-shadow: 0 3px 8px rgba(229,62,62,0.3); }
 
     /* ===== RULES MODAL ===== */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
@@ -233,6 +234,7 @@
       <button class="btn btn-secondary" id="btn-open" onclick="openOneCard()">🔓 開卡</button>
       <button class="btn btn-primary" id="btn-dice" onclick="rollDice()" disabled>🎲 擲骰</button>
       <button class="btn btn-ghost" id="btn-confirm" onclick="confirmPicks()" disabled>✓ 確認</button>
+      <button class="btn btn-danger" id="btn-cancel-sb" onclick="cancelSquareBun()" style="display:none">✕ 取消平方包</button>
     </div>
   </div>
 
@@ -259,7 +261,7 @@
     function getDivisors(n){const d=[];for(let i=1;i<=n;i++)if(n%i===0)d.push(i);return d;}
     const ALL_CARDS=[];for(let i=1;i<=88;i++){ALL_CARDS.push({n:i,divs:getDivisors(i),sq:SQUARES.has(i)});}
     let cardCount=4,mode='free',deck=[],table=[],revealed=[],selected=new Set(),dice=[null,null],score=0;
-    let phase='closed',sbMode=false,maxSelect=2;
+    let phase='closed',sbMode=false,sbPrevPhase='closed',maxSelect=2;
 
     function adjustCount(delta){cardCount=Math.max(2,Math.min(6,cardCount+delta));document.getElementById('count-val').textContent=cardCount;}
     function selectMode(m){
@@ -390,16 +392,31 @@
         selected.clear();
         document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice active';
         document.getElementById('btn-sb').textContent='✕ 取消';
+        document.getElementById('btn-cancel-sb').style.display='inline-block';
+        sbPrevPhase=phase;
         phase='squarebun';
         setStatus('🎤 平方包：選擇一張卡牌','');
       }else{
         document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';
         document.getElementById('btn-sb').textContent='🎤 平方包';
+        document.getElementById('btn-cancel-sb').style.display='none';
         phase=wasClosed?'closed':'dice-rolled';
         setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`請選擇卡牌`,'');
         renderCards(false);
       }
       renderCards(false);
+    }
+
+    function cancelSquareBun(){
+      if(phase!=='squarebun')return;
+      sbMode=false;
+      phase=sbPrevPhase;
+      document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';
+      document.getElementById('btn-sb').textContent='🎤 平方包';
+      document.getElementById('btn-cancel-sb').style.display='none';
+      selected.clear();
+      renderCards(false);
+      setStatus(phase==='closed'?'請按「開卡」揭開卡牌':'揀啱就確認，或直接確認跳過','');
     }
 
     function highlightHintCards(){
@@ -503,6 +520,7 @@
       document.getElementById('target-badge').textContent='開卡後擲骰';document.getElementById('target-badge').className='target-badge disabled';
       document.getElementById('btn-open').disabled=false;document.getElementById('btn-dice').disabled=true;
       document.getElementById('btn-sb').disabled=false;document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';document.getElementById('btn-sb').textContent='🎤 平方包';
+      document.getElementById('btn-cancel-sb').style.display='none';
       document.getElementById('btn-confirm').disabled=true;
       setStatus('請按「開卡」揭開新一回合','');
       renderOpenDots();renderCards(false);
