@@ -470,8 +470,9 @@
 
     function updateStatusForPhase(){
       if(phase==='closed')setStatus('請先開卡','');
-      else if(phase==='open')setStatus('可以擲骰，或直接用平方包！','');
-      else if(phase==='dice-rolled'){
+      else if(phase==='open'){
+        setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`可以擲骰，或直接用平方包！`,'');
+      }else if(phase==='dice-rolled'){
         setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`揀啱就核對，或直接核對跳過`,selected.size>0?'gold':'');
       }else if(phase==='squarebun'){
         setStatus('🎤 平方包：選擇一張平方數卡','');
