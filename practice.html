@@ -101,6 +101,20 @@
     .p-card.hint { background: rgba(0,200,83,0.12); border-color: var(--success); }
     .p-card.hint::after { content: '✓'; position: absolute; top: 3px; right: 5px; font-size: 10px; color: var(--success); }
     .p-card.square-bun-card { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); animation: sbPulse 1.5s infinite; }
+
+    /* ===== CARD BACKGROUND BY PHASE ===== */
+    .cards-grid.dice-rolled .p-card.revealed:not(.face-down) {
+      background: rgba(0, 200, 83, 0.12);
+    }
+    .cards-grid.squarebun-mode .p-card.revealed:not(.face-down) {
+      background: rgba(255, 152, 0, 0.15);
+    }
+    .cards-grid.dice-rolled .p-card.revealed:not(.face-down).selected {
+      background: var(--accent);
+    }
+    .cards-grid.squarebun-mode .p-card.revealed:not(.face-down).selected {
+      background: var(--gold);
+    }
     @keyframes sbPulse { 0%,100%{box-shadow:0 3px 10px rgba(233,69,96,0.3)} 50%{box-shadow:0 3px 20px rgba(233,69,96,0.6)} }
     .p-card.square-bun-card .card-num { color: white; }
     .p-card.square-bun-card.selected { background: var(--gold); animation: none; box-shadow: 0 6px 14px rgba(245,166,35,0.5); }
@@ -290,6 +304,7 @@
       document.getElementById('btn-dice').disabled=true;document.getElementById('btn-dice').className='btn btn-ghost';
       document.getElementById('btn-sb').disabled=false;document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';document.getElementById('btn-sb').textContent='🎤 平方包';
       document.getElementById('btn-confirm').disabled=true;document.getElementById('btn-confirm').className='btn btn-ghost';
+      const grid=document.getElementById('cards-grid');grid.classList.remove('dice-rolled','squarebun-mode');
       renderOpenDots();renderCards(false);
     }
 
@@ -392,6 +407,8 @@
       phase='dice-rolled';
       document.getElementById('btn-dice').className='btn btn-ghost';
       document.getElementById('btn-sb').disabled=false;
+      document.getElementById('cards-grid').classList.remove('squarebun-mode');
+      document.getElementById('cards-grid').classList.add('dice-rolled');
       setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`揀啱就核對，或直接核對跳過`,'');
       updateConfirmBtn();
       if(mode==='hint'){setTimeout(highlightHintCards,600);}
@@ -401,17 +418,22 @@
       if(phase!=='open'&&phase!=='dice-rolled'&&phase!=='closed'&&phase!=='squarebun')return;
       const wasClosed=phase==='closed';
       sbMode=!sbMode;
+      const grid=document.getElementById('cards-grid');
       if(sbMode){
         selected.clear();
         document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice active';
         document.getElementById('btn-sb').textContent='✕ 取消';
         sbPrevPhase=phase;
         phase='squarebun';
+        grid.classList.remove('dice-rolled');
+        grid.classList.add('squarebun-mode');
         setStatus('🎤 平方包：選擇一張卡牌','');
       }else{
         document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';
         document.getElementById('btn-sb').textContent='🎤 平方包';
         phase=wasClosed?'closed':'dice-rolled';
+        grid.classList.remove('squarebun-mode');
+        if(phase==='dice-rolled')grid.classList.add('dice-rolled');
         setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`請選擇卡牌`,'');
         renderCards(false);
       }
@@ -521,6 +543,7 @@
       document.getElementById('btn-dice').disabled=true;document.getElementById('btn-dice').className='btn btn-ghost';
       document.getElementById('btn-sb').disabled=false;document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';document.getElementById('btn-sb').textContent='🎤 平方包';
       document.getElementById('btn-confirm').disabled=true;document.getElementById('btn-confirm').className='btn btn-ghost';
+      const grid=document.getElementById('cards-grid');grid.classList.remove('dice-rolled','squarebun-mode');
       setStatus('請按「開卡」揭開新一回合','');
       renderOpenDots();renderCards(false);
     }
