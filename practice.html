@@ -517,6 +517,9 @@
       setTimeout(()=>{
         showFlash('skip','⏭️ 冇夾到！','可再擲骰');
         phase='dice-rolled';
+        // Re-enable dice button so player can re-roll
+        document.getElementById('btn-dice').disabled=false;
+        document.getElementById('btn-dice').className='btn btn-green';
         updateConfirmBtn();
         setTimeout(()=>{
           renderCards(false);
