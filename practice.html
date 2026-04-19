@@ -428,6 +428,7 @@
         grid.classList.remove('dice-rolled');
         grid.classList.add('squarebun-mode');
         setStatus('🎤 平方包：選擇一張卡牌','');
+        updateConfirmBtn();
       }else{
         document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';
         document.getElementById('btn-sb').textContent='🎤 平方包';
@@ -436,6 +437,7 @@
         if(phase==='dice-rolled')grid.classList.add('dice-rolled');
         setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`請選擇卡牌`,'');
         renderCards(false);
+        updateConfirmBtn();
       }
       renderCards(false);
     }
