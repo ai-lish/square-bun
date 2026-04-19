@@ -135,6 +135,17 @@
     .card-divs { font-size: 8px; color: var(--text-dim); margin-top: 2px; text-align: center; line-height: 1.2; padding: 0 3px; }
     .p-card.selected .card-divs, .p-card.correct .card-divs, .p-card.wrong .card-divs { color: rgba(255,255,255,0.85); }
 
+    /* ===== DIVS TOOLTIP (click card to show divisors) ===== */
+    .card-divs-tooltip {
+      position: fixed; background: #1a1a2e; color: white; border-radius: 10px;
+      padding: 8px 14px; font-size: 13px; font-weight: 600; z-index: 300;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3); pointer-events: none;
+      opacity: 0; transition: opacity 0.15s; white-space: nowrap;
+    }
+    .card-divs-tooltip.show { opacity: 1; }
+    .card-divs-tooltip .tip-num { font-size: 16px; font-weight: 900; color: #ffd700; margin-bottom: 3px; }
+    .card-divs-tooltip .tip-divs { color: #a8d8ea; font-size: 12px; }
+
     /* ===== STATUS ===== */
     .status-bar {
       text-align: center; padding: 7px 14px; font-size: 13px; font-weight: 700;
@@ -249,6 +260,7 @@
       </div>
       <div class="cards-grid" id="cards-grid"></div>
     </div>
+    <div class="card-divs-tooltip" id="divs-tooltip"></div>
     <div class="status-bar" id="status-bar">請先開卡</div>
     <div class="controls">
       <button class="btn btn-secondary" id="btn-open" onclick="openOneCard()">🔓 開卡</button>
@@ -349,20 +361,36 @@
     function handleCardClick(i){
       if(!revealed[i]||phase==='result')return;
 
-      // Show divisors for this card (click to learn)
-      const card=table[i];
-      const divs=card.divs.join(', ');
-      setStatus(`【${card.n}】可被 ${divs} 整除`,'');
-
       if(sbMode){
         if(selected.has(i)){selected.delete(i);}else{selected.clear();selected.add(i);}
         renderCards(false);updateConfirmBtn();return;
       }
 
+      // Show divisors tooltip for this card
+      const card=table[i];
+      showDivsTip(i);
+
       // Normal mode: max 2 selections
       if(!selected.has(i)&&selected.size>=maxSelect){setStatus('最多揀2張！','danger');return;}
       if(selected.has(i)){selected.delete(i);}else{selected.add(i);}
       renderCards(false);updateConfirmBtn();updateStatusForPhase();
+    }
+
+    let divsTipTimer=null;
+    function showDivsTip(cardIndex){
+      const card=table[cardIndex];
+      const tip=document.getElementById('divs-tooltip');
+      tip.innerHTML=`<div class="tip-num">${card.n}</div><div class="tip-divs">可被 ${card.divs.join(', ')} 整除</div>`;
+      // Position near the card
+      const cardEl=document.querySelectorAll('.p-card')[cardIndex];
+      if(cardEl){
+        const r=cardEl.getBoundingClientRect();
+        tip.style.left=Math.min(r.left,window.innerWidth-160)+'px';
+        tip.style.top=(r.top-58)+'px';
+      }
+      tip.classList.add('show');
+      if(divsTipTimer)clearTimeout(divsTipTimer);
+      divsTipTimer=setTimeout(()=>tip.classList.remove('show'),2000);
     }
 
     function updateConfirmBtn(){
@@ -396,11 +424,11 @@
       let circles='';
       if(val===0){circles=`<text x="22" y="30" text-anchor="middle" font-size="22" font-weight="900" fill="#ccc" font-family="system-ui">?</text>`;}
       else if(val===1){circles=qs([22,22]);}
-      else if(val===2){circles=qs([10,10],[34,34]);}
-      else if(val===3){circles=qs([10,10],[22,22],[34,34]);}
-      else if(val===4){circles=qs([10,10],[34,10],[10,34],[34,34]);}
-      else if(val===5){circles=qs([10,10],[34,10],[22,22],[10,34],[34,34]);}
-      else if(val===6){circles=qs([10,10],[34,10],[10,22],[34,22],[10,34],[34,34]);}
+      else if(val===2){circles=qs([11,11],[33,33]);}
+      else if(val===3){circles=qs([11,11],[22,22],[33,33]);}
+      else if(val===4){circles=qs([11,11],[33,11],[11,33],[33,33]);}
+      else if(val===5){circles=qs([11,11],[33,11],[22,22],[11,33],[33,33]);}
+      else if(val===6){circles=qs([11,11],[33,11],[11,22],[33,22],[11,33],[33,33]);}
       el.innerHTML=`<svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg"><rect width="44" height="44" rx="10" ${bg}/>${circles}</svg>`;
     }
 
