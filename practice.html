@@ -97,44 +97,66 @@
     .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; width: 100%; max-width: 300px; }
 
     .p-card {
-      aspect-ratio: 3/4; background: white; border-radius: 12px;
+      aspect-ratio: 3/4; border-radius: 12px;
+      box-shadow: var(--card-shadow); border: 2px solid transparent; min-height: 68px;
+      position: relative; perspective: 900px;
+    }
+    .p-card-inner {
+      width: 100%; height: 100%; position: relative;
+      transform-style: preserve-3d; transition: transform 0.5s;
+    }
+    .p-card.flipped .p-card-inner { transform: rotateY(180deg); }
+    .card-face {
+      position: absolute; inset: 0;
+      backface-visibility: hidden;
+      border-radius: 10px;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      cursor: pointer;
+    }
+    .card-front {
+      background: white; cursor: pointer; border: 2px solid transparent;
       transition: transform 0.12s, box-shadow 0.12s, background 0.12s, border-color 0.12s;
-      box-shadow: var(--card-shadow); border: 2px solid transparent; min-height: 68px; position: relative;
     }
-    .p-card:active { transform: scale(0.95); }
-    .p-card.face-down { background: linear-gradient(135deg, #f0ece6, #e8e4de); cursor: default; border-color: #d8d4cc; }
-    .p-card.face-down:active { transform: none; }
-    .p-card.face-down .card-back { font-size: 26px; color: #aaa; font-weight: 900; }
-    .p-card.selected { background: var(--accent); border-color: var(--accent-dark); transform: scale(1.05); box-shadow: 0 6px 14px rgba(233,69,96,0.4); }
-    .p-card.correct { background: var(--success); animation: correctPop 0.4s ease; }
-    .p-card.wrong { background: var(--danger); animation: wrongShake 0.4s ease; }
-    .p-card.hint { background: rgba(0,200,83,0.12); border-color: var(--success); }
-    .p-card.hint::after { content: '✓'; position: absolute; top: 3px; right: 5px; font-size: 10px; color: var(--success); }
-    .p-card.square-bun-card { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); animation: sbPulse 1.5s infinite; }
-
-    /* ===== CARD BACKGROUND BY PHASE ===== */
-    .cards-grid.dice-rolled .p-card:not(.face-down) {
-      background: rgba(0, 200, 83, 0.12);
+    .card-front:active { transform: scale(0.95); }
+    .p-card.face-down .card-front { background: linear-gradient(135deg, #f0ece6, #e8e4de); cursor: default; border-color: #d8d4cc; }
+    .p-card.face-down .card-front:active { transform: none; }
+    .p-card.face-down .card-front .card-back { font-size: 26px; color: #aaa; font-weight: 900; }
+    .card-back {
+      background: white; transform: rotateY(180deg); border: 2px solid #e0e0e0;
+      overflow: hidden; padding: 4px;
     }
-    .cards-grid.squarebun-mode .p-card:not(.face-down) {
-      background: rgba(255, 152, 0, 0.15);
-    }
-    .cards-grid.dice-rolled .p-card:not(.face-down).selected {
-      background: var(--accent);
-    }
-    .cards-grid.squarebun-mode .p-card:not(.face-down).selected {
-      background: var(--gold);
-    }
+    /* Phase-based card backgrounds */
+    .cards-grid.dice-rolled .card-front:not(.p-card.face-down .card-front) { background: rgba(0, 200, 83, 0.12); }
+    .cards-grid.dice-rolled .card-front.selected { background: var(--accent) !important; }
+    .cards-grid.squarebun-mode .card-front { background: rgba(255, 152, 0, 0.15); }
+    .cards-grid.squarebun-mode .card-front.selected { background: var(--gold) !important; }
+    .card-front.selected { transform: scale(1.05); box-shadow: 0 6px 14px rgba(233,69,96,0.4); }
+    .card-front.square-bun-card { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); animation: sbPulse 1.5s infinite; }
+    .card-front.hint { background: rgba(0,200,83,0.12); border-color: var(--success); }
+    .card-front.hint::after { content: '✓'; position: absolute; top: 3px; right: 5px; font-size: 10px; color: var(--success); }
     @keyframes sbPulse { 0%,100%{box-shadow:0 3px 10px rgba(233,69,96,0.3)} 50%{box-shadow:0 3px 20px rgba(233,69,96,0.6)} }
-    .p-card.square-bun-card .card-num { color: white; }
-    .p-card.square-bun-card.selected { background: var(--gold); animation: none; box-shadow: 0 6px 14px rgba(245,166,35,0.5); }
     @keyframes correctPop { 0%{transform:scale(1)} 50%{transform:scale(1.15)} 100%{transform:scale(1)} }
     @keyframes wrongShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
     .card-num { font-size: 24px; font-weight: 900; color: var(--primary); }
     .card-divs { font-size: 8px; color: var(--text-dim); margin-top: 2px; text-align: center; line-height: 1.2; padding: 0 3px; }
-    .p-card.selected .card-divs, .p-card.correct .card-divs, .p-card.wrong .card-divs { color: rgba(255,255,255,0.85); }
+    .card-front.selected .card-divs { color: rgba(255,255,255,0.85); }
+    .card-front.square-bun-card .card-num { color: white; }
+    .card-front.square-bun-card.selected { background: var(--gold) !important; animation: none; box-shadow: 0 6px 14px rgba(245,166,35,0.5); }
+    /* Factor reveal (card back) */
+    .card-back-number { font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 2px; }
+    .factor-rows { display: flex; flex-direction: column; gap: 2px; width: 100%; }
+    .factor-row { display: flex; justify-content: center; gap: 2px; }
+    .factor-circle {
+      width: 18px; height: 18px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 7px; font-weight: 900;
+    }
+    .factor-circle.green { background: #00c853; color: white; }
+    .factor-circle.orange { background: #ff9800; color: white; }
+    .factor-circle.red { background: #f44336; color: white; }
+    /* Continue button zone */
+    #continue-zone { display: none; text-align: center; padding: 10px; background: #f5f5f5; border-top: 1px solid var(--border); flex-shrink: 0; }
+    #continue-zone.show { display: block; }
+    #btn-continue { background: var(--accent); color: white; border: none; border-radius: 10px; padding: 10px 32px; font-size: 15px; font-weight: 900; cursor: pointer; }
 
     /* ===== DIVS TOOLTIP (click card to show divisors) ===== */
     .card-divs-tooltip {
@@ -260,12 +282,16 @@
         <div class="open-dots" id="open-dots"></div>
       </div>
       <div class="cards-grid" id="cards-grid"></div>
+      <div id="continue-zone">
+        <button id="btn-continue" onclick="handleContinue()">繼續 ▶</button>
+      </div>
     </div>
     <div class="card-divs-tooltip" id="divs-tooltip"></div>
     <div class="status-bar" id="status-bar">請先開卡</div>
     <div class="controls">
       <button class="btn btn-secondary" id="btn-open" onclick="openOneCard()">🔓 開卡</button>
       <button class="btn btn-primary" id="btn-dice" onclick="rollDice()" disabled>🎲 擲骰</button>
+      <button class="btn btn-ghost" id="btn-sb" onclick="triggerSquareBun()" disabled>🎤 平方包</button>
       <button class="btn btn-ghost" id="btn-confirm" onclick="confirmPicks()" disabled>✓ 核對</button>
     </div>
   </div>
@@ -289,6 +315,7 @@
     const ALL_CARDS=[];for(let i=1;i<=88;i++){ALL_CARDS.push({n:i,divs:getDivisors(i),sq:SQUARES.has(i)});}
     let cardCount=4,deck=[],table=[],revealed=[],selected=new Set(),dice=[null,null],score=0;
     let phase='closed',sbMode=false,sbPrevPhase='closed',maxSelect=2;
+    let wrongCards=[],correctCards=[];
 
     function adjustCount(delta){cardCount=Math.max(2,Math.min(6,cardCount+delta));document.getElementById('count-val').textContent=cardCount;}
     function showRules(){document.getElementById('rules-modal').classList.add('show');}
@@ -341,35 +368,48 @@
     function renderCards(showDivs){
       const grid=document.getElementById('cards-grid');grid.innerHTML='';
       table.forEach((card,i)=>{
-        const el=document.createElement('div');let cls='p-card';
-        if(!revealed[i]){cls+=' face-down';}else{if(card.sq)cls+=' square-bun-card';if(selected.has(i))cls+=' selected';}
-        el.className=cls;
-        if(!revealed[i]){el.innerHTML='<div class="card-back">?</div>';}else{
+        const wrapper=document.createElement('div');
+        let cls='p-card';
+        if(!revealed[i]){cls+=' face-down';}
+        else{if(card.sq)cls+=' square-bun-card';if(selected.has(i))cls+=' selected';}
+        wrapper.className=cls;
+
+        const inner=document.createElement('div');inner.className='p-card-inner';
+        const front=document.createElement('div');front.className='card-face card-front';
+        const back=document.createElement('div');back.className='card-face card-back';
+
+        if(!revealed[i]){
+          // Face down: show "?" on the front face (card back side of flip)
+          front.innerHTML='<div class="card-num">?</div>';
+        }else{
           const divsHtml=showDivs?`<div class="card-divs">${card.divs.slice(0,3).join(', ')}${card.divs.length>3?'...':''}</div>`:'';
-          el.innerHTML=`<div class="card-num">${card.n}</div>${divsHtml}`;
-          el.onclick=()=>handleCardClick(i);
+          front.innerHTML=`<div class="card-num">${card.n}</div>${divsHtml}`;
+          front.onclick=()=>handleCardClick(i);
+          // Back face is pre-filled with factor display (used during reveal phase)
+          back.innerHTML=renderFactorBack(card);
         }
-        if(card._new){el.classList.add('adding');card._new=false;}
-        grid.appendChild(el);
+        if(card._new){wrapper.classList.add('adding');card._new=false;}
+
+        inner.appendChild(front);inner.appendChild(back);
+        wrapper.appendChild(inner);
+        grid.appendChild(wrapper);
       });
       if(sbMode&&!showDivs){
         document.querySelectorAll('.p-card').forEach((el,i)=>{
-          if(revealed[i]&&table[i].sq&&!selected.has(i))el.classList.add('hint');
+          if(revealed[i]&&table[i].sq&&!selected.has(i))el.querySelector('.card-front').classList.add('hint');
         });
       }
     }
 
     function handleCardClick(i){
-      if(!revealed[i]||phase==='result')return;
+      if(!revealed[i]||phase==='result'||phase==='reveal')return;
 
       if(sbMode){
         if(selected.has(i)){selected.delete(i);}else{selected.clear();selected.add(i);}
         renderCards(false);updateConfirmBtn();return;
       }
 
-      // Show divisors tooltip for this card
-      const card=table[i];
-      showDivsTip(i);
+      // Show divisors tooltip for this card (replaced by factor reveal on confirm)
 
       // Normal mode: max 2 selections
       if(!selected.has(i)&&selected.size>=maxSelect){setStatus('最多揀2張！','danger');return;}
@@ -404,6 +444,28 @@
       }else{
         btn.className='btn btn-ghost';
       }
+    }
+
+    // Render the card back (factor reveal) HTML
+    // Green: factor divides dice product
+    // Orange: square root of n (if perfect square)
+    // Red: remaining factors
+    function renderFactorBack(card){
+      const D=dice[0]*dice[1];
+      const sq=Math.sqrt(card.n);
+      const isPerfectSquare=Number.isInteger(sq);
+      const sqInt=isPerfectSquare?sq:null;
+      let rows='';let row='';
+      card.divs.forEach((f,idx)=>{
+        let cls='green';
+        if(isPerfectSquare&&f===sqInt){cls='orange';}
+        else if(D%f!==0){cls='red';}
+        row+=`<span class="factor-circle ${cls}">${f}</span>`;
+        if(row.split('factor-circle').length-1===3||idx===card.divs.length-1){
+          rows+=`<div class="factor-row">${row}</div>`;row='';
+        }
+      });
+      return`<div class="card-back-number">${card.n}</div><div class="factor-rows">${rows}</div>`;
     }
 
     function updateStatusForPhase(){
@@ -506,56 +568,55 @@
       if(phase!=='dice-rolled'&&phase!=='squarebun')return;
 
       if(phase==='squarebun'){
-        phase='result';
-        renderCards(true); // show divisors
-        setTimeout(()=>{
-          const cards=document.querySelectorAll('.p-card');
-          const selectedIdx=selected.values().next().value;
-          const isSquare=table[selectedIdx].sq;
-          if(isSquare){
-            cards[selectedIdx].classList.add('correct');
-            score+=selected.size;
-            document.getElementById('score').textContent=score;
-            showFlash('gold','🎤 平方包！',`+${selected.size} 分`);
-          }else{
-            cards[selectedIdx].classList.add('wrong');
-            score=Math.max(0,score-selected.size);
-            document.getElementById('score').textContent=score;
-            showFlash('danger','✗ 唔係平方數！',`-${selected.size} 分`);
-          }
-          setTimeout(()=>doNextRound(Array.from(selected)),1200);
-        },500);
+        const selectedIdx=Array.from(selected)[0];
+        const isSquare=table[selectedIdx].sq;
+        wrongCards=isSquare?[]:[selectedIdx];
+        correctCards=isSquare?[selectedIdx]:[];
+        phase='reveal';
+        const cards=document.querySelectorAll('.p-card');
+        cards[selectedIdx].classList.add('flipped');
+        if(isSquare){
+          score+=selected.size;
+          setStatus('🎤 平方包！ +'+selected.size+' 分','gold');
+        }else{
+          score=Math.max(0,score-selected.size);
+          setStatus('✗ 唔係平方數！ -'+selected.size+' 分','');
+        }
+        document.getElementById('score').textContent=score;
+        document.getElementById('continue-zone').classList.add('show');
+        document.getElementById('btn-confirm').disabled=true;
+        document.getElementById('btn-open').disabled=true;
+        document.getElementById('btn-dice').disabled=true;
+        document.getElementById('btn-sb').disabled=true;
         return;
       }
 
       if(selected.size>0){
         const targets=getTargetSet();
-        const wrongCards=[];
-        const correctCards=[];
+        wrongCards=[];correctCards=[];
         selected.forEach(i=>{
           if(targets.has(table[i].n))correctCards.push(i);
           else wrongCards.push(i);
         });
-        phase='result';
-        renderCards(true); // show divisors first
-        setTimeout(()=>{
-          const cards=document.querySelectorAll('.p-card');
-          if(wrongCards.length>0){
-            wrongCards.forEach(i=>cards[i].classList.add('wrong'));
-            score=Math.max(0,score-wrongCards.length);
-            document.getElementById('score').textContent=score;
-            showFlash('danger',`✗ 答錯！`,`-${wrongCards.length} 分`);
-            // Only wrong cards are removed — correct cards stay on table
-            setTimeout(()=>doNextRound(wrongCards),1200);
-          }else{
-            correctCards.forEach(i=>cards[i].classList.add('correct'));
-            score+=correctCards.length;
-            document.getElementById('score').textContent=score;
-            showFlash('success',`✓ 全對！`,`+${correctCards.length} 分`);
-            // All selected are correct — remove them all from table
-            setTimeout(()=>doNextRound(Array.from(selected)),1200);
-          }
-        },500);
+        phase='reveal';
+        // Flip selected cards to show factor backs
+        const cards=document.querySelectorAll('.p-card');
+        selected.forEach(i=>cards[i].classList.add('flipped'));
+        // Update score
+        if(wrongCards.length>0){
+          score=Math.max(0,score-wrongCards.length);
+          setStatus(`✗ 答錯！ -${wrongCards.length} 分`,'');
+        }else{
+          score+=correctCards.length;
+          setStatus(`✓ 全對！ +${correctCards.length} 分`,'success');
+        }
+        document.getElementById('score').textContent=score;
+        // Show continue button
+        document.getElementById('continue-zone').classList.add('show');
+        document.getElementById('btn-confirm').disabled=true;
+        document.getElementById('btn-open').disabled=true;
+        document.getElementById('btn-dice').disabled=true;
+        document.getElementById('btn-sb').disabled=true;
         return;
       }
 
@@ -580,6 +641,18 @@
           setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`揀啱就核對，或直接核對跳過`,'');
         },500);
       },800);
+    }
+
+    function handleContinue(){
+      document.getElementById('continue-zone').classList.remove('show');
+      document.getElementById('btn-open').disabled=false;
+      document.getElementById('btn-dice').disabled=true;
+      document.getElementById('btn-sb').disabled=true;
+      document.getElementById('btn-confirm').disabled=true;
+      const toRemove=wrongCards.length>0?wrongCards:Array.from(selected);
+      wrongCards=[];correctCards=[];
+      selected.clear();sbMode=false;
+      doNextRound(toRemove);
     }
 
     function doNextRound(removeIndices){
