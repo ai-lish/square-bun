@@ -371,11 +371,13 @@
         const wrapper=document.createElement('div');
         let cls='p-card';
         if(!revealed[i]){cls+=' face-down';}
-        else{if(card.sq)cls+=' square-bun-card';if(selected.has(i))cls+=' selected';}
+        else{if(card.sq)cls+=' square-bun-card';}
         wrapper.className=cls;
 
         const inner=document.createElement('div');inner.className='p-card-inner';
-        const front=document.createElement('div');front.className='card-face card-front';
+        let frontCls='card-face card-front';
+        if(revealed[i]&&selected.has(i))frontCls+=' selected';
+        const front=document.createElement('div');front.className=frontCls;
         const back=document.createElement('div');back.className='card-face card-back';
 
         if(!revealed[i]){
