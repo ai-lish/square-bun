@@ -103,16 +103,16 @@
     .p-card.square-bun-card { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); animation: sbPulse 1.5s infinite; }
 
     /* ===== CARD BACKGROUND BY PHASE ===== */
-    .cards-grid.dice-rolled .p-card.revealed:not(.face-down) {
+    .cards-grid.dice-rolled .p-card:not(.face-down) {
       background: rgba(0, 200, 83, 0.12);
     }
-    .cards-grid.squarebun-mode .p-card.revealed:not(.face-down) {
+    .cards-grid.squarebun-mode .p-card:not(.face-down) {
       background: rgba(255, 152, 0, 0.15);
     }
-    .cards-grid.dice-rolled .p-card.revealed:not(.face-down).selected {
+    .cards-grid.dice-rolled .p-card:not(.face-down).selected {
       background: var(--accent);
     }
-    .cards-grid.squarebun-mode .p-card.revealed:not(.face-down).selected {
+    .cards-grid.squarebun-mode .p-card:not(.face-down).selected {
       background: var(--gold);
     }
     @keyframes sbPulse { 0%,100%{box-shadow:0 3px 10px rgba(233,69,96,0.3)} 50%{box-shadow:0 3px 20px rgba(233,69,96,0.6)} }
