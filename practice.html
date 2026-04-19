@@ -54,6 +54,7 @@
     .dice-pair { display: flex; align-items: center; gap: 10px; }
     .dice {
       width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+      background: #fefefe; border: 2px solid #e0e0e0;
       box-shadow: 0 2px 8px rgba(0,0,0,0.12);
       transition: transform 0.2s;
     }
@@ -420,7 +421,7 @@
     function renderDiceSVG(el,val){
       const q=(v)=>`<circle cx="${v}" cy="${v}" r="3.5" fill="#222"/>`;
       const qs=(...ps)=>ps.map(p=>q(p)).join('');
-      const bg='fill="#fefefe" stroke="#e0e0e0" stroke-width="2"';
+      const bg='fill="#fefefe"';
       let circles='';
       if(val===0){circles=`<text x="22" y="30" text-anchor="middle" font-size="22" font-weight="900" fill="#ccc" font-family="system-ui">?</text>`;}
       else if(val===1){circles=qs([22,22]);}
