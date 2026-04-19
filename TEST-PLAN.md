@@ -271,4 +271,28 @@
 
 | 日期 | 測試者 | 通過 | 失敗 | 備註 |
 |------|--------|------|------|------|
-| 2026-04-19 | 小心 | - | - | 等待執行 |
+| 2026-04-19 | 小心 | 36 | 4 | Phase 0-9 大部分通過，發現 3 個 Bugs |
+
+## 已知 Bugs
+
+### Bug 1 ✅ 已修復
+- **問題**：CSS selector 用 `.p-card.revealed`，但 JS 由未添加 `revealed` class
+- **修復**：移除 CSS 中的 `.revealed`，改為 `.p-card:not(.face-down)`
+
+### Bug 2 ✅ 已修復
+- **問題**：`triggerSquareBun()` 進入/退出 squarebun 時未調用 `updateConfirmBtn()`，確認按鈕顏色不變
+- **修復**：在 `triggerSquareBun()` 兩分支都添加 `updateConfirmBtn()` 調用
+
+### Bug 3 ✅ 已修復
+- **問題**：skip 後 `btn-dice` 被禁用，雖然 Flash 顯示「可再擲骰」但按鈕不可用
+- **修復**：skip 後啟用 `btn-dice` 並設為綠色
+
+### Bug 4 ❌ 未修復
+- **問題**：skip 後 `btn-dice` 亮綠色可點擊，1.2s 後 `doNextRound` 觸發，導致新一回合
+- **影響**：skip 後 Flash 顯示時，如果玩家點擊 btn-dice 會同時觸發 `rollDice()` 和 `doNextRound()`
+- **建議修復**：skip Flash 期間暫時禁用 btn-dice，或在 skip 時將 phase 設為 'skip' 而非 'dice-rolled'
+
+### Bug 5 ❌ 未修復（設計問題）
+- **問題**：遮罩層點擊不能關閉規則彈窗
+- **影響**：只能用「知道了！」按鈕關閉
+- **建議**：在 `.modal-overlay.onclick` 添加關閉邏輯
