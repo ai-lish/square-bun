@@ -33,6 +33,17 @@
     .header-title { font-size: 17px; font-weight: 900; color: var(--accent); }
     .score-badge { background: #fff0f3; border: 2px solid var(--accent); border-radius: 20px; padding: 5px 14px; font-size: 13px; font-weight: 700; color: var(--accent); }
     .score-badge span { color: var(--accent-dark); }
+    .score-badge .score-delta {
+      display: inline-block; font-size: 12px; font-weight: 900; margin-left: 4px;
+      animation: scoreDelta 0.9s ease-out forwards; pointer-events: none;
+    }
+    .score-badge .score-delta.pos { color: var(--success); }
+    .score-badge .score-delta.neg { color: var(--danger); }
+    @keyframes scoreDelta {
+      0%  { opacity: 1; transform: translateY(0); }
+      60% { opacity: 1; transform: translateY(-12px); }
+      100%{ opacity: 0; transform: translateY(-18px); }
+    }
     .rules-btn { background: transparent; border: none; color: var(--text-dim); font-size: 22px; cursor: pointer; padding: 4px 8px; font-family: 'Noto Sans HK', sans-serif; }
 
     /* ===== DICE ZONE ===== */
@@ -231,6 +242,14 @@
     .btn-green { background: linear-gradient(135deg, #38a169, #276749); color: white; box-shadow: 0 3px 8px rgba(56,161,105,0.4); }
     .btn-gold { background: linear-gradient(135deg, var(--gold), #e09000); color: white; box-shadow: 0 3px 8px rgba(245,166,35,0.4); }
     .btn-red { background: linear-gradient(135deg, #e53e3e, #c53030); color: white; box-shadow: 0 3px 8px rgba(229,62,62,0.4); }
+    @keyframes btnPulse {
+      0%  { transform: scale(1); }
+      40% { transform: scale(1.08); }
+      70% { transform: scale(0.97); }
+      100%{ transform: scale(1); }
+    }
+    .btn.pulse-ok  { animation: btnPulse 0.45s ease; }
+    .btn.pulse-bad { animation: btnPulse 0.45s ease; box-shadow: 0 0 0 3px var(--danger); }
 
     /* ===== RULES MODAL ===== */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
@@ -263,16 +282,6 @@
     .setup-rules-link { color: var(--text-dim); font-size: 14px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
     .start-btn { width: 100%; max-width: 280px; padding: 16px; font-size: 17px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: white; border: none; border-radius: 14px; font-weight: 900; cursor: pointer; font-family: 'Noto Sans HK', sans-serif; box-shadow: 0 6px 20px rgba(233,69,96,0.4); transition: transform 0.15s; }
     .start-btn:active { transform: scale(0.97); }
-
-    /* ===== RESULT FLASH ===== */
-    .result-flash { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
-    .result-flash.show { opacity: 1; }
-    .result-flash.success { background: rgba(0,200,83,0.95); }
-    .result-flash.danger { background: rgba(220,20,60,0.95); }
-    .result-flash.gold { background: rgba(245,166,35,0.95); }
-    .result-flash.skip { background: rgba(0,151,167,0.95); }
-    .result-flash .flash-text { font-size: 34px; font-weight: 900; color: white; letter-spacing: 2px; }
-    .result-flash .flash-sub { font-size: 18px; color: rgba(255,255,255,0.95); margin-top: 6px; font-weight: 700; }
 
     @media (min-width: 400px) { .cards-grid { max-width: 360px; gap: 11px; } .p-card { min-height: 80px; } .card-num { font-size: 28px; } }
   </style>
@@ -339,11 +348,6 @@
       <div class="modal-rule"><div class="modal-rule-icon">✅</div><div class="modal-rule-text">結算：揀啱加分，揀錯扣分。如果冇啱嘅卡，直接確認跳過。平方包卡自動得分。</div></div>
       <button class="modal-close" onclick="closeRules()">知道了！</button>
     </div>
-  </div>
-
-  <div class="result-flash" id="result-flash">
-    <div class="flash-text" id="flash-text"></div>
-    <div class="flash-sub" id="flash-sub"></div>
   </div>
 
   <script>
@@ -636,9 +640,34 @@
     }
 
     function showFlash(type,text,sub){
-      const flash=document.getElementById('result-flash');flash.className=`result-flash ${type} show`;
-      document.getElementById('flash-text').textContent=text;document.getElementById('flash-sub').textContent=sub;
-      setTimeout(()=>flash.classList.remove('show'),1100);
+      // Non-blocking feedback: status-bar + score delta + button pulse
+      const statusEl=document.getElementById('status-bar');
+      const scoreEl=document.getElementById('score');
+      const prevScore=parseInt(scoreEl.textContent)||0;
+      // 1. Status bar flash
+      const colorMap={success:'success',danger:'danger',gold:'gold',skip:'info'};
+      const iconMap={success:'✓',danger:'✗',gold:'🎤',skip:'⏭️'};
+      statusEl.className='status-bar '+colorMap[type];
+      statusEl.textContent=iconMap[type]+' '+text+(sub?('  '+sub):'');
+      // 2. Score delta animation
+      if(sub&&(type==='success'||type==='danger'||type==='gold')){
+        const delta=sub.match(/[+-]?\d+/)?.[0]||'';
+        const deltaEl=document.createElement('span');
+        deltaEl.className='score-delta '+(delta.startsWith('-')?'neg':'pos');
+        deltaEl.textContent=delta;
+        scoreEl.parentNode.appendChild(deltaEl);
+        setTimeout(()=>deltaEl.remove(),900);
+      }
+      // 3. Confirm button pulse
+      const btn=document.getElementById('btn-confirm');
+      btn.classList.remove('pulse-ok','pulse-bad');
+      void btn.offsetWidth; // force reflow
+      btn.classList.add(type==='danger'?'pulse-bad':'pulse-ok');
+      // Reset status after 1.1s
+      setTimeout(()=>{
+        statusEl.className='status-bar';
+        setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`揀啱就核對，或直接核對跳過`,'');
+      },1100);
     }
   </script>
 </body>
