@@ -153,6 +153,7 @@
     .factor-circle.green { background: #00c853; color: white; }
     .factor-circle.orange { background: #ff9800; color: white; }
     .factor-circle.red { background: #f44336; color: white; }
+    .factor-circle.grey { background: #ddd; color: #888; }
     /* Continue button zone */
     #continue-zone { display: none; text-align: center; padding: 10px; background: #f5f5f5; border-top: 1px solid var(--border); flex-shrink: 0; }
     #continue-zone.show { display: block; }
@@ -459,9 +460,11 @@
       const sqInt=isPerfectSquare?sq:null;
       let rows='';let row='';
       card.divs.forEach((f,idx)=>{
-        let cls='green';
-        if(isPerfectSquare&&f===sqInt){cls='orange';}
-        else if(D%f!==0){cls='red';}
+        let cls='grey';
+        if(f===1){cls='grey';}
+        else if(isPerfectSquare&&f===sqInt){cls='orange';}
+        else if(D%f===0){cls='green';}
+        else{cls='red';}
         row+=`<span class="factor-circle ${cls}">${f}</span>`;
         if(row.split('factor-circle').length-1===3||idx===card.divs.length-1){
           rows+=`<div class="factor-row">${row}</div>`;row='';
