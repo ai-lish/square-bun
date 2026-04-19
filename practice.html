@@ -460,8 +460,8 @@
       const sqInt=isPerfectSquare?sq:null;
       let rows='';let row='';
       card.divs.forEach((f,idx)=>{
-        let cls='grey';
-        if(f===1){cls='grey';}
+        let cls;
+        if(f===1){cls=dice.includes(1)?'green':'grey';}
         else if(isPerfectSquare&&f===sqInt){cls='orange';}
         else if(D%f===0){cls='green';}
         else{cls='red';}
