@@ -419,18 +419,17 @@
 
     // Render a die face as SVG — val 0 shows "?"
     function renderDiceSVG(el,val){
-      const q=(v)=>`<circle cx="${v}" cy="${v}" r="3.5" fill="#222"/>`;
-      const qs=(...ps)=>ps.map(p=>q(p)).join('');
+      const pip=(x,y)=>`<circle cx="${x}" cy="${y}" r="3.5" fill="#222"/>`;
       const bg='fill="#fefefe"';
       let circles='';
       if(val===0){circles=`<text x="22" y="30" text-anchor="middle" font-size="22" font-weight="900" fill="#ccc" font-family="system-ui">?</text>`;}
-      else if(val===1){circles=qs([22,22]);}
-      else if(val===2){circles=qs([11,11],[33,33]);}
-      else if(val===3){circles=qs([11,11],[22,22],[33,33]);}
-      else if(val===4){circles=qs([11,11],[33,11],[11,33],[33,33]);}
-      else if(val===5){circles=qs([11,11],[33,11],[22,22],[11,33],[33,33]);}
-      else if(val===6){circles=qs([11,11],[33,11],[11,22],[33,22],[11,33],[33,33]);}
-      el.innerHTML=`<svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg"><rect width="44" height="44" rx="10" ${bg}/>${circles}</svg>`;
+      else if(val===1){circles=pip(22,22);}
+      else if(val===2){circles=pip(10,10)+pip(34,34);}
+      else if(val===3){circles=pip(10,10)+pip(22,22)+pip(34,34);}
+      else if(val===4){circles=pip(10,10)+pip(34,10)+pip(10,34)+pip(34,34);}
+      else if(val===5){circles=pip(10,10)+pip(34,10)+pip(22,22)+pip(10,34)+pip(34,34);}
+      else if(val===6){circles=pip(10,10)+pip(34,10)+pip(10,22)+pip(34,22)+pip(10,34)+pip(34,34);}
+      el.innerHTML=`<svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="44" height="44" rx="10" ${bg}/>${circles}</svg>`;
     }
 
     function rollDice(){
