@@ -518,10 +518,16 @@
       renderCards(true); // show divisors so player can see why
       setTimeout(()=>{
         showFlash('skip','⏭️ 冇夾到！','可再擲骰');
-        phase='dice-rolled';
-        // Re-enable dice button so player can re-roll
+        // Clear dice and set phase='open' so player can re-roll
+        dice=[null,null];
+        document.getElementById('dice1').textContent='?';
+        document.getElementById('dice2').textContent='?';
+        phase='open';
         document.getElementById('btn-dice').disabled=false;
         document.getElementById('btn-dice').className='btn btn-green';
+        document.getElementById('target-badge').textContent='開卡後擲骰';
+        document.getElementById('target-badge').className='target-badge disabled';
+        document.getElementById('cards-grid').classList.remove('dice-rolled');
         updateConfirmBtn();
         setTimeout(()=>{
           renderCards(false);
