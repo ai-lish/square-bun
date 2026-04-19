@@ -297,10 +297,6 @@
         <button class="count-btn" onclick="adjustCount(1)">+</button>
       </div>
     </div>
-    <div class="setup-btns">
-      <button class="setup-btn" onclick="selectMode('free')"><div class="btn-label">自由練習</div><div class="btn-desc">慢慢揀，冇限時</div></button>
-      <button class="setup-btn" onclick="selectMode('hint')"><div class="btn-label">提示模式</div><div class="btn-desc">顯示正確答案</div></button>
-    </div>
     <div class="setup-rules-link" onclick="showRules()">📖 查看遊戲規則</div>
     <button class="start-btn" onclick="startGame()">開始練習 🎲</button>
   </div>
@@ -354,15 +350,10 @@
     const SQUARES = new Set([1,4,9,16,25,36,49,64,81]);
     function getDivisors(n){const d=[];for(let i=1;i<=n;i++)if(n%i===0)d.push(i);return d;}
     const ALL_CARDS=[];for(let i=1;i<=88;i++){ALL_CARDS.push({n:i,divs:getDivisors(i),sq:SQUARES.has(i)});}
-    let cardCount=4,mode='free',deck=[],table=[],revealed=[],selected=new Set(),dice=[null,null],score=0;
+    let cardCount=4,deck=[],table=[],revealed=[],selected=new Set(),dice=[null,null],score=0;
     let phase='closed',sbMode=false,sbPrevPhase='closed',maxSelect=2;
 
     function adjustCount(delta){cardCount=Math.max(2,Math.min(6,cardCount+delta));document.getElementById('count-val').textContent=cardCount;}
-    function selectMode(m){
-      mode=m;
-      document.querySelectorAll('.setup-btn').forEach(b=>{b.style.borderColor='#e8e4de';b.style.background='white';});
-      event.currentTarget.style.borderColor='var(--accent)';event.currentTarget.style.background='#fff0f3';
-    }
     function showRules(){document.getElementById('rules-modal').classList.add('show');}
     function closeRules(){document.getElementById('rules-modal').classList.remove('show');}
     function shuffle(a){const r=Array.from(a);for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
@@ -491,7 +482,7 @@
       document.getElementById('cards-grid').classList.add('dice-rolled');
       setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`揀啱就核對，或直接核對跳過`,'');
       updateConfirmBtn();
-      if(mode==='hint'){setTimeout(highlightHintCards,600);}
+      setTimeout(highlightHintCards,600);
     }
 
     function triggerSquareBun(){
@@ -523,7 +514,7 @@
     }
 
     function highlightHintCards(){
-      if(mode!=='hint'||phase!=='dice-rolled')return;
+      if(phase!=='dice-rolled')return;
       const targets=getTargetSet();
       document.querySelectorAll('.p-card').forEach((el,i)=>{
         if(!revealed[i])return;
@@ -581,12 +572,14 @@
             score=Math.max(0,score-wrongCards.length);
             document.getElementById('score').textContent=score;
             showFlash('danger',`✗ 答錯！`,`-${wrongCards.length} 分`);
-            setTimeout(()=>doNextRound(wrongCards.concat(correctCards)),1200);
+            // Only wrong cards are removed — correct cards stay on table
+            setTimeout(()=>doNextRound(wrongCards),1200);
           }else{
             correctCards.forEach(i=>cards[i].classList.add('correct'));
             score+=correctCards.length;
             document.getElementById('score').textContent=score;
             showFlash('success',`✓ 全對！`,`+${correctCards.length} 分`);
+            // All selected are correct — remove them all from table
             setTimeout(()=>doNextRound(Array.from(selected)),1200);
           }
         },500);
@@ -618,15 +611,14 @@
 
     function doNextRound(removeIndices){
       const toRemove=new Set(removeIndices);
-      // Wrong cards go back to deck
-      removeIndices.forEach(i=>deck.push(shuffle([table[i]])[0]));
-      // Remove from table
+      // Remove cards from table (wrong cards are discarded, not returned to deck)
       table=table.filter((_,i)=>!toRemove.has(i));
       revealed=revealed.filter((_,i)=>!toRemove.has(i));
       selected.clear();sbMode=false;
-      // Replenish to cardCount
+      // Replenish table to cardCount — draw from top of shuffled deck
       while(table.length<cardCount&&deck.length>0){table.push(deck.pop());revealed.push(false);}
-      if(table.length===0&&deck.length===0){deck=shuffle(ALL_CARDS);while(table.length<cardCount){table.push(deck.pop());revealed.push(false);}}
+      // If deck is empty or insufficient, reshuffle ALL_CARDS and continue
+      if(table.length<cardCount){deck=shuffle(ALL_CARDS);while(table.length<cardCount){table.push(deck.pop());revealed.push(false);}}
       phase='closed';dice=[null,null];
       document.getElementById('dice1').className='dice qmark';document.getElementById('dice2').className='dice qmark';
       document.getElementById('target-badge').textContent='開卡後擲骰';document.getElementById('target-badge').className='target-badge disabled';
