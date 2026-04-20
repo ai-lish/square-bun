@@ -288,11 +288,26 @@
       .start-btn { max-width: 340px; font-size: 20px; padding: 18px; }
     }
 
-    /* ===== 1024px+ — Desktop ===== */
+    /* ===== 1024px+ — iPad landscape / Desktop ===== */
     @media (min-width: 1024px) {
-      body { max-width: 720px; margin: 0 auto; }
-      .cards-grid { max-width: 600px; gap: 16px; }
-      .p-card { min-height: 140px; }
+      body { max-width: 900px; margin: 0 auto; }
+      /* Single row — flex, no wrap, horizontal scroll if cards overflow */
+      .card-area { overflow-x: hidden; justify-content: flex-start; }
+      .cards-grid {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 14px;
+        justify-content: center;
+        max-width: 100%;
+        padding-bottom: 4px;
+      }
+      .p-card {
+        flex: 0 0 auto;
+        min-height: 140px;
+        min-width: 130px;
+        max-width: 160px;
+      }
       .card-num { font-size: 44px; }
       .card-divs { font-size: 12px; }
       .card-front.hint::after { top: 8px; right: 10px; font-size: 14px; }
