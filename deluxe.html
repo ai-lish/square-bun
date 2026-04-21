@@ -764,8 +764,9 @@
       if(spawnPool.length<cardCount&&maxN<2000){
         const idx=LEVEL_THRESHOLDS.findIndex(t=>t>maxN);
         if(idx>=0){
+          // Add ALL numbers of next tier to pool
           for(let n=LEVEL_THRESHOLDS[idx-1]+1;n<=LEVEL_THRESHOLDS[idx];n++){
-            if(n<=maxN||!coll[n])spawnPool.push(n);
+            spawnPool.push(n);spawnPool.push(n); // 2 copies each
           }
           // Force unlock next tier
           const nextThreshold=LEVEL_THRESHOLDS[idx];
@@ -1166,13 +1167,11 @@
         // If still not enough, auto-open next tier
         const maxN=getMaxUnlockedN();
         if(pool.length<cardCount&&maxN<2000){
-          // Find next tier and open it
           const idx=LEVEL_THRESHOLDS.findIndex(t=>t>maxN);
           if(idx>=0){
+            // Add ALL numbers of next tier to pool
             for(let n=LEVEL_THRESHOLDS[idx-1]+1;n<=LEVEL_THRESHOLDS[idx];n++){
-              if(isNumberUnlocked(n)||n<=LEVEL_THRESHOLDS[idx-1]+1){
-                pool.push(n);
-              }
+              pool.push(n);pool.push(n); // 2 copies each
             }
             // Force unlock next tier
             const nextThreshold=LEVEL_THRESHOLDS[idx];
