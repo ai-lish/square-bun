@@ -563,7 +563,7 @@
         let cls;
         if(f===1){cls=dice.includes(1)?'green':'red';}
         else if(isPerfectSquare&&f===sqInt){cls='orange';}
-        else if(D%f===0){cls='green';}
+        else if(dice.includes(f)){cls='green';}
         else{cls='red';}
         row+=`<span class="factor-circle ${cls}">${f}</span>`;
         if(row.split('factor-circle').length-1===3||idx===card.divs.length-1){
