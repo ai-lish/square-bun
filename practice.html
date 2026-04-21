@@ -561,7 +561,7 @@
       let rows='';let row='';
       card.divs.forEach((f,idx)=>{
         let cls;
-        if(f===1){cls=dice.includes(1)?'green':'grey';}
+        if(f===1){cls=dice.includes(1)?'green':'red';}
         else if(isPerfectSquare&&f===sqInt){cls='orange';}
         else if(D%f===0){cls='green';}
         else{cls='red';}
@@ -728,7 +728,6 @@
 
       // No cards selected — let player re-roll instead of penalty
       phase='result';
-      renderCards(true); // show divisors so player can see why
       setTimeout(()=>{
         showFlash('skip','⏭️ 冇夾到！','可再擲骰');
         // Clear dice and set phase='open' so player can re-roll
