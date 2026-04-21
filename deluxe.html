@@ -589,26 +589,21 @@
     // ===== COLLECTION SYSTEM =====
     // Level unlock thresholds: each tier unlocks when previous tier is 100% collected
     const LEVEL_THRESHOLDS = [20, 100, 200, 500, 1000, 2000];
-    function isLevelComplete(levelIdx){
-      // Check if all cards up to LEVEL_THRESHOLDS[levelIdx] are collected
-      const threshold = LEVEL_THRESHOLDS[levelIdx];
-      for(let n=1;n<=threshold;n++){
-        if(!coll[n]||!coll[n].unlocked)return false;
-      }
-      return true;
-    }
     function getCurrentLevel(){
-      // Return the HIGHEST level whose threshold is satisfied
-      // Iterate from smallest to largest, track the last satisfied level
-      let current = 1;
-      for(let i=0;i<LEVEL_THRESHOLDS.length;i++){
-        if(isLevelComplete(i)) current = i+1;
+      for(let i=LEVEL_THRESHOLDS.length-1;i>=0;i--){
+        const prevCollected = i===0 ? 0 : LEVEL_THRESHOLDS[i-1];
+        const allCollected = getAllCollectedUpTo(LEVEL_THRESHOLDS[i]);
+        if(allCollected >= LEVEL_THRESHOLDS[i]) return i+1;
       }
-      return current;
+      return 1; // default level 1
     }
     function getMaxUnlockedN(){
       const lvl = getCurrentLevel();
       return LEVEL_THRESHOLDS[lvl-1];
+    }
+    function getAllCollectedUpTo(n){
+      if(typeof coll==='undefined'||!coll)return 0;
+      return Object.keys(coll).filter(k=>parseInt(k)<=n&&coll[k]&&coll[k].unlocked).length;
     }
     function isNumberUnlocked(n){
       return n<=getMaxUnlockedN();
@@ -645,12 +640,14 @@
     let coll = JSON.parse(localStorage.getItem('sb_coll')||'{}');
     function saveColl(){localStorage.setItem('sb_coll',JSON.stringify(coll));}
     function collectCard(n){
-      const prevLevel = getCurrentLevel();
       if(!coll[n])coll[n]={unlocked:true,gold:false,count:0,rarity:getRarity(n)};
       else if(!coll[n].unlocked){coll[n].unlocked=true;}
       coll[n].count++;
+      // Gold upgrade: 3+ collects of same number
       if(coll[n].count>=3)coll[n].gold=true;
       saveColl();
+      // Check level unlock
+      const prevLevel = getCurrentLevel();
       const newLevel = getCurrentLevel();
       if(newLevel>prevLevel){
         showLevelUnlock(newLevel);
@@ -737,7 +734,7 @@
     const ALL_CARDS=[];for(let i=1;i<=2000;i++){ALL_CARDS.push({n:i,divs:getDivisors(i),sq:SQUARES.has(i)});}
     let cardCount=4,deck=[],table=[],revealed=[],selected=new Set(),dice=[null,null],score=0;
     let phase='closed',sbMode=false,sbPrevPhase='closed',maxSelect=2;
-    let wrongCards=[],correctCards=[],discardPile=[];
+    let wrongCards=[],correctCards=[];
 
     function adjustCount(delta){cardCount=Math.max(2,Math.min(6,cardCount+delta));document.getElementById('count-val').textContent=cardCount;}
     function showRules(){document.getElementById('rules-modal').classList.add('show');}
@@ -753,29 +750,7 @@
     }
 
     function startRound(){
-      let spawnPool=getShuffledSpawnPool();
-      // If pool is too small, add discard pile back (reshuffle)
-      if(spawnPool.length<cardCount&&discardPile.length>0){
-        spawnPool=[...spawnPool,...shuffle(discardPile.map(c=>c.n))];
-        discardPile=[];
-      }
-      // Auto-open next tier when pool is almost exhausted (≤2 cards left)
-      const maxN=getMaxUnlockedN();
-      if(spawnPool.length<=2&&maxN<2000){
-        const idx=LEVEL_THRESHOLDS.findIndex(t=>t>maxN);
-        if(idx>=0){
-          // Add ALL numbers of next tier to pool
-          for(let n=LEVEL_THRESHOLDS[idx-1]+1;n<=LEVEL_THRESHOLDS[idx];n++){
-            spawnPool.push(n);spawnPool.push(n); // 2 copies each
-          }
-          // Force unlock next tier
-          const nextThreshold=LEVEL_THRESHOLDS[idx];
-          for(let n=1;n<=nextThreshold;n++){
-            if(!coll[n])coll[n]={unlocked:true,gold:0};
-          }
-          updateCollectionBtn();
-        }
-      }
+      const spawnPool=getShuffledSpawnPool();
       table=spawnPool.splice(0,cardCount).map(n=>({n,divs:getDivisors(n),sq:SQUARES.has(n)}));
       revealed=new Array(cardCount).fill(false);
       selected.clear();dice=[null,null];phase='closed';sbMode=false;
@@ -1135,16 +1110,6 @@
       document.getElementById('btn-sb').disabled=true;
       document.getElementById('btn-confirm').disabled=true;
       const toRemove=wrongCards.length>0?wrongCards:Array.from(selected);
-      // Penalty: wrong cards go to discard pile
-      if(wrongCards.length>0){
-        wrongCards.forEach(i=>discardPile.push(table[i]));
-        // Return one random selected card to deck (as penalty)
-        const allSelected=[...wrongCards,...correctCards];
-        if(allSelected.length>0){
-          const randIdx=allSelected[Math.floor(Math.random()*allSelected.length)];
-          discardPile.push({...table[randIdx]});
-        }
-      }
       wrongCards=[];correctCards=[];
       selected.clear();sbMode=false;
       doNextRound(toRemove);
@@ -1152,24 +1117,18 @@
 
     function doNextRound(removeIndices){
       const toRemove=new Set(removeIndices);
-      // Remove cards from table
-      table=table.filter((_,i)=!toRemove.has(i));
-      revealed=revealed.filter((_,i)=!toRemove.has(i));
+      // Remove cards from table (wrong cards are discarded, not returned to deck)
+      table=table.filter((_,i)=>!toRemove.has(i));
+      revealed=revealed.filter((_,i)=>!toRemove.has(i));
       selected.clear();sbMode=false;
       // Replenish table to cardCount — draw from spawn pool
       while(table.length<cardCount){
         let pool=getShuffledSpawnPool();
-        // If pool is too small, add discard pile back (reshuffle)
-        if(pool.length<cardCount&&discardPile.length>0){
-          pool=[...pool,...shuffle(discardPile.map(c=>c.n))];
-          discardPile=[];
-        }
         // Auto-open next tier when pool is almost exhausted (≤2 cards left)
         const maxN=getMaxUnlockedN();
         if(pool.length<=2&&maxN<2000){
           const idx=LEVEL_THRESHOLDS.findIndex(t=>t>maxN);
           if(idx>=0){
-            // Add ALL numbers of next tier to pool
             for(let n=LEVEL_THRESHOLDS[idx-1]+1;n<=LEVEL_THRESHOLDS[idx];n++){
               pool.push(n);pool.push(n); // 2 copies each
             }
@@ -1182,8 +1141,7 @@
           }
         }
         if(pool.length===0)break;
-        table.push({n:pool[0],divs:getDivisors(pool[0]),sq:SQUARES.has(pool[0])});
-        revealed.push(false);
+        table.push(pool[0]);revealed.push(false);
       }
       phase='closed';dice=[null,null];
       renderDiceSVG(document.getElementById('dice1'),0);renderDice2SVG(document.getElementById('dice2'),0);
