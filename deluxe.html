@@ -759,9 +759,9 @@
         spawnPool=[...spawnPool,...shuffle(discardPile.map(c=>c.n))];
         discardPile=[];
       }
-      // If still not enough, auto-open next tier
+      // Auto-open next tier when pool is almost exhausted (≤2 cards left)
       const maxN=getMaxUnlockedN();
-      if(spawnPool.length<cardCount&&maxN<2000){
+      if(spawnPool.length<=2&&maxN<2000){
         const idx=LEVEL_THRESHOLDS.findIndex(t=>t>maxN);
         if(idx>=0){
           // Add ALL numbers of next tier to pool
@@ -1164,9 +1164,9 @@
           pool=[...pool,...shuffle(discardPile.map(c=>c.n))];
           discardPile=[];
         }
-        // If still not enough, auto-open next tier
+        // Auto-open next tier when pool is almost exhausted (≤2 cards left)
         const maxN=getMaxUnlockedN();
-        if(pool.length<cardCount&&maxN<2000){
+        if(pool.length<=2&&maxN<2000){
           const idx=LEVEL_THRESHOLDS.findIndex(t=>t>maxN);
           if(idx>=0){
             // Add ALL numbers of next tier to pool
