@@ -598,10 +598,13 @@
       return true;
     }
     function getCurrentLevel(){
-      for(let i=LEVEL_THRESHOLDS.length-1;i>=0;i--){
-        if(isLevelComplete(i))return i+1;
+      // Return the HIGHEST level whose threshold is satisfied
+      // Iterate from smallest to largest, track the last satisfied level
+      let current = 1;
+      for(let i=0;i<LEVEL_THRESHOLDS.length;i++){
+        if(isLevelComplete(i)) current = i+1;
       }
-      return 1;
+      return current;
     }
     function getMaxUnlockedN(){
       const lvl = getCurrentLevel();
@@ -642,14 +645,12 @@
     let coll = JSON.parse(localStorage.getItem('sb_coll')||'{}');
     function saveColl(){localStorage.setItem('sb_coll',JSON.stringify(coll));}
     function collectCard(n){
+      const prevLevel = getCurrentLevel();
       if(!coll[n])coll[n]={unlocked:true,gold:false,count:0,rarity:getRarity(n)};
       else if(!coll[n].unlocked){coll[n].unlocked=true;}
       coll[n].count++;
-      // Gold upgrade: 3+ collects of same number
       if(coll[n].count>=3)coll[n].gold=true;
       saveColl();
-      // Check level unlock
-      const prevLevel = getCurrentLevel();
       const newLevel = getCurrentLevel();
       if(newLevel>prevLevel){
         showLevelUnlock(newLevel);
