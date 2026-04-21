@@ -557,7 +557,7 @@
     function startRound(){
       deck=shuffle(ALL_CARDS);table=deck.splice(0,cardCount);revealed=new Array(cardCount).fill(false);
       selected.clear();dice=[null,null];phase='closed';sbMode=false;
-      renderDiceSVG(document.getElementById('dice1'),0);renderDiceSVG(document.getElementById('dice2'),0);
+      renderDiceSVG(document.getElementById('dice1'),0);renderDice2SVG(document.getElementById('dice2'),0);
       document.getElementById('target-badge').textContent='開卡後擲骰';document.getElementById('target-badge').className='target-badge disabled';
       document.getElementById('status-bar').textContent='請按「開卡」揭開卡牌';document.getElementById('status-bar').className='status-bar';
       document.getElementById('btn-open').disabled=false;document.getElementById('btn-open').className='btn btn-green';
@@ -674,9 +674,11 @@
     }
 
     // Render the card back (factor reveal) HTML
-    // Green: factor divides dice product
+    // Green: factor divides dice product (or prime in P mode)
     // Orange: square root of n (if perfect square)
     // Red: remaining factors
+    function isPrime(n){if(n<2)return false;for(let i=2;i<=Math.sqrt(n);i++)if(n%i===0)return false;return true;}
+    function isPMode(){return dice[1]===1;}
     function renderFactorBack(card){
       const D=dice[0]*dice[1];
       const sq=Math.sqrt(card.n);
@@ -685,10 +687,19 @@
       let rows='';let row='';
       card.divs.forEach((f,idx)=>{
         let cls;
-        if(f===1){cls=dice.includes(1)?'green':'red';}
-        else if(isPerfectSquare&&f===sqInt){cls='orange';}
-        else if(dice.includes(f)){cls='green';}
-        else{cls='red';}
+        if(isPMode()){
+          // P mode: green = prime factors, orange = square root
+          if(f===1){cls='grey';}
+          else if(isPerfectSquare&&f===sqInt){cls='orange';}
+          else if(isPrime(f)){cls='green';}
+          else{cls='red';}
+        }else{
+          // Normal mode: green = dice values
+          if(f===1){cls=dice.includes(1)?'green':'red';}
+          else if(isPerfectSquare&&f===sqInt){cls='orange';}
+          else if(dice.includes(f)){cls='green';}
+          else{cls='red';}
+        }
         row+=`<span class="factor-circle ${cls}">${f}</span>`;
         if(row.split('factor-circle').length-1===3||idx===card.divs.length-1){
           rows+=`<div class="factor-row">${row}</div>`;row='';
@@ -723,15 +734,29 @@
       else if(val===6){circles=pip(10,10)+pip(34,10)+pip(10,22)+pip(34,22)+pip(10,34)+pip(34,34);}
       el.innerHTML=`<svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="44" height="44" rx="10" ${bg}/>${circles}</svg>`;
     }
+    function renderDice2SVG(el,val){
+      const pip=(x,y)=>`<circle cx="${x}" cy="${y}" r="3.5" fill="#222"/>`;
+      const bg='fill="#fefefe"';
+      let circles='';
+      if(val===0){circles=`<text x="22" y="30" text-anchor="middle" font-size="22" font-weight="900" fill="#ccc" font-family="system-ui">?</text>`;}
+      else if(val===1){circles=`<text x="22" y="30" text-anchor="middle" font-size="20" font-weight="900" fill="#e53e3e" font-family="system-ui">P</text>`;}
+      else if(val===2){circles=pip(10,10)+pip(34,34);}
+      else if(val===3){circles=pip(10,10)+pip(22,22)+pip(34,34);}
+      else if(val===4){circles=pip(10,10)+pip(34,10)+pip(10,34)+pip(34,34);}
+      else if(val===5){circles=pip(10,10)+pip(34,10)+pip(22,22)+pip(10,34)+pip(34,34);}
+      else if(val===6){circles=pip(10,10)+pip(34,10)+pip(10,22)+pip(34,22)+pip(10,34)+pip(34,34);}
+      el.innerHTML=`<svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="44" height="44" rx="10" ${bg}/>${circles}</svg>`;
+    }
 
     function rollDice(){
       if(phase!=='open')return;
       dice=[Math.floor(Math.random()*6)+1,Math.floor(Math.random()*6)+1];
       const d1=document.getElementById('dice1'),d2=document.getElementById('dice2');
       d1.classList.add('rolling');d2.classList.add('rolling');
-      setTimeout(()=>{renderDiceSVG(d1,dice[0]);renderDiceSVG(d2,dice[1]);d1.classList.remove('rolling');d2.classList.remove('rolling');},500);
+      setTimeout(()=>{renderDiceSVG(d1,dice[0]);renderDice2SVG(d2,dice[1]);d1.classList.remove('rolling');d2.classList.remove('rolling');},500);
       const targets=getTargetSet();
-      document.getElementById('target-badge').textContent=`可被 ${dice[0]} 或 ${dice[1]} 整除`;
+      const d2Label=dice[1]===1?'P':dice[1];
+      document.getElementById('target-badge').textContent=dice[1]===1?`質數目標`:`可被 ${dice[0]} 或 ${d2Label} 整除`;
       document.getElementById('target-badge').classList.remove('disabled');
       // Check for square cards that match
       const matchingSquares=table.filter((c,i)=>revealed[i]&&c.sq&&targets.has(c.n));
@@ -790,7 +815,12 @@
     function getTargetSet(){
       const s=new Set();
       if(dice[0]===null)return s;
-      for(const d of dice)for(let i=1;i<=88;i++)if(i%d===0)s.add(i);
+      if(isPMode()){
+        // P mode: target = prime numbers 1-88
+        for(let i=1;i<=88;i++)if(isPrime(i))s.add(i);
+      }else{
+        for(const d of dice)for(let i=1;i<=88;i++)if(i%d===0)s.add(i);
+      }
       return s;
     }
 
@@ -895,7 +925,7 @@
       // If deck is empty or insufficient, reshuffle ALL_CARDS and continue
       if(table.length<cardCount){deck=shuffle(ALL_CARDS);while(table.length<cardCount){table.push(deck.pop());revealed.push(false);}}
       phase='closed';dice=[null,null];
-      renderDiceSVG(document.getElementById('dice1'),0);renderDiceSVG(document.getElementById('dice2'),0);
+      renderDiceSVG(document.getElementById('dice1'),0);renderDice2SVG(document.getElementById('dice2'),0);
       document.getElementById('target-badge').textContent='開卡後擲骰';document.getElementById('target-badge').className='target-badge disabled';
       document.getElementById('btn-open').disabled=false;document.getElementById('btn-open').className='btn btn-green';
       document.getElementById('btn-dice').disabled=true;document.getElementById('btn-dice').className='btn btn-ghost';
