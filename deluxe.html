@@ -156,6 +156,27 @@
     .sound-toggle:hover { background: rgba(0,0,0,0.05); }
     .sound-toggle.muted { opacity: 0.4; }
 
+    /* ===== DELUXE: Collection Grid ===== */
+    .coll-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+      gap: 6px;
+      padding: 4px;
+    }
+
+    /* ===== DELUXE: Modal Overlay (shared) ===== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 600;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+
     /* ===== DICE ZONE ===== */
     .dice-zone {
       display: flex; align-items: center; justify-content: center;
@@ -478,6 +499,7 @@
           <span class="combo-fire">🔥</span>
           <span class="combo-count" id="combo-count">0</span>
         </div>
+        <button id="coll-btn" onclick="openCollection()" style="background:linear-gradient(135deg,#6c5ce7,#a29bfe);border:none;color:white;padding:4px 10px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(108,92,231,0.3);">📚 0/20</button>
         <div class="score-badge">得分 <span id="score">0</span></div>
         <button class="sound-toggle" id="sound-toggle" onclick="toggleSound()" title="音效">🔊</button>
         <button class="rules-btn" onclick="showRules()">📖</button>
@@ -532,12 +554,184 @@
     <div class="ach-name" id="ach-notify-name">名稱</div>
     <div class="ach-desc" id="ach-notify-desc">描述</div>
   </div>
+  <div class="modal-overlay" id="coll-modal">
+    <div class="modal" style="max-width:620px;max-height:80vh;display:flex;flex-direction:column;">
+      <h2 style="display:flex;align-items:center;gap:8px;">📚 卡牌圖鑑 <span id="coll-stats" style="font-size:14px;color:#aaa;font-weight:400;"></span></h2>
+      <div style="display:flex;gap:6px;margin:8px 0;flex-wrap:wrap;">
+        <button id="coll-tab-all" onclick="openCollection('all')" style="background:#2d2d4e;color:white;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;border:none;">全部</button>
+        <button id="coll-tab-leg" onclick="openCollection('legendary')" style="background:transparent;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;color:#aaa;font-size:13px;">⭐ 傳說</button>
+        <button id="coll-tab-epic" onclick="openCollection('epic')" style="background:transparent;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;color:#aaa;font-size:13px;">💎 史詩</button>
+        <button id="coll-tab-rare" onclick="openCollection('rare')" style="background:transparent;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;color:#aaa;font-size:13px;">👑 稀有</button>
+      </div>
+      <div id="coll-content" style="flex:1;overflow-y:auto;padding:4px 0;"></div>
+      <button class="modal-close" onclick="closeCollection()" style="margin-top:8px;">關閉</button>
+    </div>
+  </div>
   <canvas id="particles-canvas"></canvas>
 
   <script>
-    const SQUARES = new Set([1,4,9,16,25,36,49,64,81]);
+    const SQUARES = new Set([1,4,9,16,25,36,49,64,81,100,121,144,169,196,225,256,289,324,361,400,441,484,529,576,625,676,729,784,841,900,961,1024,1089,1156,1225,1296,1369,1444,1521,1600,1681,1764,1849,1936]);
     function getDivisors(n){const d=[];for(let i=1;i<=n;i++)if(n%i===0)d.push(i);return d;}
-    const ALL_CARDS=[];for(let i=1;i<=88;i++){ALL_CARDS.push({n:i,divs:getDivisors(i),sq:SQUARES.has(i)});}
+    function primeFactors(n){const f=[];let x=n;for(let d=2;d*d<=x;d++){while(x%d===0){f.push(d);x/=d;}}if(x>1)f.push(x);return f;}
+    function isPrime(n){return n>=2&&primeFactors(n).length===1&&primeFactors(n)[0]===n;}
+    function isProductOfDistinctPrimes(n){if(n<2)return false;const f=primeFactors(n);return new Set(f).size===f.length&&f.length>=2;}
+    function getRarity(n){
+      if(n===1||isPrime(n))return 'legendary';
+      if(isProductOfDistinctPrimes(n))return 'epic';
+      const sq=Math.sqrt(n);
+      if(Number.isInteger(sq))return 'rare';
+      return 'common';
+    }
+    function getRarityEmoji(r){return {legendary:'⭐',epic:'💎',rare:'👑',common:'⚪'}[r];}
+    function getRarityLabel(r){return {legendary:'傳說',epic:'史詩',rare:'稀有',common:'普通'}[r];}
+    function getRarityCSSClass(r){return 'rarity-'+r;}
+
+    // ===== COLLECTION SYSTEM =====
+    // Level unlock thresholds: each tier unlocks when previous tier is 100% collected
+    const LEVEL_THRESHOLDS = [20, 100, 200, 500, 1000, 2000];
+    function getCurrentLevel(){
+      for(let i=LEVEL_THRESHOLDS.length-1;i>=0;i--){
+        const prevCollected = i===0 ? 0 : LEVEL_THRESHOLDS[i-1];
+        const allCollected = getAllCollectedUpTo(LEVEL_THRESHOLDS[i]);
+        if(allCollected >= LEVEL_THRESHOLDS[i]) return i+1;
+      }
+      return 1; // default level 1
+    }
+    function getMaxUnlockedN(){
+      const lvl = getCurrentLevel();
+      return LEVEL_THRESHOLDS[lvl-1];
+    }
+    function getAllCollectedUpTo(n){
+      if(typeof coll==='undefined'||!coll)return 0;
+      return Object.keys(coll).filter(k=>parseInt(k)<=n&&coll[k]&&coll[k].unlocked).length;
+    }
+    function isNumberUnlocked(n){
+      return n<=getMaxUnlockedN();
+    }
+
+    // Get pool of spawnable numbers (within unlocked range, not on table)
+    function getSpawnPool(){
+      const maxN = getMaxUnlockedN();
+      const onTable = new Set(table.map(c=>c.n));
+      // In collection mode, we don't spawn numbers already on table
+      // But we allow repeats of numbers not currently visible
+      // For variety, allow up to 2 copies of same number on table
+      const countOnTable = {};
+      table.forEach(c=>{countOnTable[c.n]=(countOnTable[c.n]||0)+1;});
+      const pool=[];
+      for(let n=1;n<=maxN;n++){
+        const count = countOnTable[n]||0;
+        // Allow up to 2 copies of same number
+        for(let i=count;i<2;i++)pool.push(n);
+      }
+      return pool;
+    }
+    function getShuffledSpawnPool(){
+      const pool = getSpawnPool();
+      // Fisher-Yates shuffle
+      for(let i=pool.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [pool[i],pool[j]]=[pool[j],pool[i]];
+      }
+      return pool;
+    }
+
+    // Collection state
+    let coll = JSON.parse(localStorage.getItem('sb_coll')||'{}');
+    function saveColl(){localStorage.setItem('sb_coll',JSON.stringify(coll));}
+    function collectCard(n){
+      if(!coll[n])coll[n]={unlocked:true,gold:false,count:0,rarity:getRarity(n)};
+      else if(!coll[n].unlocked){coll[n].unlocked=true;}
+      coll[n].count++;
+      // Gold upgrade: 3+ collects of same number
+      if(coll[n].count>=3)coll[n].gold=true;
+      saveColl();
+      // Check level unlock
+      const prevLevel = getCurrentLevel();
+      const newLevel = getCurrentLevel();
+      if(newLevel>prevLevel){
+        showLevelUnlock(newLevel);
+      }
+      updateCollectionBtn();
+    }
+    function getUniqueCollected(){
+      return Object.keys(coll).filter(k=>coll[k]&&coll[k].unlocked).length;
+    }
+    function getUniqueGold(){
+      return Object.keys(coll).filter(k=>coll[k]&&coll[k].gold).length;
+    }
+    function updateCollectionBtn(){
+      const total = getMaxUnlockedN();
+      const collected = getUniqueCollected();
+      const btn = document.getElementById('coll-btn');
+      if(btn)btn.textContent = `📚 ${collected}/${total}`;
+    }
+    function showLevelUnlock(newLevel){
+      const n = LEVEL_THRESHOLDS[newLevel-1];
+      const el = document.createElement('div');
+      el.style.cssText='position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#1a1a2e,#2d2d4e);color:white;padding:24px 40px;border-radius:20px;text-align:center;z-index:800;box-shadow:0 8px 40px rgba(0,0,0,0.6);border:3px solid #ffd700;';
+      el.innerHTML=`<div style="font-size:36px;">🎉</div><div style="font-size:12px;color:#ffd700;letter-spacing:1px;margin-top:4px;">等級開啟</div><div style="font-size:28px;font-weight:900;margin:4px 0;">1-${n}</div><div style="font-size:12px;color:#aaa;">新卡池已解鎖！</div>`;
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(),3500);
+    }
+
+    // Collection modal
+    let collTab = 'all';
+    function openCollection(tab){
+      collTab=tab||'all';
+      const modal=document.getElementById('coll-modal');
+      modal.classList.add('show');
+      renderCollection();
+    }
+    function closeCollection(){document.getElementById('coll-modal').classList.remove('show');}
+    function renderCollection(){
+      const maxN = getMaxUnlockedN();
+      const allBtn=document.getElementById('coll-tab-all');
+      const legBtn=document.getElementById('coll-tab-leg');
+      const epicBtn=document.getElementById('coll-tab-epic');
+      const rareBtn=document.getElementById('coll-tab-rare');
+      [allBtn,legBtn,epicBtn,rareBtn].forEach(b=>b.style.cssText='background:transparent;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;color:#aaa;font-size:13px;');
+      const activeBtn={all:allBtn,legendary:legBtn,epic:epicBtn,rare:rareBtn}[collTab];
+      if(activeBtn)activeBtn.style.cssText='background:#2d2d4e;color:white;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;';
+      let html='<div class="coll-grid">';
+      for(let n=1;n<=maxN;n++){
+        const r=getRarity(n);
+        if(collTab!=='all'&&collTab!==r)continue;
+        const data=coll[n];
+        const unlocked=data&&data.unlocked;
+        const gold=unlocked&&data.gold;
+        const css=getRarityCSSClass(r);
+        const emoji=getRarityEmoji(r);
+        const borderColor={legendary:'#ffd700',epic:'#00bfff',rare:'#ffd700',common:'#888'}[r];
+        let cardStyle='width:56px;height:72px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;';
+        if(gold){
+          cardStyle+='background:linear-gradient(135deg,#1a1a2e,#2d2d4e);border:2px solid #ffd700;box-shadow:0 0 12px rgba(255,215,0,0.5);';
+        }else if(unlocked){
+          cardStyle+=`background:linear-gradient(135deg,#1a1a2e,#2d2d4e);border:2px solid ${borderColor};`;
+        }else{
+          cardStyle+='background:#222;border:2px solid #444;opacity:0.4;';
+        }
+        html+=`<div style="${cardStyle}">`;
+        if(unlocked){
+          html+=`<div style="font-size:22px;font-weight:900;color:white;">${gold?'✨':''}${n}</div>`;
+          html+=`<div style="font-size:11px;color:${borderColor};">${emoji} ${getRarityLabel(r)}</div>`;
+          if(gold)html+=`<div style="font-size:10px;color:#ffd700;">×${data.count}</div>`;
+        }else{
+          html+=`<div style="font-size:22px;color:#555;">?</div>`;
+          html+=`<div style="font-size:10px;color:#444;">未解鎖</div>`;
+        }
+        html+='</div>';
+      }
+      html+='</div>';
+      document.getElementById('coll-content').innerHTML=html;
+      // Stats
+      const total=maxN;
+      const collected=getUniqueCollected();
+      const gold=getUniqueGold();
+      document.getElementById('coll-stats').textContent=`已收集 ${collected}/${total} 張  ·  金卡 ${gold} 張`;
+    }
+
+    const ALL_CARDS=[];for(let i=1;i<=2000;i++){ALL_CARDS.push({n:i,divs:getDivisors(i),sq:SQUARES.has(i)});}
     let cardCount=4,deck=[],table=[],revealed=[],selected=new Set(),dice=[null,null],score=0;
     let phase='closed',sbMode=false,sbPrevPhase='closed',maxSelect=2;
     let wrongCards=[],correctCards=[];
@@ -551,11 +745,14 @@
       document.getElementById('setup-screen').style.display='none';
       document.getElementById('game-screen').style.display='flex';
       score=0;document.getElementById('score').textContent=score;
+      updateCollectionBtn();
       startRound();
     }
 
     function startRound(){
-      deck=shuffle(ALL_CARDS);table=deck.splice(0,cardCount);revealed=new Array(cardCount).fill(false);
+      const spawnPool=getShuffledSpawnPool();
+      table=spawnPool.splice(0,cardCount).map(n=>({n,divs:getDivisors(n),sq:SQUARES.has(n)}));
+      revealed=new Array(cardCount).fill(false);
       selected.clear();dice=[null,null];phase='closed';sbMode=false;
       renderDiceSVG(document.getElementById('dice1'),0);renderDice2SVG(document.getElementById('dice2'),0);
       document.getElementById('target-badge').textContent='開卡後擲骰';document.getElementById('target-badge').className='target-badge disabled';
@@ -837,6 +1034,8 @@
         cards[selectedIdx].classList.add('flipped');
         if(isSquare){
           score+=selected.size;
+          // Collect square bun cards
+          selected.forEach(i=>collectCard(table[i].n));
           setStatus('🎤 平方包！ +'+selected.size+' 分','gold');
         }else{
           score=Math.max(0,score-selected.size);
@@ -868,6 +1067,8 @@
           setStatus(`✗ 答錯！ -${wrongCards.length} 分`,'');
         }else{
           score+=correctCards.length;
+          // Collect correct cards
+          correctCards.forEach(i=>collectCard(table[i].n));
           setStatus(`✓ 全對！ +${correctCards.length} 分`,'success');
         }
         document.getElementById('score').textContent=score;
@@ -920,10 +1121,8 @@
       table=table.filter((_,i)=>!toRemove.has(i));
       revealed=revealed.filter((_,i)=>!toRemove.has(i));
       selected.clear();sbMode=false;
-      // Replenish table to cardCount — draw from top of shuffled deck
-      while(table.length<cardCount&&deck.length>0){table.push(deck.pop());revealed.push(false);}
-      // If deck is empty or insufficient, reshuffle ALL_CARDS and continue
-      if(table.length<cardCount){deck=shuffle(ALL_CARDS);while(table.length<cardCount){table.push(deck.pop());revealed.push(false);}}
+      // Replenish table to cardCount — draw from spawn pool
+      while(table.length<cardCount){const pool=getShuffledSpawnPool();table.push(pool[0]);revealed.push(false);}
       phase='closed';dice=[null,null];
       renderDiceSVG(document.getElementById('dice1'),0);renderDice2SVG(document.getElementById('dice2'),0);
       document.getElementById('target-badge').textContent='開卡後擲骰';document.getElementById('target-badge').className='target-badge disabled';
