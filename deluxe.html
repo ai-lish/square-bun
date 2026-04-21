@@ -737,7 +737,7 @@
     const ALL_CARDS=[];for(let i=1;i<=2000;i++){ALL_CARDS.push({n:i,divs:getDivisors(i),sq:SQUARES.has(i)});}
     let cardCount=4,deck=[],table=[],revealed=[],selected=new Set(),dice=[null,null],score=0;
     let phase='closed',sbMode=false,sbPrevPhase='closed',maxSelect=2;
-    let wrongCards=[],correctCards=[];
+    let wrongCards=[],correctCards=[],discardPile=[];
 
     function adjustCount(delta){cardCount=Math.max(2,Math.min(6,cardCount+delta));document.getElementById('count-val').textContent=cardCount;}
     function showRules(){document.getElementById('rules-modal').classList.add('show');}
@@ -753,7 +753,28 @@
     }
 
     function startRound(){
-      const spawnPool=getShuffledSpawnPool();
+      let spawnPool=getShuffledSpawnPool();
+      // If pool is too small, add discard pile back (reshuffle)
+      if(spawnPool.length<cardCount&&discardPile.length>0){
+        spawnPool=[...spawnPool,...shuffle(discardPile.map(c=>c.n))];
+        discardPile=[];
+      }
+      // If still not enough, auto-open next tier
+      const maxN=getMaxUnlockedN();
+      if(spawnPool.length<cardCount&&maxN<2000){
+        const idx=LEVEL_THRESHOLDS.findIndex(t=>t>maxN);
+        if(idx>=0){
+          for(let n=LEVEL_THRESHOLDS[idx-1]+1;n<=LEVEL_THRESHOLDS[idx];n++){
+            if(n<=maxN||!coll[n])spawnPool.push(n);
+          }
+          // Force unlock next tier
+          const nextThreshold=LEVEL_THRESHOLDS[idx];
+          for(let n=1;n<=nextThreshold;n++){
+            if(!coll[n])coll[n]={unlocked:true,gold:0};
+          }
+          updateCollectionBtn();
+        }
+      }
       table=spawnPool.splice(0,cardCount).map(n=>({n,divs:getDivisors(n),sq:SQUARES.has(n)}));
       revealed=new Array(cardCount).fill(false);
       selected.clear();dice=[null,null];phase='closed';sbMode=false;
@@ -1113,6 +1134,16 @@
       document.getElementById('btn-sb').disabled=true;
       document.getElementById('btn-confirm').disabled=true;
       const toRemove=wrongCards.length>0?wrongCards:Array.from(selected);
+      // Penalty: wrong cards go to discard pile
+      if(wrongCards.length>0){
+        wrongCards.forEach(i=>discardPile.push(table[i]));
+        // Return one random selected card to deck (as penalty)
+        const allSelected=[...wrongCards,...correctCards];
+        if(allSelected.length>0){
+          const randIdx=allSelected[Math.floor(Math.random()*allSelected.length)];
+          discardPile.push({...table[randIdx]});
+        }
+      }
       wrongCards=[];correctCards=[];
       selected.clear();sbMode=false;
       doNextRound(toRemove);
@@ -1120,12 +1151,41 @@
 
     function doNextRound(removeIndices){
       const toRemove=new Set(removeIndices);
-      // Remove cards from table (wrong cards are discarded, not returned to deck)
-      table=table.filter((_,i)=>!toRemove.has(i));
-      revealed=revealed.filter((_,i)=>!toRemove.has(i));
+      // Remove cards from table
+      table=table.filter((_,i)=!toRemove.has(i));
+      revealed=revealed.filter((_,i)=!toRemove.has(i));
       selected.clear();sbMode=false;
       // Replenish table to cardCount — draw from spawn pool
-      while(table.length<cardCount){const pool=getShuffledSpawnPool();table.push(pool[0]);revealed.push(false);}
+      while(table.length<cardCount){
+        let pool=getShuffledSpawnPool();
+        // If pool is too small, add discard pile back (reshuffle)
+        if(pool.length<cardCount&&discardPile.length>0){
+          pool=[...pool,...shuffle(discardPile.map(c=>c.n))];
+          discardPile=[];
+        }
+        // If still not enough, auto-open next tier
+        const maxN=getMaxUnlockedN();
+        if(pool.length<cardCount&&maxN<2000){
+          // Find next tier and open it
+          const idx=LEVEL_THRESHOLDS.findIndex(t=>t>maxN);
+          if(idx>=0){
+            for(let n=LEVEL_THRESHOLDS[idx-1]+1;n<=LEVEL_THRESHOLDS[idx];n++){
+              if(isNumberUnlocked(n)||n<=LEVEL_THRESHOLDS[idx-1]+1){
+                pool.push(n);
+              }
+            }
+            // Force unlock next tier
+            const nextThreshold=LEVEL_THRESHOLDS[idx];
+            for(let n=1;n<=nextThreshold;n++){
+              if(!coll[n])coll[n]={unlocked:true,gold:0};
+            }
+            updateCollectionBtn();
+          }
+        }
+        if(pool.length===0)break;
+        table.push({n:pool[0],divs:getDivisors(pool[0]),sq:SQUARES.has(pool[0])});
+        revealed.push(false);
+      }
       phase='closed';dice=[null,null];
       renderDiceSVG(document.getElementById('dice1'),0);renderDice2SVG(document.getElementById('dice2'),0);
       document.getElementById('target-badge').textContent='開卡後擲骰';document.getElementById('target-badge').className='target-badge disabled';
