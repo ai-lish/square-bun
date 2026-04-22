@@ -894,9 +894,9 @@
           else if(isPrime(f)){cls='green';}
           else{cls='red';}
         }else{
-          // Normal mode: green = dice values
+          // Normal mode: green = dice values, orange ONLY in P mode
           if(f===1){cls=dice.includes(1)?'green':'red';}
-          else if(isPerfectSquare&&f===sqInt){cls='orange';}
+          else if(isPMode()&&isPerfectSquare&&f===sqInt){cls='orange';}
           else if(dice.includes(f)){cls='green';}
           else{cls='red';}
         }
