@@ -730,6 +730,9 @@
 
       // No cards selected — let player re-roll instead of penalty
       phase='result';
+      // Immediately disable dice button during result display
+      document.getElementById('btn-dice').disabled=true;
+      document.getElementById('btn-dice').className='btn btn-ghost';
       setTimeout(()=>{
         showFlash('skip','⏭️ 冇夾到！','可再擲骰');
         // Clear dice and set phase='open' so player can re-roll
@@ -738,8 +741,7 @@
         renderDiceSVG(document.getElementById('dice2'),0);
         phase='open';
         document.getElementById('btn-dice').disabled=true;
-        document.getElementById('btn-dice').className='btn btn-ghost';
-        // Re-enable dice button after Flash duration (1500ms) so player can re-roll
+        // Re-enable dice button after Flash duration so player can re-roll
         setTimeout(()=>{
           if(phase==='open'){
             document.getElementById('btn-dice').disabled=false;
