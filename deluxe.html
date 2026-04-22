@@ -736,7 +736,7 @@
     const ALL_CARDS=[];for(let i=1;i<=2000;i++){ALL_CARDS.push({n:i,divs:getDivisors(i),sq:SQUARES.has(i)});}
     let cardCount=4,deck=[],table=[],revealed=[],selected=new Set(),dice=[null,null],score=0;
     let phase='closed',sbMode=false,sbPrevPhase='closed',maxSelect=2;
-    let wrongCards=[],correctCards=[],wonNumbers=new Set(),spawnPool=[];
+    let wrongCards=[],correctCards=[],wonNumbers=new Map(),spawnPool=[];
 
     function adjustCount(delta){cardCount=Math.max(2,Math.min(6,cardCount+delta));document.getElementById('count-val').textContent=cardCount;}
     function showRules(){document.getElementById('rules-modal').classList.add('show');}
@@ -1127,7 +1127,7 @@
       const toRemove=new Set(removeIndices);
       // Track correct cards as won — they never come back (use correctIndices passed from handleContinue)
       const prevTable=[...table];
-      (correctIndices||[]).forEach(idx=>{if(prevTable[idx])wonNumbers.add(prevTable[idx].n);});
+      (correctIndices||[]).forEach(idx=>{if(prevTable[idx]){const n=prevTable[idx].n;wonNumbers.set(n,(wonNumbers.get(n)||0)+1);}});
       // Remove specified cards from table (wrong cards discarded, untargeted cards stay)
       table=table.filter((_,i)=>!toRemove.has(i));
       // Reset revealed — new round starts with all cards face-down
@@ -1146,7 +1146,7 @@
               table.forEach(c=>{countOnTable[c.n]=(countOnTable[c.n]||0)+1;});
               // Auto-unlock next tier — respect 2-copies-max rule
               for(let n=LEVEL_THRESHOLDS[idx-1]+1;n<=LEVEL_THRESHOLDS[idx];n++){
-                if(wonNumbers.has(n))continue;
+                if((wonNumbers.get(n)||0)>=2)continue;
                 const onTable=countOnTable[n]||0;
                 const inPool=spawnPool.filter(x=>x===n).length;
                 const toAdd=Math.max(0,2-onTable-inPool);
@@ -1165,10 +1165,10 @@
           }
         }
         if(spawnPool.length===0)break;
-        // Skip won numbers when popping
+        // Skip won numbers when popping (only if 2 copies already won)
         let newN=spawnPool.pop();
-        while(spawnPool.length>0&&wonNumbers.has(newN)){newN=spawnPool.pop();}
-        if(wonNumbers.has(newN))break; // all remaining are won
+        while(spawnPool.length>0&&(wonNumbers.get(newN)||0)>=2){newN=spawnPool.pop();}
+        if((wonNumbers.get(newN)||0)>=2)break; // all remaining are won (2 copies each)
         table.push({n:newN,divs:getDivisors(newN),sq:SQUARES.has(newN)});revealed.push(false);
       }
       phase='closed';dice=[null,null];
