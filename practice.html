@@ -765,7 +765,8 @@
       const toRemove=new Set(removeIndices);
       // Remove cards from table (wrong cards are discarded, not returned to deck)
       table=table.filter((_,i)=>!toRemove.has(i));
-      revealed=revealed.filter((_,i)=>!toRemove.has(i));
+      // Reset revealed — new round starts with all cards face-down
+      revealed=table.map(()=>false);
       selected.clear();sbMode=false;
       // Replenish table to cardCount — draw from top of shuffled deck
       while(table.length<cardCount&&deck.length>0){table.push(deck.pop());revealed.push(false);}
