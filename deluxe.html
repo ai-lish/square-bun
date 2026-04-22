@@ -615,11 +615,13 @@
       const onTable = new Set(table.map(c=>c.n));
       // In collection mode, we don't spawn numbers already on table
       // But we allow repeats of numbers not currently visible
-      // For variety, allow up to 2 copies of same number on table
+      // For variety, allow up to 2 copies of same number (1 on table + 1 in pool max)
+      // Also exclude numbers that have been won (wonNumbers)
       const countOnTable = {};
       table.forEach(c=>{countOnTable[c.n]=(countOnTable[c.n]||0)+1;});
       const pool=[];
       for(let n=1;n<=maxN;n++){
+        if(wonNumbers.has(n))continue; // Never spawn won numbers
         const count = countOnTable[n]||0;
         // Allow up to 2 copies of same number
         for(let i=count;i<2;i++)pool.push(n);
@@ -734,7 +736,7 @@
     const ALL_CARDS=[];for(let i=1;i<=2000;i++){ALL_CARDS.push({n:i,divs:getDivisors(i),sq:SQUARES.has(i)});}
     let cardCount=4,deck=[],table=[],revealed=[],selected=new Set(),dice=[null,null],score=0;
     let phase='closed',sbMode=false,sbPrevPhase='closed',maxSelect=2;
-    let wrongCards=[],correctCards=[];
+    let wrongCards=[],correctCards=[],wonNumbers=new Set(),spawnPool=[];
 
     function adjustCount(delta){cardCount=Math.max(2,Math.min(6,cardCount+delta));document.getElementById('count-val').textContent=cardCount;}
     function showRules(){document.getElementById('rules-modal').classList.add('show');}
@@ -744,14 +746,15 @@
     function startGame(){
       document.getElementById('setup-screen').style.display='none';
       document.getElementById('game-screen').style.display='flex';
-      score=0;document.getElementById('score').textContent=score;
+      score=0;wonNumbers.clear();spawnPool=[];document.getElementById('score').textContent=score;
       updateCollectionBtn();
       startRound();
     }
 
     function startRound(){
-      const spawnPool=getShuffledSpawnPool();
-      table=spawnPool.splice(0,cardCount).map(n=>({n,divs:getDivisors(n),sq:SQUARES.has(n)}));
+      const localPool=getShuffledSpawnPool();
+      table=localPool.splice(0,cardCount).map(n=>({n,divs:getDivisors(n),sq:SQUARES.has(n)}));
+      spawnPool=localPool; // persist remaining pool globally for later replenishment
       revealed=new Array(cardCount).fill(false);
       selected.clear();dice=[null,null];phase='closed';sbMode=false;
       renderDiceSVG(document.getElementById('dice1'),0);renderDice2SVG(document.getElementById('dice2'),0);
@@ -1119,32 +1122,40 @@
 
     function doNextRound(removeIndices){
       const toRemove=new Set(removeIndices);
-      // Remove cards from table (wrong cards are discarded, not returned to deck)
+      // Track correct cards as won — they never come back
+      const prevTable=[...table];
+      correctCards.forEach(idx=>{if(prevTable[idx])wonNumbers.add(prevTable[idx].n);});
+      // Remove specified cards from table (wrong cards discarded, untargeted cards stay)
       table=table.filter((_,i)=>!toRemove.has(i));
       // Reset revealed — new round starts with all cards face-down
       revealed=table.map(()=>false);
       selected.clear();sbMode=false;
-      // Replenish table to cardCount — draw from spawn pool
+      // Replenish table to cardCount — pop from global spawnPool (persistent across rounds)
       while(table.length<cardCount){
-        let pool=getShuffledSpawnPool();
-        // Auto-open next tier when pool is almost exhausted (≤2 cards left)
-        const maxN=getMaxUnlockedN();
-        if(pool.length<=2&&maxN<2000){
-          const idx=LEVEL_THRESHOLDS.findIndex(t=>t>maxN);
-          if(idx>=0){
-            for(let n=LEVEL_THRESHOLDS[idx-1]+1;n<=LEVEL_THRESHOLDS[idx];n++){
-              pool.push(n);pool.push(n); // 2 copies each
+        // Refill spawnPool when nearly empty (≤2 numbers left)
+        if(spawnPool.length<=2){
+          const maxN=getMaxUnlockedN();
+          if(maxN<2000){
+            const idx=LEVEL_THRESHOLDS.findIndex(t=>t>maxN);
+            if(idx>=0){
+              // Auto-unlock next tier
+              for(let n=LEVEL_THRESHOLDS[idx-1]+1;n<=LEVEL_THRESHOLDS[idx];n++){
+                if(!wonNumbers.has(n))spawnPool.push(n);
+              }
+              for(let n=1;n<=LEVEL_THRESHOLDS[idx];n++){
+                if(!coll[n])coll[n]={unlocked:true,gold:0};
+              }
+              updateCollectionBtn();
             }
-            // Force unlock next tier
-            const nextThreshold=LEVEL_THRESHOLDS[idx];
-            for(let n=1;n<=nextThreshold;n++){
-              if(!coll[n])coll[n]={unlocked:true,gold:0};
-            }
-            updateCollectionBtn();
+          }
+          // Shuffle remaining pool
+          for(let i=spawnPool.length-1;i>0;i--){
+            const j=Math.floor(Math.random()*(i+1));
+            [spawnPool[i],spawnPool[j]]=[spawnPool[j],spawnPool[i]];
           }
         }
-        if(pool.length===0)break;
-        const newN=pool[0];
+        if(spawnPool.length===0)break;
+        const newN=spawnPool.pop();
         table.push({n:newN,divs:getDivisors(newN),sq:SQUARES.has(newN)});revealed.push(false);
       }
       phase='closed';dice=[null,null];
