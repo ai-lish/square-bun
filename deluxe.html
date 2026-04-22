@@ -1140,9 +1140,16 @@
           if(maxN<2000){
             const idx=LEVEL_THRESHOLDS.findIndex(t=>t>maxN);
             if(idx>=0){
-              // Auto-unlock next tier
+              // Count how many copies of each number are already on the table
+              const countOnTable={};
+              table.forEach(c=>{countOnTable[c.n]=(countOnTable[c.n]||0)+1;});
+              // Auto-unlock next tier — respect 2-copies-max rule
               for(let n=LEVEL_THRESHOLDS[idx-1]+1;n<=LEVEL_THRESHOLDS[idx];n++){
-                if(!wonNumbers.has(n))spawnPool.push(n);
+                if(wonNumbers.has(n))continue;
+                const onTable=countOnTable[n]||0;
+                const inPool=spawnPool.filter(x=>x===n).length;
+                const toAdd=Math.max(0,2-onTable-inPool);
+                for(let k=0;k<toAdd;k++)spawnPool.push(n);
               }
               for(let n=1;n<=LEVEL_THRESHOLDS[idx];n++){
                 if(!coll[n])coll[n]={unlocked:true,gold:0};
@@ -1157,7 +1164,10 @@
           }
         }
         if(spawnPool.length===0)break;
-        const newN=spawnPool.pop();
+        // Skip won numbers when popping
+        let newN=spawnPool.pop();
+        while(spawnPool.length>0&&wonNumbers.has(newN)){newN=spawnPool.pop();}
+        if(wonNumbers.has(newN))break; // all remaining are won
         table.push({n:newN,divs:getDivisors(newN),sq:SQUARES.has(newN)});revealed.push(false);
       }
       phase='closed';dice=[null,null];
