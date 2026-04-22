@@ -1165,12 +1165,27 @@
           }
         }
         if(spawnPool.length===0)break;
-        // Skip won numbers when popping (only if 2 copies already won)
-        let newN=spawnPool.pop();
-        while(spawnPool.length>0&&(wonNumbers.get(newN)||0)>=2){newN=spawnPool.pop();}
-        if((wonNumbers.get(newN)||0)>=2)break; // all remaining are won (2 copies each)
-        table.push({n:newN,divs:getDivisors(newN),sq:SQUARES.has(newN)});revealed.push(false);
-      }
+        // Track last spawned card to avoid duplicates within the same round
+        let lastN=null;
+        while(table.length<targetSize&&spawnPool.length>0){
+          if(spawnPool.length===0)break;
+          // Skip won numbers when popping (only if 2 copies already won)
+          let newN=spawnPool.pop();
+          while(spawnPool.length>0&&(wonNumbers.get(newN)||0)>=2){newN=spawnPool.pop();}
+          if((wonNumbers.get(newN)||0)>=2)break; // all remaining are won (2 copies each)
+          // Rule: newly spawned cards within the same round must be different
+          if(lastN!==null&&newN===lastN){
+            spawnPool.push(newN); // put back
+            // Reshuffle and try again
+            for(let i=spawnPool.length-1;i>0;i--){
+              const j=Math.floor(Math.random()*(i+1));
+              [spawnPool[i],spawnPool[j]]=[spawnPool[j],spawnPool[i]];
+            }
+            continue;
+          }
+          lastN=newN;
+          table.push({n:newN,divs:getDivisors(newN),sq:SQUARES.has(newN)});revealed.push(false);
+        }
       phase='closed';dice=[null,null];
       renderDiceSVG(document.getElementById('dice1'),0);renderDice2SVG(document.getElementById('dice2'),0);
       document.getElementById('target-badge').textContent='開卡後擲骰';document.getElementById('target-badge').className='target-badge disabled';
