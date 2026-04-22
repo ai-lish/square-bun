@@ -994,10 +994,10 @@
         grid.classList.remove('squarebun-mode');
         if(phase==='dice-rolled')grid.classList.add('dice-rolled');
         setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`請選擇卡牌`,'');
-        renderCards(false);
+        selected.clear();
+        sbMode=false;
         updateConfirmBtn();
       }
-      renderCards(false);
     }
 
     function highlightHintCards(){
