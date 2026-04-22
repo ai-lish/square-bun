@@ -1144,7 +1144,8 @@
           }
         }
         if(pool.length===0)break;
-        table.push(pool[0]);revealed.push(false);
+        const newN=pool[0];
+        table.push({n:newN,divs:getDivisors(newN),sq:SQUARES.has(newN)});revealed.push(false);
       }
       phase='closed';dice=[null,null];
       renderDiceSVG(document.getElementById('dice1'),0);renderDice2SVG(document.getElementById('dice2'),0);
