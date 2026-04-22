@@ -1117,16 +1117,17 @@
       document.getElementById('btn-sb').disabled=true;
       document.getElementById('btn-confirm').disabled=true;
       const toRemove=wrongCards.length>0?wrongCards:Array.from(selected);
+      const correctIndices=[...correctCards]; // save before clearing
       wrongCards=[];correctCards=[];
       selected.clear();sbMode=false;
-      doNextRound(toRemove);
+      doNextRound(toRemove,correctIndices);
     }
 
-    function doNextRound(removeIndices){
+    function doNextRound(removeIndices,correctIndices){
       const toRemove=new Set(removeIndices);
-      // Track correct cards as won — they never come back
+      // Track correct cards as won — they never come back (use correctIndices passed from handleContinue)
       const prevTable=[...table];
-      correctCards.forEach(idx=>{if(prevTable[idx])wonNumbers.add(prevTable[idx].n);});
+      (correctIndices||[]).forEach(idx=>{if(prevTable[idx])wonNumbers.add(prevTable[idx].n);});
       // Remove specified cards from table (wrong cards discarded, untargeted cards stay)
       table=table.filter((_,i)=>!toRemove.has(i));
       // Reset revealed — new round starts with all cards face-down
@@ -1512,9 +1513,9 @@
 
     // --- HOOK into doNextRound (reset combo on new round) ---
     const _doNextRound = doNextRound;
-    doNextRound = function(removeIndices) {
+    doNextRound = function(removeIndices, correctIndices) {
       // Combo already reset on wrong/skip in confirmPicks above
-      _doNextRound(removeIndices);
+      _doNextRound(removeIndices, correctIndices);
     };
 
   </script>
