@@ -672,6 +672,8 @@
 
     function confirmPicks(){
       if(phase!=='dice-rolled'&&phase!=='squarebun')return;
+      // Always reset wrong/correct tracking at the start of each confirm
+      wrongCards=[];correctCards=[];
 
       if(phase==='squarebun'){
         const selectedIdx=Array.from(selected)[0];
@@ -700,7 +702,6 @@
 
       if(selected.size>0){
         const targets=getTargetSet();
-        wrongCards=[];correctCards=[];
         selected.forEach(i=>{
           if(targets.has(table[i].n))correctCards.push(i);
           else wrongCards.push(i);
