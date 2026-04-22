@@ -1109,6 +1109,8 @@
     }
 
     function handleContinue(){
+      // Guard against double-call: if nothing to remove, exit early
+      if(wrongCards.length===0&&correctCards.length===0&&selected.size===0)return;
       document.getElementById('continue-zone').classList.remove('show');
       document.getElementById('btn-open').disabled=false;
       document.getElementById('btn-dice').disabled=true;
