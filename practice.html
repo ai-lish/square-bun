@@ -397,7 +397,7 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="rules-modal">
+  <div class="modal-overlay" id="rules-modal" onclick="if(event.target===this)closeRules();">
     <div class="modal">
       <h2>📖 遊戲規則</h2>
       <div class="modal-rule"><div class="modal-rule-icon">1️⃣</div><div class="modal-rule-text">開卡：按「開卡」按鈕，一張一張揭開卡牌。所有卡揭開後才能擲骰。</div></div>
@@ -737,8 +737,15 @@
         renderDiceSVG(document.getElementById('dice1'),0);
         renderDiceSVG(document.getElementById('dice2'),0);
         phase='open';
-        document.getElementById('btn-dice').disabled=false;
-        document.getElementById('btn-dice').className='btn btn-green';
+        document.getElementById('btn-dice').disabled=true;
+        document.getElementById('btn-dice').className='btn btn-ghost';
+        // Re-enable dice button after Flash duration (1500ms) so player can re-roll
+        setTimeout(()=>{
+          if(phase==='open'){
+            document.getElementById('btn-dice').disabled=false;
+            document.getElementById('btn-dice').className='btn btn-green';
+          }
+        },1500);
         document.getElementById('target-badge').textContent='開卡後擲骰';
         document.getElementById('target-badge').className='target-badge disabled';
         document.getElementById('cards-grid').classList.remove('dice-rolled');
