@@ -4,7 +4,7 @@
     const ALL_CARDS=[];for(let i=1;i<=88;i++){ALL_CARDS.push({n:i,divs:getDivisors(i),sq:SQUARES.has(i)});}
     const DELUXE_RANGE=typeof CARD_RANGE!=='undefined'?CARD_RANGE:88; // Default 88 (practice); deluxe sets CARD_RANGE=20 before loading
     let cardCount=4,deck=[],table=[],revealed=[],selected=new Set(),dice=[null,null],score=0;
-    let won=[]; // Deluxe: collected cards (don't return to deck)
+    let collected=new Map(); // Deluxe: card number -> count collected
     let phase='closed',sbMode=false,sbPrevPhase='closed',maxSelect=2;
     let wrongCards=[],correctCards=[];
 
@@ -16,15 +16,14 @@
     function startGame(){
       document.getElementById('setup-screen').style.display='none';
       document.getElementById('game-screen').style.display='flex';
-      score=0;won=[];document.getElementById('score').textContent=score;
+      score=0;collected=new Map();document.getElementById('score').textContent=score;
       startRound();
     }
 
     function startRound(){
-      // Deluxe: build deck from 1-20, excluding already-won cards
-      const wonSet=new Set(won.map(c=>c.n));
-      const baseDeck=ALL_CARDS.filter(c=>c.n<=DELUXE_RANGE&&!wonSet.has(c.n));
-      deck=shuffle(baseDeck.length>0?baseDeck:ALL_CARDS.filter(c=>!wonSet.has(c.n)));
+      // Deluxe: deck always contains all 1-20 cards (collected cards can reappear)
+      const baseDeck=ALL_CARDS.filter(c=>c.n<=DELUXE_RANGE);
+      deck=shuffle([...baseDeck]);
       table=deck.splice(0,cardCount);revealed=new Array(cardCount).fill(false);
       selected.clear();dice=[null,null];phase='closed';sbMode=false;
       renderDiceSVG(document.getElementById('dice1'),0);renderDiceSVG(document.getElementById('dice2'),0);
@@ -279,17 +278,19 @@
         const cards=document.querySelectorAll('.p-card');
         cards[selectedIdx].classList.add('flipped');
         if(isSquare){
-          // Deluxe: add square bun cards to collected
-          won.push(table[selectedIdx]);
+          // Deluxe: increment collected count for this card
+          const n=table[selectedIdx].n;
+          collected.set(n,(collected.get(n)||0)+1);
           score+=selected.size;
           setStatus('🎤 平方包！ +'+selected.size+' 分','gold');
         }else{
-          // Deluxe penalty
-          if(won.length>0){
-            const idx=Math.floor(Math.random()*won.length);
-            const lost=won.splice(idx,1)[0];
-            deck.push(lost);
-            setStatus('✗ 唔係平方數！失去 '+lost.n+' 號卡！','');
+          // Deluxe penalty: lose 1 collected card (count -1), if count=0 card can reappear
+          if(collected.size>0){
+            const keys=Array.from(collected.keys());
+            const lostN=keys[Math.floor(Math.random()*keys.length)];
+            const newCount=collected.get(lostN)-1;
+            if(newCount<=0){collected.delete(lostN);}else{collected.set(lostN,newCount);}
+            setStatus('✗ 唔係平方數！失去 '+lostN+' 號卡！','');
           }else{
             score=Math.max(0,score-selected.size);
             setStatus('✗ 唔係平方數！ -'+selected.size+' 分','');
@@ -317,21 +318,25 @@
         selected.forEach(i=>cards[i].classList.add('flipped'));
         // Update score
         if(wrongCards.length>0){
-          // Deluxe penalty: lose 1 random collected card (if any), return it to deck
-          let lostCard=null;
-          if(won.length>0){
-            const idx=Math.floor(Math.random()*won.length);
-            lostCard=won.splice(idx,1)[0];
-            deck.push(lostCard); // Return lost card to deck
-            setStatus(`✗ 答錯！失去 ${lostCard.n} 號卡！`,'');
+          // Deluxe penalty: lose 1 collected card (count -1), if count=0 card can reappear
+          let lostN=null;
+          if(collected.size>0){
+            const keys=Array.from(collected.keys());
+            lostN=keys[Math.floor(Math.random()*keys.length)];
+            const newCount=collected.get(lostN)-1;
+            if(newCount<=0){collected.delete(lostN);}else{collected.set(lostN,newCount);}
+            setStatus(`✗ 答錯！失去 ${lostN} 號卡！`,'');
           }else{
             score=Math.max(0,score-wrongCards.length);
             setStatus(`✗ 答錯！ -${wrongCards.length} 分`,'');
           }
-          // Deluxe: won cards are removed from table and added to collected, not discarded
+          // Deluxe: correct cards are added to collected (count +1)
         }else{
-          // Deluxe: add correct cards to collected
-          correctCards.forEach(i=>won.push(table[i]));
+          // Deluxe: increment collected count for correct cards
+          correctCards.forEach(i=>{
+            const n=table[i].n;
+            collected.set(n,(collected.get(n)||0)+1);
+          });
           score+=correctCards.length;
           setStatus(`✓ 全對！ +${correctCards.length} 分`,'success');
         }
@@ -397,11 +402,10 @@
       selected.clear();sbMode=false;
       // Replenish table to cardCount — draw from top of shuffled deck
       while(table.length<cardCount&&deck.length>0){table.push(deck.pop());revealed.push(false);}
-      // If deck is empty or insufficient, reshuffle remaining non-won cards
+      // If deck is empty or insufficient, reshuffle all 1-20 cards
       if(table.length<cardCount){
-        const wonSet=new Set(won.map(c=>c.n));
-        const remaining=ALL_CARDS.filter(c=>!wonSet.has(c.n)&&c.n<=DELUXE_RANGE);
-        deck=shuffle(remaining);
+        const baseDeck=ALL_CARDS.filter(c=>c.n<=DELUXE_RANGE);
+        deck=shuffle([...baseDeck]);
         while(table.length<cardCount&&deck.length>0){table.push(deck.pop());revealed.push(false);}
       }
       phase='closed';dice=[null,null];
