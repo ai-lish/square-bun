@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>平方包 - 豪華版</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f5f3ef;
+      --primary: #1a1a2e;
+      --accent: #e94560;
+      --accent-dark: #c23a51;
+      --gold: #f5a623;
+      --card-bg: #fff;
+      --card-front: #fff;
+      --card-shadow: 0 3px 12px rgba(0,0,0,0.1);
+      --text: #2d2d2d;
+      --text-dim: #888;
+      --success: #00c853;
+      --danger: #ff3b5c;
+      --border: #e8e4de;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; touch-action: manipulation; }
+    body { font-family: 'Noto Sans HK', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100dvh; }
+
+    /* ===== HEADER ===== */
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 16px; background: white; flex-shrink: 0; border-bottom: 1px solid var(--border);
+    }
+    .header-title { font-size: 17px; font-weight: 900; color: var(--accent); }
+    .score-badge { background: #fff0f3; border: 2px solid var(--accent); border-radius: 20px; padding: 5px 14px; font-size: 13px; font-weight: 700; color: var(--accent); }
+    .score-badge span { color: var(--accent-dark); }
+    .score-badge .score-delta {
+      display: inline-block; font-size: 12px; font-weight: 900; margin-left: 4px;
+      animation: scoreDelta 0.9s ease-out forwards; pointer-events: none;
+    }
+    .score-badge .score-delta.pos { color: var(--success); }
+    .score-badge .score-delta.neg { color: var(--danger); }
+    @keyframes scoreDelta {
+      0%  { opacity: 1; transform: translateY(0); }
+      60% { opacity: 1; transform: translateY(-12px); }
+      100%{ opacity: 0; transform: translateY(-18px); }
+    }
+    .rules-btn { background: transparent; border: none; color: var(--text-dim); font-size: 22px; cursor: pointer; padding: 4px 8px; font-family: 'Noto Sans HK', sans-serif; }
+
+    /* ===== DELUXE: Combo Display ===== */
+    .combo-display {
+      display: none;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      font-weight: 900;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: #fff;
+      border: 2px solid var(--gold);
+      box-shadow: 0 2px 8px rgba(245,166,35,0.3);
+      transition: all 0.3s;
+    }
+    .combo-display.active { display: flex; }
+    .combo-display.fire { background: linear-gradient(135deg, #ff6b00, #ff4500); color: white; border-color: #ff4500; animation: comboPulse 0.5s ease; }
+    .combo-display.super { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #5a3000; border-color: #ffd700; animation: comboPulse 0.5s ease, comboGlow 1s infinite; }
+    @keyframes comboPulse { 0%{transform:scale(1)} 50%{transform:scale(1.2)} 100%{transform:scale(1)} }
+    @keyframes comboGlow { 0%,100%{box-shadow:0 2px 12px rgba(255,215,0,0.5)} 50%{box-shadow:0 2px 24px rgba(255,215,0,0.9)} }
+    .combo-display .combo-fire { font-size: 16px; }
+    .combo-display .combo-count { font-size: 15px; }
+
+    /* ===== DELUXE: Achievement ===== */
+    .ach-badge {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 6px;
+      z-index: 500;
+      flex-wrap: wrap;
+      max-width: 160px;
+      justify-content: flex-end;
+    }
+    .ach-icon {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), #e09000);
+      border: 2px solid white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      cursor: help;
+      position: relative;
+      animation: achPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes achPop { 0%{transform:scale(0) rotate(-20deg);opacity:0} 100%{transform:scale(1) rotate(0);opacity:1} }
+    .ach-icon:hover::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: -30px;
+      right: 0;
+      background: #1a1a2e;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+      z-index: 600;
+    }
+
+    /* ===== DELUXE: Achievement Notification ===== */
+    .ach-notify {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: linear-gradient(135deg, #1a1a2e, #2d2d4e);
+      color: white;
+      padding: 24px 36px;
+      border-radius: 20px;
+      text-align: center;
+      z-index: 700;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+      border: 3px solid var(--gold);
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .ach-notify.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    .ach-notify .ach-emoji { font-size: 48px; margin-bottom: 8px; }
+    .ach-notify .ach-title { font-size: 14px; color: var(--gold); font-weight: 700; letter-spacing: 1px; }
+    .ach-notify .ach-name { font-size: 20px; font-weight: 900; margin: 4px 0; }
+    .ach-notify .ach-desc { font-size: 12px; color: #aaa; }
+
+    /* ===== DELUXE: Particles ===== */
+    #particles-canvas {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 400;
+    }
+
+    /* ===== DELUXE: Screen Shake ===== */
+    @keyframes screenShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+    body.shake { animation: screenShake 0.4s ease; }
+
+    /* ===== DELUXE: Sound Toggle ===== */
+    .sound-toggle {
+      background: transparent;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+    .sound-toggle:hover { background: rgba(0,0,0,0.05); }
+    .sound-toggle.muted { opacity: 0.4; }
+
+    /* ===== DELUXE: Collection Grid ===== */
+    .coll-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+      gap: 6px;
+      padding: 4px;
+    }
+
+    /* ===== DELUXE: Modal Overlay (shared) ===== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 600;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+
+    /* ===== DICE ZONE ===== */
+    .dice-zone {
+      display: flex; align-items: center; justify-content: center;
+      gap: 14px; padding: 10px 16px; background: white; flex-shrink: 0; border-bottom: 1px solid var(--border);
+    }
+    .dice-pair { display: flex; align-items: center; gap: 10px; }
+    .dice {
+      width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+      background: #fefefe; border: 2px solid #e0e0e0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      transition: transform 0.2s;
+    }
+    .dice.rolling { animation: diceRoll 0.5s ease-out; }
+    @keyframes diceRoll { 0%{transform:rotate(0deg) scale(1)} 50%{transform:rotate(180deg) scale(0.8)} 100%{transform:rotate(360deg) scale(1)} }
+    .dice svg { display: block; border-radius: 10px; }
+    .dice-slash { font-size: 22px; color: #ccc; font-weight: 300; }
+    .target-badge {
+      background: var(--accent); color: white; border-radius: 12px;
+      padding: 7px 14px; font-size: 13px; font-weight: 700;
+      min-width: 90px; text-align: center;
+      box-shadow: 0 3px 10px rgba(233,69,96,0.3);
+    }
+    .target-badge.disabled { background: #ddd; color: #999; box-shadow: none; }
+    .target-badge.gold-bg { background: var(--gold); box-shadow: 0 3px 10px rgba(245,166,35,0.4); }
+    .btn-sb-dice {
+      padding: 7px 14px; font-size: 12px; font-weight: 700;
+      border: none; border-radius: 10px; cursor: pointer;
+      font-family: 'Noto Sans HK', sans-serif;
+      background: linear-gradient(135deg, var(--gold), #e09000);
+      color: white; box-shadow: 0 3px 8px rgba(245,166,35,0.4);
+      transition: transform 0.1s, opacity 0.1s;
+      min-height: 38px;
+    }
+    .btn-sb-dice:active { transform: scale(0.95); }
+    .btn-sb-dice:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-sb-dice.active { background: var(--accent); box-shadow: 0 3px 8px rgba(233,69,96,0.4); }
+
+    /* ===== CARD AREA ===== */
+    .card-area {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 10px; overflow: hidden; position: relative;
+    }
+    .open-status { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; min-height: 28px; }
+    .open-status-text { font-size: 12px; color: var(--text-dim); }
+    .open-dots { display: flex; gap: 5px; }
+    .open-dot { width: 8px; height: 8px; border-radius: 50%; background: #e8e4de; border: 2px solid #ccc; transition: background 0.2s, border-color 0.2s; }
+    .open-dot.revealed { background: var(--accent); border-color: var(--accent); }
+
+    .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; width: 100%; max-width: 300px; }
+
+    .p-card {
+      aspect-ratio: 3/4; border-radius: 12px;
+      box-shadow: var(--card-shadow); border: 2px solid transparent; min-height: 68px;
+      position: relative; perspective: 900px;
+    }
+    .p-card-inner {
+      width: 100%; height: 100%; position: relative;
+      transform-style: preserve-3d; transition: transform 0.5s;
+    }
+    .p-card.flipped .p-card-inner { transform: rotateY(180deg); }
+    .card-face {
+      position: absolute; inset: 0;
+      backface-visibility: hidden;
+      border-radius: 10px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .card-front {
+      background: white; cursor: pointer; border: 2px solid transparent;
+      transition: transform 0.12s, box-shadow 0.12s, background 0.12s, border-color 0.12s;
+    }
+    .card-front:active { transform: scale(0.95); }
+    .p-card.face-down .card-front { background: linear-gradient(135deg, #f0ece6, #e8e4de); cursor: default; border-color: #d8d4cc; }
+    .p-card.face-down .card-front:active { transform: none; }
+    .p-card.face-down .card-front .card-back { font-size: 26px; color: #aaa; font-weight: 900; }
+    .card-back {
+      background: white; transform: rotateY(180deg); border: 2px solid #e0e0e0;
+      overflow: hidden; padding: 4px;
+    }
+    /* Phase-based card backgrounds */
+    .cards-grid.dice-rolled .card-front:not(.p-card.face-down .card-front) { background: rgba(0, 200, 83, 0.12); }
+    .cards-grid.dice-rolled .card-front.selected { background: var(--accent) !important; }
+    .cards-grid.squarebun-mode .card-front { background: rgba(255, 152, 0, 0.15); }
+    .cards-grid.squarebun-mode .card-front.selected { background: var(--gold) !important; }
+    .card-front.selected { transform: scale(1.05); box-shadow: 0 6px 14px rgba(233,69,96,0.4); }
+    .card-front.square-bun-card { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); animation: sbPulse 1.5s infinite; }
+    .card-front.hint { background: rgba(0,200,83,0.12); border-color: var(--success); }
+    .card-front.hint::after { content: '✓'; position: absolute; top: 3px; right: 5px; font-size: 10px; color: var(--success); }
+    @keyframes sbPulse { 0%,100%{box-shadow:0 3px 10px rgba(233,69,96,0.3)} 50%{box-shadow:0 3px 20px rgba(233,69,96,0.6)} }
+    @keyframes correctPop { 0%{transform:scale(1)} 50%{transform:scale(1.15)} 100%{transform:scale(1)} }
+    @keyframes wrongShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+    .card-num { font-size: 24px; font-weight: 900; color: var(--primary); }
+    .card-divs { font-size: 8px; color: var(--text-dim); margin-top: 2px; text-align: center; line-height: 1.2; padding: 0 3px; }
+    .card-front.selected .card-divs { color: rgba(255,255,255,0.85); }
+    .card-front.square-bun-card .card-num { color: white; }
+    .card-front.square-bun-card.selected { background: var(--gold) !important; animation: none; box-shadow: 0 6px 14px rgba(245,166,35,0.5); }
+    /* Factor reveal (card back) */
+    .card-back-number { font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 2px; }
+    .factor-rows { display: flex; flex-direction: column; gap: 2px; width: 100%; }
+    .factor-row { display: flex; justify-content: center; gap: 2px; }
+    .factor-circle {
+      width: 18px; height: 18px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 7px; font-weight: 900;
+    }
+    .factor-circle.green { background: #00c853; color: white; }
+    .factor-circle.orange { background: #ff9800; color: white; }
+    .factor-circle.red { background: #f44336; color: white; }
+    .factor-circle.grey { background: #ddd; color: #888; }
+    /* Continue button zone */
+    #continue-zone { display: none; text-align: center; padding: 10px; background: #f5f5f5; border-top: 1px solid var(--border); flex-shrink: 0; }
+    #continue-zone.show { display: block; }
+    #btn-continue { background: var(--accent); color: white; border: none; border-radius: 10px; padding: 10px 32px; font-size: 15px; font-weight: 900; cursor: pointer; }
+
+    /* ===== DIVS TOOLTIP (click card to show divisors) ===== */
+    .card-divs-tooltip {
+      position: fixed; background: #1a1a2e; color: white; border-radius: 10px;
+      padding: 8px 14px; font-size: 13px; font-weight: 600; z-index: 300;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3); pointer-events: none;
+      opacity: 0; transition: opacity 0.15s; white-space: nowrap;
+    }
+    .card-divs-tooltip.show { opacity: 1; }
+    .card-divs-tooltip .tip-num { font-size: 16px; font-weight: 900; color: #ffd700; margin-bottom: 3px; }
+    .card-divs-tooltip .tip-divs { color: #a8d8ea; font-size: 12px; }
+
+    /* ===== STATUS ===== */
+    .status-bar {
+      text-align: center; padding: 7px 14px; font-size: 13px; font-weight: 700;
+      color: var(--text-dim); flex-shrink: 0; min-height: 34px;
+      display: flex; align-items: center; justify-content: center; background: white;
+    }
+    .status-bar.success { color: var(--success); }
+    .status-bar.danger { color: var(--danger); }
+    .status-bar.gold { color: #d4910e; }
+    .status-bar.info { color: #0097a7; }
+
+    /* ===== BOTTOM CONTROLS ===== */
+    .controls {
+      display: flex; gap: 7px; padding: 9px 12px;
+      padding-bottom: max(9px, env(safe-area-inset-bottom));
+      background: white; flex-shrink: 0; border-top: 1px solid var(--border);
+    }
+    .btn {
+      flex: 1; padding: 12px 5px; font-size: 12px; font-weight: 700;
+      border: none; border-radius: 11px; cursor: pointer;
+      transition: transform 0.1s, opacity 0.1s; font-family: 'Noto Sans HK', sans-serif; min-height: 46px;
+    }
+    .btn:active { transform: scale(0.95); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn:disabled:active { transform: none; }
+    .btn-primary { background: var(--accent); color: white; box-shadow: 0 3px 8px rgba(233,69,96,0.3); }
+    .btn-secondary { background: #f0f0f5; color: var(--primary); }
+    .btn-ghost { background: #f5f5f5; color: var(--text-dim); }
+    .btn-green { background: linear-gradient(135deg, #38a169, #276749); color: white; box-shadow: 0 3px 8px rgba(56,161,105,0.4); }
+    .btn-gold { background: linear-gradient(135deg, var(--gold), #e09000); color: white; box-shadow: 0 3px 8px rgba(245,166,35,0.4); }
+    .btn-red { background: linear-gradient(135deg, #e53e3e, #c53030); color: white; box-shadow: 0 3px 8px rgba(229,62,62,0.4); }
+    @keyframes btnPulse {
+      0%  { transform: scale(1); }
+      40% { transform: scale(1.08); }
+      70% { transform: scale(0.97); }
+      100%{ transform: scale(1); }
+    }
+    .btn.pulse-ok  { animation: btnPulse 0.45s ease; }
+    .btn.pulse-bad { animation: btnPulse 0.45s ease; box-shadow: 0 0 0 3px var(--danger); }
+
+    /* ===== RULES MODAL ===== */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: white; border-radius: 20px; padding: 26px; max-width: 340px; width: 100%; max-height: 80vh; overflow-y: auto; }
+    .modal h2 { font-size: 20px; font-weight: 900; color: var(--accent); margin-bottom: 18px; text-align: center; }
+    .modal-rule { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+    .modal-rule-icon { font-size: 20px; flex-shrink: 0; width: 30px; text-align: center; }
+    .modal-rule-text { font-size: 13px; color: var(--text); line-height: 1.6; }
+    .modal-rule-text strong { color: var(--accent); }
+    .modal-close { width: 100%; margin-top: 18px; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans HK', sans-serif; }
+
+    /* ===== SETUP SCREEN ===== */
+    #setup-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 28px 24px; gap: 22px; background: linear-gradient(160deg, #fff5f5 0%, #faf8f4 100%); }
+    .setup-logo { text-align: center; }
+    .setup-logo h1 { font-size: 34px; font-weight: 900; background: linear-gradient(135deg, var(--accent) 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 6px; }
+    .setup-logo p { color: var(--text-dim); font-size: 15px; }
+    .setup-card-count { width: 100%; max-width: 280px; }
+    .setup-card-count label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 10px; text-align: center; }
+    .count-selector { display: flex; align-items: center; justify-content: center; gap: 16px; }
+    .count-btn { width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--accent); background: white; color: var(--accent); font-size: 22px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans HK', sans-serif; transition: all 0.15s; box-shadow: 0 2px 8px rgba(233,69,96,0.15); }
+    .count-btn:active { background: var(--accent); color: white; }
+    .count-display { font-size: 32px; font-weight: 900; width: 50px; text-align: center; color: var(--accent); }
+    .count-display span { font-size: 13px; font-weight: 400; color: var(--text-dim); }
+    .setup-btns { display: flex; gap: 10px; width: 100%; max-width: 280px; }
+    .setup-btn { flex: 1; padding: 15px 12px; border-radius: 14px; border: 2px solid #e8e4de; background: white; color: var(--text); font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; transition: all 0.15s; font-family: 'Noto Sans HK', sans-serif; }
+    .setup-btn:active { border-color: var(--accent); background: #fff0f3; }
+    .setup-btn .btn-label { font-size: 15px; margin-bottom: 3px; color: var(--accent); }
+    .setup-btn .btn-desc { font-size: 11px; color: var(--text-dim); font-weight: 400; }
+    .setup-rules-link { color: var(--text-dim); font-size: 14px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+    .start-btn { width: 100%; max-width: 280px; padding: 16px; font-size: 17px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: white; border: none; border-radius: 14px; font-weight: 900; cursor: pointer; font-family: 'Noto Sans HK', sans-serif; box-shadow: 0 6px 20px rgba(233,69,96,0.4); transition: transform 0.15s; }
+    .start-btn:active { transform: scale(0.97); }
+
+    @media (min-width: 400px) { .cards-grid { max-width: 360px; gap: 11px; } .p-card { min-height: 80px; } .card-num { font-size: 28px; } }
+
+    /* ===== 500px+ — Phablet / small tablet ===== */
+    @media (min-width: 500px) {
+      .cards-grid { max-width: 420px; gap: 12px; }
+      .p-card { min-height: 88px; border-radius: 14px; }
+      .card-num { font-size: 30px; }
+      .card-divs { font-size: 10px; }
+      .btn { font-size: 13px; padding: 13px 6px; }
+      .header { padding: 12px 20px; }
+      .dice-zone { gap: 18px; padding: 12px 20px; }
+      .controls { padding: 12px 16px; gap: 10px; }
+    }
+
+    /* ===== 768px+ — iPad / tablet ===== */
+    @media (min-width: 768px) {
+      .cards-grid { max-width: 520px; gap: 14px; }
+      .p-card { min-height: 110px; border-radius: 16px; }
+      .card-num { font-size: 36px; }
+      .card-divs { font-size: 11px; }
+      .card-front.hint::after { top: 6px; right: 8px; font-size: 12px; }
+      .dice { width: 56px; height: 56px; border-radius: 14px; }
+      .dice-slash { font-size: 22px; }
+      .dice-zone { gap: 24px; padding: 16px 32px; }
+      .header { padding: 14px 28px; }
+      .header-title { font-size: 20px; }
+      .score-badge { font-size: 15px; padding: 6px 18px; }
+      .btn { font-size: 15px; padding: 15px 8px; border-radius: 13px; min-height: 52px; }
+      .btn-sb-dice { font-size: 16px; padding: 12px 20px; }
+      .controls { padding: 14px 24px; gap: 12px; }
+      .open-status-text { font-size: 14px; }
+      .status-bar { font-size: 15px; padding: 10px 24px; }
+      .factor-circle { width: 22px; height: 22px; font-size: 9px; }
+      #continue-zone { padding: 14px; }
+      #btn-continue { padding: 12px 40px; font-size: 16px; }
+      .modal { max-width: 500px; padding: 32px; border-radius: 24px; }
+      .modal h2 { font-size: 24px; }
+      .modal-rule { font-size: 15px; gap: 14px; }
+      #setup-screen { padding: 40px 32px; gap: 28px; }
+      .setup-logo h1 { font-size: 44px; }
+      .setup-logo p { font-size: 18px; }
+      .setup-card-count { max-width: 340px; }
+      .setup-card-count label { font-size: 15px; }
+      .start-btn { max-width: 340px; font-size: 20px; padding: 18px; }
+    }
+
+    /* ===== 1024px+ — iPad landscape / Desktop ===== */
+    @media (min-width: 1024px) {
+      body { max-width: 900px; margin: 0 auto; }
+      /* Single row — flex, no wrap, horizontal scroll if cards overflow */
+      .card-area { overflow-x: hidden; justify-content: flex-start; }
+      .cards-grid {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 14px;
+        justify-content: center;
+        max-width: 100%;
+        padding-bottom: 4px;
+      }
+      .p-card {
+        flex: 0 0 auto;
+        min-height: 140px;
+        min-width: 130px;
+        max-width: 160px;
+      }
+      .card-num { font-size: 44px; }
+      .card-divs { font-size: 12px; }
+      .card-front.hint::after { top: 8px; right: 10px; font-size: 14px; }
+      .dice { width: 64px; height: 64px; border-radius: 16px; }
+      .dice-zone { gap: 30px; padding: 18px 40px; }
+      .header { padding: 16px 36px; }
+      .header-title { font-size: 22px; }
+      .score-badge { font-size: 16px; }
+      .btn { font-size: 16px; padding: 16px 10px; border-radius: 14px; min-height: 56px; }
+      .btn-sb-dice { font-size: 18px; padding: 14px 26px; }
+      .controls { padding: 16px 32px; gap: 14px; }
+      .open-status-text { font-size: 15px; }
+      .status-bar { font-size: 16px; padding: 12px 32px; }
+      .factor-circle { width: 26px; height: 26px; font-size: 10px; }
+      #continue-zone { padding: 16px; }
+      #btn-continue { padding: 14px 48px; font-size: 17px; }
+      .modal { max-width: 600px; padding: 36px; }
+      .modal h2 { font-size: 26px; }
+      .modal-rule { font-size: 16px; }
+      #setup-screen { padding: 56px 40px; gap: 36px; }
+      .setup-logo h1 { font-size: 56px; }
+      .setup-logo p { font-size: 20px; }
+      .setup-card-count { max-width: 400px; }
+      .setup-card-count label { font-size: 16px; }
+      .start-btn { max-width: 400px; font-size: 22px; padding: 20px; border-radius: 18px; }
+      .setup-rules-link { font-size: 16px; }
+    }
+
+    /* ===== Hover effects (desktop/iPad with mouse) ===== */
+    @media (hover: hover) {
+      .p-card:not(.face-down):hover .card-front { box-shadow: 0 4px 16px rgba(233,69,96,0.25); }
+      .btn:hover { filter: brightness(1.05); }
+      .btn:active { transform: scale(0.97); }
+      .start-btn:hover { transform: scale(1.02); }
+    }
+  </style>
+</head>
+<body>
+  <div id="setup-screen">
+    <div class="setup-logo"><h1>🎯 平方包</h1><p>練習模式 · 獨自修煉</p></div>
+    <div class="setup-card-count">
+      <label>桌面卡數（2–6張）</label>
+      <div class="count-selector">
+        <button class="count-btn" onclick="adjustCount(-1)">−</button>
+        <div class="count-display"><span id="count-val">4</span><span> 張</span></div>
+        <button class="count-btn" onclick="adjustCount(1)">+</button>
+      </div>
+    </div>
+    <div class="setup-rules-link" onclick="showRules()">📖 查看遊戲規則</div>
+    <button class="start-btn" onclick="startGame()">開始練習 🎲</button>
+  </div>
+
+  <div id="game-screen" style="display:none; height:100%; flex-direction:column;">
+    <div class="header">
+      <div class="header-title">🎯 平方包</div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="combo-display" id="combo-display">
+          <span class="combo-fire">🔥</span>
+          <span class="combo-count" id="combo-count">0</span>
+        </div>
+        <button id="coll-btn" onclick="openCollection()" style="background:linear-gradient(135deg,#6c5ce7,#a29bfe);border:none;color:white;padding:4px 10px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(108,92,231,0.3);">📚 0/20</button>
+        <div class="score-badge">得分 <span id="score">0</span></div>
+        <button class="sound-toggle" id="sound-toggle" onclick="toggleSound()" title="音效">🔊</button>
+        <button class="rules-btn" onclick="showRules()">📖</button>
+      </div>
+    </div>
+    <div class="dice-zone">
+      <div class="dice-pair">
+        <div class="dice" id="dice1"></div>
+        <span class="dice-slash">/</span>
+        <div class="dice" id="dice2"></div>
+      </div>
+      <button class="btn btn-gold btn-sb-dice" id="btn-sb" onclick="triggerSquareBun()">🎤 平方包</button>
+      <div class="target-badge disabled" id="target-badge">開卡後擲骰</div>
+    </div>
+    <div class="card-area">
+      <div class="open-status">
+        <span class="open-status-text" id="open-status-text">已開 0 / 4 張</span>
+        <div class="open-dots" id="open-dots"></div>
+      </div>
+      <div class="cards-grid" id="cards-grid"></div>
+      <div id="continue-zone">
+        <button id="btn-continue" onclick="handleContinue()">繼續 ▶</button>
+      </div>
+    </div>
+    <div class="card-divs-tooltip" id="divs-tooltip"></div>
+    <div class="status-bar" id="status-bar">請先開卡</div>
+    <div class="controls">
+      <button class="btn btn-secondary" id="btn-open" onclick="openOneCard()">🔓 開卡</button>
+      <button class="btn btn-primary" id="btn-dice" onclick="rollDice()" disabled>🎲 擲骰</button>
+      <button class="btn btn-ghost" id="btn-sb" onclick="triggerSquareBun()" disabled>🎤 平方包</button>
+      <button class="btn btn-ghost" id="btn-confirm" onclick="confirmPicks()" disabled>✓ 核對</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="rules-modal">
+    <div class="modal">
+      <h2>📖 遊戲規則</h2>
+      <div class="modal-rule"><div class="modal-rule-icon">1️⃣</div><div class="modal-rule-text">開卡：按「開卡」按鈕，一張一張揭開卡牌。所有卡揭開後才能擲骰。</div></div>
+      <div class="modal-rule"><div class="modal-rule-icon">2️⃣</div><div class="modal-rule-text">擲骰：擲出兩粒骰子，目標是找出<strong>可被骰子數字整除</strong>的卡牌。</div></div>
+      <div class="modal-rule"><div class="modal-rule-icon">🎤</div><div class="modal-rule-text"><strong>平方包</strong>：擲骰後可隨時按，選擇一張<strong>平方數卡（1,4,9,16...）</strong>，直接收走得分。</div></div>
+      <div class="modal-rule"><div class="modal-rule-icon">🖐️</div><div class="modal-rule-text">揀卡：<strong>最多選擇 2 張卡</strong>（兩隻手）。選擇可被整除的卡。</div></div>
+      <div class="modal-rule"><div class="modal-rule-icon">➕</div><div class="modal-rule-text">補卡：確認後卡牌自動補充<strong>一張</strong>。</div></div>
+      <div class="modal-rule"><div class="modal-rule-icon">✅</div><div class="modal-rule-text">結算：揀啱加分，揀錯扣分。如果冇啱嘅卡，直接確認跳過。平方包卡自動得分。</div></div>
+      <button class="modal-close" onclick="closeRules()">知道了！</button>
+    </div>
+  </div>
+
+  <div class="ach-badge" id="ach-badges"></div>
+  <div class="ach-notify" id="ach-notify">
+    <div class="ach-emoji" id="ach-notify-emoji">🏆</div>
+    <div class="ach-title">成就解鎖</div>
+    <div class="ach-name" id="ach-notify-name">名稱</div>
+    <div class="ach-desc" id="ach-notify-desc">描述</div>
+  </div>
+  <div class="modal-overlay" id="coll-modal">
+    <div class="modal" style="max-width:620px;max-height:80vh;display:flex;flex-direction:column;">
+      <h2 style="display:flex;align-items:center;gap:8px;">📚 卡牌圖鑑 <span id="coll-stats" style="font-size:14px;color:#aaa;font-weight:400;"></span></h2>
+      <div style="display:flex;gap:6px;margin:8px 0;flex-wrap:wrap;">
+        <button id="coll-tab-all" onclick="openCollection('all')" style="background:#2d2d4e;color:white;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;border:none;">全部</button>
+        <button id="coll-tab-leg" onclick="openCollection('legendary')" style="background:transparent;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;color:#aaa;font-size:13px;">⭐ 傳說</button>
+        <button id="coll-tab-epic" onclick="openCollection('epic')" style="background:transparent;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;color:#aaa;font-size:13px;">💎 史詩</button>
+        <button id="coll-tab-rare" onclick="openCollection('rare')" style="background:transparent;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;color:#aaa;font-size:13px;">👑 稀有</button>
+      </div>
+      <div id="coll-content" style="flex:1;overflow-y:auto;padding:4px 0;"></div>
+      <button class="modal-close" onclick="closeCollection()" style="margin-top:8px;">關閉</button>
+    </div>
+  </div>
+  <canvas id="particles-canvas"></canvas>
+
+  
+  <script src="game.js"></script>
+  <script src="deluxe.js"></script>
+
+</body>
+</html>
