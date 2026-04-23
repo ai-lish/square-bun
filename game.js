@@ -3,7 +3,8 @@
     function getDivisors(n){const d=[];for(let i=1;i<=n;i++)if(n%i===0)d.push(i);return d;}
     const ALL_CARDS=[];for(let i=1;i<=88;i++){ALL_CARDS.push({n:i,divs:getDivisors(i),sq:SQUARES.has(i)});}
     const DELUXE_RANGE=typeof CARD_RANGE!=='undefined'?CARD_RANGE:88; // Default 88 (practice); deluxe sets CARD_RANGE=20 before loading
-    let cardCount=4,deck=[],table=[],revealed=[],selected=new Set(),dice=[null,null],score=0;
+    let cardCount=4,deck=[],table=[],revealed=[],selected=new Set(),dice=[null,null];
+    let successCount=0,attemptCount=0,winStreak=0; // Deluxe: no score, track success rate + streak
     let collected=new Map(); // Deluxe: card number -> count collected
     let phase='closed',sbMode=false,sbPrevPhase='closed',maxSelect=2;
     let wrongCards=[],correctCards=[];
@@ -16,8 +17,18 @@
     function startGame(){
       document.getElementById('setup-screen').style.display='none';
       document.getElementById('game-screen').style.display='flex';
-      score=0;collected=new Map();document.getElementById('score').textContent=score;
+      successCount=0;attemptCount=0;winStreak=0;collected=new Map();updateSuccessRateDisplay();
       startRound();
+    }
+
+    // Deluxe: update the success rate + streak + collection count UI elements
+    function updateSuccessRateDisplay(){
+      const rateEl=document.getElementById('success-rate');
+      const streakEl=document.getElementById('win-streak');
+      const collEl=document.getElementById('coll-count');
+      if(rateEl){rateEl.textContent=attemptCount>0?Math.round(successCount/attemptCount*100)+'%':'—';}
+      if(streakEl){streakEl.textContent=winStreak;}
+      if(collEl){collEl.textContent=collected.size;}
     }
 
     function startRound(){
@@ -278,11 +289,11 @@
         const cards=document.querySelectorAll('.p-card');
         cards[selectedIdx].classList.add('flipped');
         if(isSquare){
-          // Deluxe: increment collected count for this card
+          // Deluxe: increment collected + track success
           const n=table[selectedIdx].n;
           collected.set(n,(collected.get(n)||0)+1);
-          score+=selected.size;
-          setStatus('🎤 平方包！ +'+selected.size+' 分','gold');
+          successCount++;attemptCount++;winStreak++;
+          setStatus('🎤 平方包！ 成功！','gold');
         }else{
           // Deluxe penalty: lose 1 collected card (count -1), if count=0 card can reappear
           if(collected.size>0){
@@ -292,11 +303,11 @@
             if(newCount<=0){collected.delete(lostN);}else{collected.set(lostN,newCount);}
             setStatus('✗ 唔係平方數！失去 '+lostN+' 號卡！','');
           }else{
-            score=Math.max(0,score-selected.size);
-            setStatus('✗ 唔係平方數！ -'+selected.size+' 分','');
+            attemptCount++;winStreak=0;
+            setStatus('✗ 唔係平方數！ 失敗','');
           }
         }
-        document.getElementById('score').textContent=score;
+        updateSuccessRateDisplay();
         document.getElementById('continue-zone').classList.add('show');
         document.getElementById('btn-confirm').disabled=true;
         document.getElementById('btn-open').disabled=true;
@@ -327,8 +338,8 @@
             if(newCount<=0){collected.delete(lostN);}else{collected.set(lostN,newCount);}
             setStatus(`✗ 答錯！失去 ${lostN} 號卡！`,'');
           }else{
-            score=Math.max(0,score-wrongCards.length);
-            setStatus(`✗ 答錯！ -${wrongCards.length} 分`,'');
+            attemptCount++;winStreak=0;
+            setStatus(`✗ 答錯！ 失敗`,'');
           }
           // Deluxe: correct cards are added to collected (count +1)
         }else{
@@ -337,10 +348,10 @@
             const n=table[i].n;
             collected.set(n,(collected.get(n)||0)+1);
           });
-          score+=correctCards.length;
-          setStatus(`✓ 全對！ +${correctCards.length} 分`,'success');
+          successCount++;attemptCount++;winStreak++;
+          setStatus(`✓ 全對！ 成功！`,'success');
         }
-        document.getElementById('score').textContent=score;
+        updateSuccessRateDisplay();
         // Show continue button
         document.getElementById('continue-zone').classList.add('show');
         document.getElementById('btn-confirm').disabled=true;
@@ -356,7 +367,7 @@
       document.getElementById('btn-dice').disabled=true;
       document.getElementById('btn-dice').className='btn btn-ghost';
       setTimeout(()=>{
-        showFlash('skip','⏭️ 冇夾到！','可再擲骰');
+        showFlash('skip','⏭️ 冇夾到！');
         // Clear dice and set phase='open' so player can re-roll
         dice=[null,null];
         renderDiceSVG(document.getElementById('dice1'),0);
@@ -421,23 +432,23 @@
     }
 
     function showFlash(type,text,sub){
-      // Non-blocking feedback: status-bar + score delta + button pulse
+      // Non-blocking feedback: status-bar + button pulse
       const statusEl=document.getElementById('status-bar');
       const scoreEl=document.getElementById('score');
-      const prevScore=parseInt(scoreEl.textContent)||0;
       // 1. Status bar flash
       const colorMap={success:'success',danger:'danger',gold:'gold',skip:'info'};
       const iconMap={success:'✓',danger:'✗',gold:'🎤',skip:'⏭️'};
       statusEl.className='status-bar '+colorMap[type];
       statusEl.textContent=iconMap[type]+' '+text+(sub?('  '+sub):'');
-      // 2. Score delta animation
-      if(sub&&(type==='success'||type==='danger'||type==='gold')){
-        const delta=sub.match(/[+-]?\d+/)?.[0]||'';
+      // 2. Success rate delta animation (+1 success / -1 failure)
+      if(type==='success'||type==='danger'||type==='gold'){
+        const deltaVal=type==='success'?1:-1;
         const deltaEl=document.createElement('span');
-        deltaEl.className='score-delta '+(delta.startsWith('-')?'neg':'pos');
-        deltaEl.textContent=delta;
+        deltaEl.className='score-delta '+(deltaVal>0?'pos':'neg');
+        deltaEl.textContent=deltaVal>0?'+1':'-1';
         scoreEl.parentNode.appendChild(deltaEl);
         setTimeout(()=>deltaEl.remove(),900);
+        updateSuccessRateDisplay();
       }
       // 3. Confirm button pulse
       const btn=document.getElementById('btn-confirm');

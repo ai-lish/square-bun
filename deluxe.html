@@ -499,8 +499,13 @@
           <span class="combo-fire">🔥</span>
           <span class="combo-count" id="combo-count">0</span>
         </div>
-        <button id="coll-btn" onclick="openCollection()" style="background:linear-gradient(135deg,#6c5ce7,#a29bfe);border:none;color:white;padding:4px 10px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(108,92,231,0.3);">📚 0/20</button>
-        <div class="score-badge">得分 <span id="score">0</span></div>
+        <button id="coll-btn" onclick="openCollection()" style="background:linear-gradient(135deg,#6c5ce7,#a29bfe);border:none;color:white;padding:4px 10px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(108,92,231,0.3);">📚 <span id="coll-count">0</span>/20</button>
+        <div class="score-badge" style="border-color:#00c853;color:#00c853;background:#f0fff4;">
+          <span id="success-rate">—</span>
+        </div>
+        <div class="score-badge" style="border-color:#ff6b00;color:#ff6b00;background:#fffaf0;">
+          🔥 <span id="win-streak">0</span>
+        </div>
         <button class="sound-toggle" id="sound-toggle" onclick="toggleSound()" title="音效">🔊</button>
         <button class="rules-btn" onclick="showRules()">📖</button>
       </div>
