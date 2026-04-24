@@ -27,12 +27,15 @@
 
 ## 遊戲流程
 
-### Lv.1 完成後
-1. 畫面彈出 **「Lv.1 完成！」** 小結 popup
-2. 顯示：成功率、本關連勝數、收集時間
-3. 兩個按鈕：
-   - **「挑戰 Lv.2」** → 擴大範圍至 1-100，繼續
-   - **「重玩 Lv.1」** → 保持 1-20 範圍，重新開始
+### 完成收集後（任意關卡）
+完成當前範圍所有卡牌後，彈出 **「完成！」** 小結 popup：
+- 顯示：成功率、本關連勝數、已收集卡牌數
+- 三個按鈕：
+  - **「挑戰更大範圍」** → 擴大卡牌範圍，**已收集記錄完整保留**
+  - **「繼續遊玩」** → 保持當前範圍，**已收集記錄完整保留**
+  - **「重置進度」** → 清除所有已收集記錄，重新開始
+
+> **關鍵設計**：擴大範圍或繼續遊玩**均不會重置已收集記錄**。卡牌範圍擴大後，已收集的卡牌仍然算係已收集，牌組自動加入新範圍內未收集的卡牌。
 
 ### 難度遞增方式
 - **Lv.1（1-20）**：每回合 4 張卡，少量候選，容易確認
@@ -106,16 +109,31 @@ function showLevelSummaryPopup() {
   overlay.style.display = 'flex';
 }
 
-function goToNextLevel() {
+function expandRange() {
+  // 擴大範圍，已收集記錄完整保留
   if (currentLevel < LEVELS.length) {
     currentLevel++;
     showLevelSummary = false;
     document.getElementById('level-summary-overlay').style.display = 'none';
-    startGame();
+    startGame(); // collected Map 保持不變，牌組自動加入新範圍卡牌
   }
 }
 
-function replayCurrentLevel() {
+function keepPlaying() {
+  // 繼續當前範圍，已收集記錄完整保留
+  showLevelSummary = false;
+  document.getElementById('level-summary-overlay').style.display = 'none';
+  startGame(); // collected Map 保持不變
+}
+
+function resetProgress() {
+  // 清除所有已收集記錄，重新開始
+  collected = new Map();
+  penaltySet = new Set();
+  successCount = 0;
+  attemptCount = 0;
+  winStreak = 0;
+  currentLevel = 1;
   showLevelSummary = false;
   document.getElementById('level-summary-overlay').style.display = 'none';
   startGame();
@@ -130,13 +148,16 @@ function replayCurrentLevel() {
 <!-- 關卡完成 Summary Overlay -->
 <div id="level-summary-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:9999;">
   <div style="background:#1a1a2e; border:2px solid #f5c518; border-radius:16px; padding:32px; text-align:center; max-width:400px;">
-    <h2 style="color:#f5c518;">🎉 Lv.<span id="summary-level">1</span> 完成！</h2>
+    <h2 style="color:#f5c518;">🎉 <span id="summary-level">1-20</span> 完成！</h2>
     <p>成功率：<span id="summary-rate">85%</span></p>
     <p>最高連勝：<span id="summary-streak">12</span></p>
     <p>已收集：<span id="summary-collected">20/20</span></p>
     <br>
-    <button onclick="goToNextLevel()">🔥 挑戰 Lv.<span id="next-level-num">2</span></button>
-    <button onclick="replayCurrentLevel()">🔄 重玩 Lv.<span id="replay-level-num">1</span></button>
+    <button onclick="expandRange()">🔓 開放更大範圍（<span id="next-range">1-100</span>）</button>
+    <br><br>
+    <button onclick="keepPlaying()">🔄 繼續遊玩（保持 <span id="current-range">1-20</span>）</button>
+    <br><br>
+    <button onclick="resetProgress()" style="background:#333;">🗑️ 重置進度</button>
   </div>
 </div>
 ```
@@ -162,14 +183,15 @@ function replayCurrentLevel() {
 ## 持久化（localStorage）
 
 ```javascript
-// 保存每關進度
-localStorage.setItem('sb_levels', JSON.stringify({
-  currentLevel: 1,
-  levelProgress: {
-    1: { collected: {1:2, 4:1, ...}, attempts: 20, success: 18, maxStreak: 12 },
-    2: { collected: {}, attempts: 0, success: 0, maxStreak: 0 },
-    // ...
-  }
+// 保存遊戲進度（擴大範圍或繼續遊玩均保留 collected）
+localStorage.setItem('sb_squarebun', JSON.stringify({
+  collected: { 1: 2, 4: 1, 9: 3, ... },   // 卡牌收集記錄（數字 → 收集次數）
+  penaltySet: [15, 7],                       // penalty 失去的卡牌
+  currentLevel: 1,                           // 當前範圍 (1=1-20, 2=1-100, ...)
+  successCount: 18,
+  attemptCount: 20,
+  winStreak: 12,
+  maxStreak: 15,
 }));
 ```
 
