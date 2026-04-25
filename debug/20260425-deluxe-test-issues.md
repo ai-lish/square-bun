@@ -22,27 +22,20 @@
 
 ## 🔴 需要修復的問題
 
-### Issue #1：`📚 0/20/0/20` 顯示格式錯誤
+### Issue #1：`📚 X/Y/X/Y` 顯示格式錯誤 ✅ 已修復
 
-**描述：** 右上角 📚 按鈕顯示 `📚 0/20/0/20`，重複咗 twice。
+**描述：** 右上角 📚 按鈕顯示 `📚 X/Y/X/Y`，`coll-count` 和 `coll-progress-text` 都包含 `X/Y`。
 
-**預期：** `📚 0/20` 或 `📚 0/20（成功率：—）`
+**根因：** 兩個函數同時更新同一個格式：
 
-**實際：** `📚 0/20/0/20`
+1. `updateCollectionBadge()` 將 `coll-count` 設為 `X/Y`（錯誤）
+2. `updateLevelBadge()` 將 `coll-progress-text` 設為 `X/Y`（錯誤）
 
-**嚴重程度：** 中
+**修復（commit `b4e2578` + `1bcb263`）：**
+- `updateCollectionBadge()`：`coll-count = X`，`coll-progress-text = Y`（分開）
+- `updateLevelBadge()`：只更新 level badge，移除 `coll-progress-text` 更新
 
-**懷疑原因：** `updateCollectionBadge()` 可能用錯格式字符串，多餘咗一節。
-
-**代碼位置（猜測）：** `deluxe.js` 中 `updateCollectionBadge()` 函數
-
-**測試方法：**
-```javascript
-// 在 browser console 檢查
-document.getElementById('coll-count').textContent
-// 或
-document.querySelector('.coll-btn').textContent
-```
+**修復後預期：** `📚 X/Y`（coll-count=X，coll-progress-text=Y）
 
 ---
 
