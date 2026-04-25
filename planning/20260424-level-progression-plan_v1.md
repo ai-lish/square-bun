@@ -1,57 +1,66 @@
 # Square Bun 豪華版 — 關卡漸進系統提案
 
-**版本：** v1
+**版本：** v1 → v2（更新實作範圍說明，避免混淆）
 **日期：** 2026-04-24
 **作者：** 小心（Zach 前線助手）
 
 ---
 
+## 實作範圍（重要）
+
+**這是一個擴展現有 deluxe.html 的方案，不是新建頁面。**
+
+修改的檔案：
+- `deluxe.html` — 新增 Summary Overlay HTML
+- `game.js` — 新增 LEVELS 配置、currentLevel 狀態、startRound() 修改、expandRange() / keepPlaying() / resetProgress() 函數
+- `deluxe.js` — confirmPicks() 新增完成檢查、showLevelSummaryPopup() 調用
+
+不修改：`practice.html`、`index.html`
+
+---
+
 ## 概述
 
-在完成 1-20 所有卡牌收集後，開放新關卡，卡牌範圍逐步擴大至 1-2000。核心挑戰：由於候選卡牌數量增多，快速識別「可被骰仔整除的目標卡」嘅難度提升。
+在完成當前範圍所有卡牌收集後，開放新範圍。核心設計：擴大範圍或繼續遊玩均**不重置已收集記錄**。
+
+卡牌範圍逐步擴大：1-20 → 1-100 → 1-200 → 1-500 → 1-1000 → 1-2000。
 
 ---
 
 ## 關卡設計
 
-| 關卡 | 卡牌範圍 | 牌組總量 | 收集完成條件 |
-|------|----------|----------|------------|
-| Lv.1 | 1–20 | 20 張 | 收集全部 20 種卡牌 |
-| Lv.2 | 1–100 | 100 張 | 收集全部 100 種卡牌 |
-| Lv.3 | 1–200 | 200 張 | 收集全部 200 種卡牌 |
-| Lv.4 | 1–500 | 500 張 | 收集全部 500 種卡牌 |
-| Lv.5 | 1–1000 | 1000 張 | 收集全部 1000 種卡牌 |
-| Lv.6 | 1–2000 | 2000 張 | 完成收集（終極目標）|
+| 等級 | 卡牌範圍 | 收集完成條件 |
+|------|----------|------------|
+| 1 | 1–20 | 收集全部 20 種 |
+| 2 | 1–100 | 收集全部 100 種 |
+| 3 | 1–200 | 收集全部 200 種 |
+| 4 | 1–500 | 收集全部 500 種 |
+| 5 | 1–1000 | 收集全部 1000 種 |
+| 6 | 1–2000 | 完成終極收集 |
+
+> 每回合仍然只顯示 4 張卡。挑戰來自玩家需要在更大範圍內心算「可被 X 或 Y 整除」。
 
 ---
 
-## 遊戲流程
+## 完成後流程
 
-### 完成收集後（任意關卡）
-完成當前範圍所有卡牌後，彈出 **「完成！」** 小結 popup：
-- 顯示：成功率、本關連勝數、已收集卡牌數
-- 三個按鈕：
-  - **「挑戰更大範圍」** → 擴大卡牌範圍，**已收集記錄完整保留**
-  - **「繼續遊玩」** → 保持當前範圍，**已收集記錄完整保留**
-  - **「重置進度」** → 清除所有已收集記錄，重新開始
+完成當前範圍所有卡牌收集後，彈出 Summary popup：
 
-> **關鍵設計**：擴大範圍或繼續遊玩**均不會重置已收集記錄**。卡牌範圍擴大後，已收集的卡牌仍然算係已收集，牌組自動加入新範圍內未收集的卡牌。
+| 按鈕 | 行為 |
+|------|------|
+| 🔓 開放更大範圍 | 擴大卡牌範圍，已收集記錄**完整保留** |
+| 🔄 繼續遊玩 | 保持當前範圍，已收集記錄**完整保留** |
+| 🗑️ 重置進度 | 清除所有已收集記錄，從頭開始 |
 
-### 難度遞增方式
-- **Lv.1（1-20）**：每回合 4 張卡，少量候選，容易確認
-- **Lv.2（1-100）**：每回合 4 張卡，範圍大 5 倍，因數組合更多
-- **Lv.3（1-200）**：每回合 4 張卡，平方數量大增（1²~14²），平方包機會更多
-- **Lv.4（1-500）**：每回合 4 張卡，大量合數，干擾增多
-- **Lv.5（1-1000）**：每回合 4 張卡，超大範圍，高手挑戰
-- **Lv.6（1-2000）**：終極關卡，最大範圍
-
-> **設計理念**：範圍擴大但每回合仍係 4 張卡。挑戰嚟自玩家需要喺更大範圍內快速心算「可被 X 或 Y 整除」，以及應對更多干擾卡。
+> 關鍵：擴大範圍不會丟失已收集的卡牌。
 
 ---
 
-## 代碼改動（game.js + deluxe.js）
+## 代碼改動說明
 
-### 1. 新增關卡配置
+### game.js 改動
+
+**1. LEVELS 配置（在文件頂部新增）**
 ```javascript
 const LEVELS = [
   { level: 1, max: 20 },
@@ -63,94 +72,87 @@ const LEVELS = [
 ];
 ```
 
-### 2. 新增遊戲狀態
+**2. currentLevel 狀態（在現有狀態附近新增）**
 ```javascript
-let currentLevel = 1;        // 當前關卡
-let levelStats = {};          // 每關統計 { 1: { collected: Map, attempts: N, success: N, maxStreak: N }, ... }
-let showLevelSummary = false;
+let currentLevel = 1;  // 當前等級（默認 1-20 範圍）
 ```
 
-### 3. 修改 startRound() — 使用當前關卡範圍
+**3. startRound() 修改（現有函數需修改一行）**
 ```javascript
 function startRound() {
-  const level = LEVELS[currentLevel - 1];
-  // baseDeck = 所有 1 ~ level.max 的卡牌（排除 penalty 失去的）
-  const baseDeck = ALL_CARDS.filter(c =>
-    c.n <= level.max && !penaltySet.has(c.n)
-  );
+  // 改：用當前等級的 max 值過濾牌組，不再是固定的 20
+  const levelMax = LEVELS[currentLevel - 1].max;
+  const baseDeck = ALL_CARDS.filter(c => c.n <= levelMax && !penaltySet.has(c.n));
   deck = shuffle(baseDeck);
   // ... 其餘不變
 }
 ```
 
-### 4. 修改 confirmPicks() — 成功後檢查是否完成當前關卡
+**4. 新增函數（放在檔案合適位置）**
 ```javascript
-function confirmPicks() {
-  // ... 現有邏輯不變
-
-  if (correct) {
-    // ... 現有成功邏輯
-
-    // 【新增】檢查是否完成當前關卡所有卡牌
-    const level = LEVELS[currentLevel - 1];
-    if (collected.size >= level.max) {
-      showLevelSummaryPopup();
-    }
-  }
-}
-```
-
-### 5. 新增函數
-```javascript
-function showLevelSummaryPopup() {
-  showLevelSummary = true;
-  const overlay = document.getElementById('level-summary-overlay');
-  // 填充：本關統計、成功率、連勝數
-  overlay.style.display = 'flex';
-}
-
 function expandRange() {
-  // 擴大範圍，已收集記錄完整保留
   if (currentLevel < LEVELS.length) {
     currentLevel++;
-    showLevelSummary = false;
     document.getElementById('level-summary-overlay').style.display = 'none';
-    startGame(); // collected Map 保持不變，牌組自動加入新範圍卡牌
+    startRound();
   }
 }
 
 function keepPlaying() {
-  // 繼續當前範圍，已收集記錄完整保留
-  showLevelSummary = false;
   document.getElementById('level-summary-overlay').style.display = 'none';
-  startGame(); // collected Map 保持不變
+  startRound();
 }
 
 function resetProgress() {
-  // 清除所有已收集記錄，重新開始
   collected = new Map();
   penaltySet = new Set();
   successCount = 0;
   attemptCount = 0;
   winStreak = 0;
   currentLevel = 1;
-  showLevelSummary = false;
   document.getElementById('level-summary-overlay').style.display = 'none';
   startGame();
 }
 ```
 
----
+### deluxe.js 改動
 
-## HTML 新增（deluxe.html）
+**5. confirmPicks() 成功後新增檢查（在一輪正確收取後新增）**
+```javascript
+// 現有成功邏輯不變 ...
+collected.set(n, (collected.get(n) || 0) + 1);
+playSound('correct');
+spawnParticles(...);
 
+// 【新增】檢查是否完成當前範圍所有卡牌
+if (collected.size >= LEVELS[currentLevel - 1].max) {
+  showLevelSummaryPopup();
+}
+```
+
+**6. showLevelSummaryPopup()（新增函數）**
+```javascript
+function showLevelSummaryPopup() {
+  const level = LEVELS[currentLevel - 1];
+  const rate = attemptCount > 0 ? Math.round(successCount / attemptCount * 100) : 0;
+  document.getElementById('summary-range').textContent = `1-${level.max}`;
+  document.getElementById('summary-rate').textContent = `${rate}%`;
+  document.getElementById('summary-collected').textContent = `${collected.size}/${level.max}`;
+  document.getElementById('next-range').textContent = currentLevel < LEVELS.length
+    ? `1-${LEVELS[currentLevel].max}` : 'MAX';
+  document.getElementById('current-range').textContent = `1-${level.max}`;
+  document.getElementById('level-summary-overlay').style.display = 'flex';
+}
+```
+
+### deluxe.html 改動
+
+**7. 新增 Summary Overlay（在 body 底部新增）**
 ```html
-<!-- 關卡完成 Summary Overlay -->
-<div id="level-summary-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:9999;">
-  <div style="background:#1a1a2e; border:2px solid #f5c518; border-radius:16px; padding:32px; text-align:center; max-width:400px;">
-    <h2 style="color:#f5c518;">🎉 <span id="summary-level">1-20</span> 完成！</h2>
+<div id="level-summary-overlay" style="display:none; ...">
+  <div style="...">
+    <h2 style="color:#f5c518;">🎉 <span id="summary-range">1-20</span> 完成！</h2>
     <p>成功率：<span id="summary-rate">85%</span></p>
-    <p>最高連勝：<span id="summary-streak">12</span></p>
     <p>已收集：<span id="summary-collected">20/20</span></p>
     <br>
     <button onclick="expandRange()">🔓 開放更大範圍（<span id="next-range">1-100</span>）</button>
@@ -164,49 +166,44 @@ function resetProgress() {
 
 ---
 
-## UI/UX 考慮
+## UI 改動
 
-### 進度條
-- 右上角顯示 **「Lv.1 | 📚 12/20」**，隨收集實時更新
-- 進度條視覺化（0% → 100%）
-
-### 關卡標示
-- 左上角顯示 **「Lv.1」** badge
-- 提升玩家知道自己處於邊個難度
-
-### Lv.6 完成
-- 顯示「終極大師」成就 + 全卡收集列表
-- 提供「重置所有進度」按鈕
+**右上角進度顯示**（現有 📚 0/20 旁新增等級標示）
+```
+Lv.1  📚 12/20
+```
+- 等級跟隨 `currentLevel` 更新
+- `📚` 跟隨 `collected.size / LEVELS[currentLevel-1].max` 更新
 
 ---
 
 ## 持久化（localStorage）
 
 ```javascript
-// 保存遊戲進度（擴大範圍或繼續遊玩均保留 collected）
+// 現有 localStorage 結構無需大改，只需加入 currentLevel
 localStorage.setItem('sb_squarebun', JSON.stringify({
-  collected: { 1: 2, 4: 1, 9: 3, ... },   // 卡牌收集記錄（數字 → 收集次數）
-  penaltySet: [15, 7],                       // penalty 失去的卡牌
-  currentLevel: 1,                           // 當前範圍 (1=1-20, 2=1-100, ...)
+  collected: { 1: 2, 4: 1, ... },
+  penaltySet: [15, 7],
+  currentLevel: 1,      // 【新增】當前等級
   successCount: 18,
   attemptCount: 20,
   winStreak: 12,
-  maxStreak: 15,
 }));
 ```
 
 ---
 
-## 待研究問題
+## 風險與測試要點
 
-1. **Lv.5/Lv.6 嘅 1000/2000 張卡渲染性能**：每回合只顯示 4 張卡，DOM 壓力唔大，但 `ALL_CARDS` 陣列需要包含 2000 個元素
-2. **平方數 highlight**：Lv.3+ 平方數量大（1²~44²），平方包按鈕視覺化可以更搶眼
-3. **Penalty 失去卡牌**：在超大型牌組中影響較小，可考慮調整 penalty 頻率
+- **Lv.1 → Lv.2 過渡測試**：小量卡（20→100），快速驗證 collected 保留
+- **DOM 元素限制**：每回合只渲染 4 張卡，無論範圍多大 DOM 壓力不變；`ALL_CARDS` 已是數據陣列，無需 DOM 批量建立
+- **localStorage 兼容性**：若讀到舊存檔（無 currentLevel），預設為 1（1-20 範圍）
+- **Lv.6 完成後**：expandRange() 按鈕不顯示或禁用，提示「已達到最大範圍」
 
 ---
 
 ## 執行順序建議
 
-1. 先實現 Lv.1 → Lv.2（最細改動，驗證系統）
-2. 再擴展至 Lv.3–Lv.6
-3. 最後加 Summary popup 視覺效果
+1. 先實現 Lv.1 → Lv.2 過渡（最小改動，驗證 collected 保留機制）
+2. 再擴展至 Lv.3–Lv.6 等級配置（只需修改 LEVELS 陣列）
+3. 最後加入 Summary popup 視覺效果
