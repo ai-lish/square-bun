@@ -81,8 +81,10 @@
     }
     function updateCollectionBadge(){
       const collEl=document.getElementById('coll-count');
+      const progEl=document.getElementById('coll-progress-text');
       const lvl=LEVELS[currentLevel-1];
-      if(collEl&&lvl){collEl.textContent=collected.size+'/'+lvl.max;}
+      if(collEl&&lvl){collEl.textContent=collected.size;}
+      if(progEl&&lvl){progEl.textContent=lvl.max;}
     }
 
     function startRound(){
