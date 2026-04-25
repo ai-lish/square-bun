@@ -3,11 +3,49 @@
     function getDivisors(n){const d=[];for(let i=1;i<=n;i++)if(n%i===0)d.push(i);return d;}
     const ALL_CARDS=[];for(let i=1;i<=88;i++){ALL_CARDS.push({n:i,divs:getDivisors(i),sq:SQUARES.has(i)});}
     const DELUXE_RANGE=typeof CARD_RANGE!=='undefined'?CARD_RANGE:88; // Default 88 (practice); deluxe sets CARD_RANGE=20 before loading
+
+    // --- LEVEL PROGRESSION SYSTEM ---
+    const LEVELS = [
+      { level: 1, max: 20 },
+      { level: 2, max: 100 },
+      { level: 3, max: 200 },
+      { level: 4, max: 500 },
+      { level: 5, max: 1000 },
+      { level: 6, max: 2000 },
+    ];
+    let currentLevel = 1;  // default Lv.1 (1-20)
+    let penaltySet = new Set();  // cards lost due to wrong picks
+
     let cardCount=4,deck=[],table=[],revealed=[],selected=new Set(),dice=[null,null];
     let successCount=0,attemptCount=0,winStreak=0; // Deluxe: no score, track success rate + streak
     let collected=new Map(); // Deluxe: card number -> count collected
     let phase='closed',sbMode=false,sbPrevPhase='closed',maxSelect=2;
     let wrongCards=[],correctCards=[];
+
+    // --- LOCALSTORAGE SAVE / LOAD (level progression aware) ---
+    function saveProgress(){
+      localStorage.setItem('sb_squarebun', JSON.stringify({
+        collected: Object.fromEntries(collected),
+        penaltySet: Array.from(penaltySet),
+        currentLevel,
+        successCount,
+        attemptCount,
+        winStreak,
+      }));
+    }
+    function loadProgress(){
+      try{
+        const raw=localStorage.getItem('sb_squarebun');
+        if(!raw)return;
+        const data=JSON.parse(raw);
+        collected=new Map(Object.entries(data.collected||{}));
+        penaltySet=new Set(data.penaltySet||[]);
+        currentLevel=data.currentLevel||1;
+        successCount=data.successCount||0;
+        attemptCount=data.attemptCount||0;
+        winStreak=data.winStreak||0;
+      }catch(e){}
+    }
 
     function adjustCount(delta){cardCount=Math.max(2,Math.min(6,cardCount+delta));document.getElementById('count-val').textContent=cardCount;}
     function showRules(){document.getElementById('rules-modal').classList.add('show');}
@@ -15,25 +53,42 @@
     function shuffle(a){const r=Array.from(a);for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
 
     function startGame(){
+      loadProgress();
       document.getElementById('setup-screen').style.display='none';
       document.getElementById('game-screen').style.display='flex';
-      successCount=0;attemptCount=0;winStreak=0;collected=new Map();updateSuccessRateDisplay();
+      updateLevelBadge();
+      updateCollectionBadge();
+      updateSuccessRateDisplay();
       startRound();
     }
 
-    // Deluxe: update the success rate + streak + collection count UI elements
+    function updateLevelBadge(){
+      const el=document.getElementById('level-badge');
+      if(el)el.textContent='Lv.'+currentLevel;
+      const progressEl=document.getElementById('coll-progress-text');
+      if(progressEl){
+        const lvl=LEVELS[currentLevel-1];
+        progressEl.textContent=collected.size+'/'+lvl.max;
+      }
+    }
+
     function updateSuccessRateDisplay(){
       const rateEl=document.getElementById('success-rate');
       const streakEl=document.getElementById('win-streak');
-      const collEl=document.getElementById('coll-count');
       if(rateEl){rateEl.textContent=attemptCount>0?Math.round(successCount/attemptCount*100)+'%':'—';}
       if(streakEl){streakEl.textContent=winStreak;}
-      if(collEl){collEl.textContent=collected.size;}
+      updateCollectionBadge();
+    }
+    function updateCollectionBadge(){
+      const collEl=document.getElementById('coll-count');
+      const lvl=LEVELS[currentLevel-1];
+      if(collEl&&lvl){collEl.textContent=collected.size+'/'+lvl.max;}
     }
 
     function startRound(){
-      // Deluxe: deck always contains all 1-20 cards (collected cards can reappear)
-      const baseDeck=ALL_CARDS.filter(c=>c.n<=DELUXE_RANGE);
+      // Level progression: use currentLevel max instead of fixed DELUXE_RANGE
+      const levelMax=LEVELS[currentLevel-1].max;
+      const baseDeck=ALL_CARDS.filter(c=>c.n<=levelMax&&!penaltySet.has(c.n));
       deck=shuffle([...baseDeck]);
       table=deck.splice(0,cardCount);revealed=new Array(cardCount).fill(false);
       selected.clear();dice=[null,null];phase='closed';sbMode=false;
@@ -294,17 +349,26 @@
           collected.set(n,(collected.get(n)||0)+1);
           successCount++;attemptCount++;winStreak++;
           setStatus('🎤 平方包！ 成功！','gold');
+          checkLevelCompletion();
+          saveProgress();
         }else{
           // Deluxe penalty: lose 1 collected card (count -1), if count=0 card can reappear
           if(collected.size>0){
             const keys=Array.from(collected.keys());
             const lostN=keys[Math.floor(Math.random()*keys.length)];
             const newCount=collected.get(lostN)-1;
-            if(newCount<=0){collected.delete(lostN);}else{collected.set(lostN,newCount);}
+            if(newCount<=0){
+              collected.delete(lostN);
+              penaltySet.add(lostN);
+            }else{
+              collected.set(lostN,newCount);
+            }
             setStatus('✗ 唔係平方數！失去 '+lostN+' 號卡！','');
+            saveProgress();
           }else{
             attemptCount++;winStreak=0;
             setStatus('✗ 唔係平方數！ 失敗','');
+            saveProgress();
           }
         }
         updateSuccessRateDisplay();
@@ -335,11 +399,18 @@
             const keys=Array.from(collected.keys());
             lostN=keys[Math.floor(Math.random()*keys.length)];
             const newCount=collected.get(lostN)-1;
-            if(newCount<=0){collected.delete(lostN);}else{collected.set(lostN,newCount);}
+            if(newCount<=0){
+              collected.delete(lostN);
+              penaltySet.add(lostN);
+            }else{
+              collected.set(lostN,newCount);
+            }
             setStatus(`✗ 答錯！失去 ${lostN} 號卡！`,'');
+            saveProgress();
           }else{
             attemptCount++;winStreak=0;
             setStatus(`✗ 答錯！ 失敗`,'');
+            saveProgress();
           }
           // Deluxe: correct cards are added to collected (count +1)
         }else{
@@ -350,6 +421,8 @@
           });
           successCount++;attemptCount++;winStreak++;
           setStatus(`✓ 全對！ 成功！`,'success');
+          checkLevelCompletion();
+          saveProgress();
         }
         updateSuccessRateDisplay();
         // Show continue button
@@ -413,12 +486,15 @@
       selected.clear();sbMode=false;
       // Replenish table to cardCount — draw from top of shuffled deck
       while(table.length<cardCount&&deck.length>0){table.push(deck.pop());revealed.push(false);}
-      // If deck is empty or insufficient, reshuffle all 1-20 cards
+      // If deck is empty or insufficient, reshuffle remaining cards in current level range
+      const levelMax=LEVELS[currentLevel-1].max;
       if(table.length<cardCount){
-        const baseDeck=ALL_CARDS.filter(c=>c.n<=DELUXE_RANGE);
+        const baseDeck=ALL_CARDS.filter(c=>c.n<=levelMax&&!penaltySet.has(c.n));
         deck=shuffle([...baseDeck]);
         while(table.length<cardCount&&deck.length>0){table.push(deck.pop());revealed.push(false);}
       }
+      updateLevelBadge();
+      saveProgress();
       phase='closed';dice=[null,null];
       renderDiceSVG(document.getElementById('dice1'),0);renderDiceSVG(document.getElementById('dice2'),0);
       document.getElementById('target-badge').textContent='開卡後擲骰';document.getElementById('target-badge').className='target-badge disabled';
@@ -460,5 +536,55 @@
         statusEl.className='status-bar';
         setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`揀啱就核對，或直接核對跳過`,'');
       },1100);
+    }
+
+    // --- LEVEL PROGRESSION: Three post-completion actions ---
+    function expandRange(){
+      if(currentLevel < LEVELS.length){
+        currentLevel++;
+        document.getElementById('level-summary-overlay').style.display='none';
+        updateLevelBadge();
+        updateCollectionBadge();
+        saveProgress();
+        startRound();
+      }
+    }
+    function keepPlaying(){
+      document.getElementById('level-summary-overlay').style.display='none';
+      startRound();
+    }
+    function resetProgress(){
+      collected=new Map();
+      penaltySet=new Set();
+      successCount=0;
+      attemptCount=0;
+      winStreak=0;
+      currentLevel=1;
+      document.getElementById('level-summary-overlay').style.display='none';
+      updateLevelBadge();
+      updateCollectionBadge();
+      updateSuccessRateDisplay();
+      saveProgress();
+      startRound();
+    }
+    function showLevelSummaryPopup(){
+      const level=LEVELS[currentLevel-1];
+      const rate=attemptCount>0?Math.round(successCount/attemptCount*100):0;
+      document.getElementById('summary-range').textContent='1-'+level.max;
+      document.getElementById('summary-rate').textContent=rate+'%';
+      document.getElementById('summary-collected').textContent=collected.size+'/'+level.max;
+      const nextRange=document.getElementById('next-range');
+      if(nextRange){ nextRange.textContent=currentLevel<LEVELS.length?('1-'+LEVELS[currentLevel].max):'MAX'; }
+      const currentRange=document.getElementById('current-range');
+      if(currentRange){ currentRange.textContent='1-'+level.max; }
+      const expandBtn=document.getElementById('expand-btn');
+      if(expandBtn){ expandBtn.style.display=currentLevel<LEVELS.length?'block':'none'; }
+      document.getElementById('level-summary-overlay').style.display='flex';
+    }
+    function checkLevelCompletion(){
+      const level=LEVELS[currentLevel-1];
+      if(collected.size>=level.max){
+        showLevelSummaryPopup();
+      }
     }
   
