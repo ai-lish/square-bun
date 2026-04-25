@@ -65,11 +65,6 @@
     function updateLevelBadge(){
       const el=document.getElementById('level-badge');
       if(el)el.textContent='Lv.'+currentLevel;
-      const progressEl=document.getElementById('coll-progress-text');
-      if(progressEl){
-        const lvl=LEVELS[currentLevel-1];
-        progressEl.textContent=collected.size+'/'+lvl.max;
-      }
     }
 
     function updateSuccessRateDisplay(){
