@@ -1,6 +1,8 @@
 # Square Bun 豪華版 — 關卡漸進系統提案
 
-**版本：** v1 → v2（更新實作範圍說明，避免混淆）
+**版本：** v2（實作完成）
+**PR：** https://github.com/ai-lish/square-bun/pull/new/feat/level-progression
+**實作：** feat/level-progression branch
 **日期：** 2026-04-24
 **作者：** 小心（Zach 前線助手）
 
