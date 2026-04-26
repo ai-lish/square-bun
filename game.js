@@ -583,5 +583,63 @@
       if(collected.size>=level.max){
         showLevelSummaryPopup();
       }
+    
+    // --- DEBUG EXPOSURE (window._sb for console testing) ---
+    window._sb = {
+      get dice() { return dice; },
+      get table() { return table; },
+      get selected() { return selected; },
+      get collected() { return collected; },
+      get currentLevel() { return currentLevel; },
+      get successCount() { return successCount; },
+      get attemptCount() { return attemptCount; },
+      get winStreak() { return winStreak; },
+      get LEVELS() { return LEVELS; },
+      get levelMax() { return LEVELS[currentLevel-1].max; },
+      get phase() { return phase; },
+      get sbMode() { return sbMode; },
+      get cardCount() { return cardCount; },
+      get deck() { return deck; },
+      get collectedSize() { return collected.size; },
+      get penaltySize() { return penaltySet.size; },
+      triggerRoll: () => rollDice(),
+      triggerConfirm: () => confirmPicks(),
+      triggerSB: () => triggerSquareBun(),
+      openOne: () => openOneCard(),
+      startRound: () => startRound(),
+      checkLevel: () => checkLevelCompletion(),
+      simulateCollect: (n) => { collected.set(n, (collected.get(n)||0)+1); saveProgress(); updateCollectionBadge(); },
+      logState: () => console.table({dice, phase, collected: collected.size, level: currentLevel, streak: winStreak}),
+    };
+    console.log('[Square Bun] Debug exposed. Use window._sb');
+    
+    // --- DEBUG EXPOSURE (window._sb for console testing) ---
+    window._sb = {
+      get dice() { return dice; },
+      get table() { return table; },
+      get selected() { return selected; },
+      get collected() { return collected; },
+      get currentLevel() { return currentLevel; },
+      get successCount() { return successCount; },
+      get attemptCount() { return attemptCount; },
+      get winStreak() { return winStreak; },
+      get LEVELS() { return LEVELS; },
+      get levelMax() { return LEVELS[currentLevel-1].max; },
+      get phase() { return phase; },
+      get sbMode() { return sbMode; },
+      get cardCount() { return cardCount; },
+      get deck() { return deck; },
+      get collectedSize() { return collected.size; },
+      get penaltySize() { return penaltySet.size; },
+      triggerRoll: () => rollDice(),
+      triggerConfirm: () => confirmPicks(),
+      triggerSB: () => triggerSquareBun(),
+      openOne: () => openOneCard(),
+      startRound: () => startRound(),
+      checkLevel: () => checkLevelCompletion(),
+      simulateCollect: (n) => { collected.set(n, (collected.get(n)||0)+1); saveProgress(); updateCollectionBadge(); },
+      logState: () => console.table({dice, phase, collected: collected.size, level: currentLevel, streak: winStreak}),
+    };
+    console.log('[Square Bun] Debug exposed. Use window._sb');
     }
   
