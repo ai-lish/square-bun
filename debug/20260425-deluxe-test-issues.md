@@ -131,9 +131,40 @@ window._sb = {
 
 ---
 
-### Issue #4：因數圈顏色邏輯未完整驗證
+### Issue #4：✓ 核對 按鈕完全無反應（Button ReferenceError）🔴 ✅ 已修復
 
-**描述：** 測試時骰仔為 [3, 5]，但桌面卡牌更換咗（從 6, 17, 1, 2 變成 8, 10, 9, 16），無法確認因數圈顏色邏輯是否正確（`dice.includes(f)`）。
+**描述：** 點擊 ✓ 核對 按鈕後完全冇反應，遊戲狀態（attemptCount, collected）冇任何變化。
+
+**根因：** deluxe.js 仍然引用 `score` 變量，但 Level Progression PR 已將 `score` 移除，改為 `successCount` + `attemptCount` + `winStreak`。
+
+**出錯位置：** `deluxe.js` 的 `confirmPicks` wrapper 內：
+```javascript
+// BEFORE (BROKEN):
+const preScore = score;            // ReferenceError: score is not defined
+const scoreDiff = score - preScore; // ReferenceError
+if (scoreDiff > 0) { ... }         // scoreDiff undefined
+```
+
+**修復（commit `f2c5e2d`）：**
+```javascript
+// AFTER (FIXED):
+const preSuccessCount = successCount;
+const successDiff = successCount - preSuccessCount; // each correct = +1
+if (successDiff > 0) { ... }
+```
+
+**其他修復：**
+- `stats.totalScore = score;` → `stats.totalScore = successCount;`
+- `stats.maxRoundScore = Math.max(..., scoreDiff)` → `Math.max(..., 1)`
+- `score_50` 成就描述：`總得分` → `成功次數`
+
+**驗證：** 等 GitHub Pages deploy 後重新測試 ✓ 核對 按鈕。
+
+---
+
+### Issue #5：因數圈顏色邏輯未完整驗證
+
+**描述：** 測試時骰仔為 [3, 5]，但桌面卡牌更換咗，無法確認因數圈顏色邏輯是否正確（`dice.includes(f)`）。
 
 **需要驗證：** 骰仔 [X, Y]，某卡因數 f，f 必須係 `dice.includes(f)` 先顯示綠色。
 
@@ -164,5 +195,6 @@ window._sb = {
 |------|------|------|
 | P1 | Issue #1：`📚` 顯示格式 | ✅ 已修復 + 已驗證 |
 | P2 | Issue #3：Level Summary Popup 測試 | ✅ 已完整測試（全部通過）|
-| P3 | Issue #4：因數圈顏色邏輯驗證 | ⚠️ 未驗證（需控制骰仔值）|
-| P4 | Issue #2：`window._sb` 調試工具 | ✅ 已存在（大佬已加入）|
+| P3 | Issue #4：✓ 核對 按鈕 ReferenceError | ✅ 已修復 `f2c5e2d`（待驗證）|
+| P4 | Issue #5：因數圈顏色邏輯驗證 | ⚠️ 未驗證 |
+| P5 | Issue #2：`window._sb` 調試工具 | ✅ 已存在 |
