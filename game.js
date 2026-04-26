@@ -300,7 +300,7 @@
       }else{
         document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';
         document.getElementById('btn-sb').textContent='🎤 平方包';
-        phase=wasClosed?'closed':'dice-rolled';
+        phase=sbPrevPhase;
         grid.classList.remove('squarebun-mode');
         if(phase==='dice-rolled')grid.classList.add('dice-rolled');
         setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`請選擇卡牌`,'');
