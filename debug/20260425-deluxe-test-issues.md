@@ -1,7 +1,7 @@
 # 豪華版 Browser 測試問題記錄
 
 **日期：** 2026-04-25
-**測試版本：** `0e3cdfa`（feat/level-progression 已 merge）
+**測試版本：** `0e3cdfa`（feat/level-progression 已 merge）→ `b4e2578`（Issue #1 修復）→ `1bcb263`（Issue #1 完全修復）
 **測試 URL：** https://ai-lish.github.io/square-bun/deluxe.html?v=5
 
 ---
@@ -17,12 +17,18 @@
 | 因數圈顯示 | ✅ PASS | 揭卡後顯示因數圈（1, 2, 3, 6） |
 | ✓ 核對按鈕 | ✅ PASS | 擲骰後啟用 |
 | 🔤 平方包按鈕 | ✅ PASS | 部分disabled狀態正確 |
+| `window._sb` 調試工具 | ✅ PASS | 大佬已加入 `checkLevelCompletion()` 內 |
+| 📚 Badge 格式 | ✅ PASS | `📚 20/20` / `📚 20/100` 正確顯示 |
+| Level Summary Popup 內容 | ✅ PASS | `🎉 完成！ 1-20 全部收集！ 成功率 85% 已收集 20/20` |
+| 🔓 開放更大範圍 | ✅ PASS | collected=20, level=2, max=100, 新卡 1-100 |
+| 🔄 繼續遊玩 | ✅ PASS | collected=20, level=1, max=20, stats 全保留 |
+| 🗑️ 重置進度 | ✅ PASS | collected=0, level=1, stats=0, localStorage=null |
 
 ---
 
 ## 🔴 需要修復的問題
 
-### Issue #1：`📚 X/Y/X/Y` 顯示格式錯誤 ✅ 已修復
+### Issue #1：`📚 X/Y/X/Y` 顯示格式錯誤 ✅ 已修復 + 已驗證
 
 **描述：** 右上角 📚 按鈕顯示 `📚 X/Y/X/Y`，`coll-count` 和 `coll-progress-text` 都包含 `X/Y`。
 
@@ -36,6 +42,13 @@
 - `updateLevelBadge()`：只更新 level badge，移除 `coll-progress-text` 更新
 
 **修復後預期：** `📚 X/Y`（coll-count=X，coll-progress-text=Y）
+
+**驗證結果（v4 CDN）：**
+| 場景 | coll-count | coll-progress-text | 按鈕顯示 |
+|------|-----------|-------------------|---------|
+| Lv.1 collected=20 | `20` | `20` | `📚 20/20` ✅ |
+| Lv.2 collected=20 | `20` | `100` | `📚 20/100` ✅ |
+| 初始 | `0` | `20` | `📚 0/20` ✅ |
 
 ---
 
@@ -68,29 +81,53 @@ window._sb = {
 
 ---
 
-### Issue #3：Level Summary Popup 未測試
+### Issue #3：Level Summary Popup ✅ 已完整測試
 
-**描述：** 由於需要收集 20 種不同卡牌才能觸發 popup，browser testing 未能完整驗證以下場景：
+**測試方法：** 使用 `window._sb` 調試工具（`checkLevelCompletion()`）直接觸發 popup。
 
-- 收集完 20 種卡後 popup 正確彈出
-- 🔓「開放更大範圍」按鈕 → collected 保留，範圍變 1-100
-- 🔄「繼續遊玩」按鈕 → collected 保留，範圍不變
-- 🗑️「重置進度」按鈕 → collected 清空，回到 Lv.1
+**測試結果：**
 
-**建議：** 通過 localStorage injection 模擬已收集 19/20 張卡，快速觸發 popup。
+#### 🎯 T2: Popup 內容驗證
+| 元素 | 預期值 | 實際值 | 狀態 |
+|------|--------|--------|------|
+| Popup display | flex | flex | ✅ |
+| summary-range | 1-20 | 1-20 | ✅ |
+| summary-rate | 85% | 85% | ✅ |
+| summary-collected | 20/20 | 20/20 | ✅ |
+| expand-btn | 🔓 開放更大範圍（1-100） | 🔓 開放更大範圍（1-100） | ✅ |
+| next-range | 1-100 | 1-100 | ✅ |
 
-```javascript
-// 模拟收集 19/20
-localStorage.setItem('sb_squarebun', JSON.stringify({
-  collected: Object.fromEntries([...Array(19).keys()].map(n => [n+1, 1])),
-  currentLevel: 1,
-  successCount: 10,
-  attemptCount: 12,
-  winStreak: 3,
-  penaltySet: []
-}));
-// 刷新頁面，再收集一張正確卡就會觸發 popup
-```
+#### 🎯 T3: 🔄 繼續遊玩（保持 1-20）
+| 狀態 | 點擊前 | 點擊後 | 預期 |
+|------|--------|--------|------|
+| collected.size | 20 | 20 | ✅ 保留 |
+| currentLevel | 1 | 1 | ✅ 不變 |
+| lvlMax | 20 | 20 | ✅ 保持 1-20 |
+| successCount | 17 | 17 | ✅ 保留 |
+| winStreak | 5 | 5 | ✅ 保留 |
+| popupDisplay | flex | none | ✅ 已關閉 |
+
+#### 🎯 T4: 🗑️ 重置進度
+| 狀態 | 點擊前 | 點擊後 | 預期 |
+|------|--------|--------|------|
+| collected.size | 20 | 0 | ✅ 完全清除 |
+| currentLevel | 1 | 1 | ✅ 回 Lv.1 |
+| successCount | 17 | 0 | ✅ 完全清除 |
+| attemptCount | 20 | 0 | ✅ 完全清除 |
+| winStreak | 5 | 0 | ✅ 完全清除 |
+| localStorage | collected=... | null, null | ✅ 完全清除 |
+| popupDisplay | flex | none | ✅ 已關閉 |
+
+#### 🎯 T5: 🔓 開放更大範圍（1-100）
+| 狀態 | 點擊前 | 點擊後 | 預期 |
+|------|--------|--------|------|
+| collected.size | 20 | 20 | ✅ 完整保留 |
+| currentLevel | 1 | 2 | ✅ Lv.2 |
+| lvlMax | 20 | 100 | ✅ 擴大到 1-100 |
+| collBtn | 📚 20/20 | 📚 20/100 | ✅ 動態更新 |
+| levelBadge | Lv.1 | Lv.2 | ✅ |
+| tableCards | — | [37, 81, 13, 75] | ✅ 新卡 1-100 |
+| popupDisplay | flex | none | ✅ 已關閉 |
 
 ---
 
@@ -123,9 +160,9 @@ localStorage.setItem('sb_squarebun', JSON.stringify({
 
 ## 📋 優先修復順序
 
-| 優先 | 問題 | 預計時間 |
-|------|------|----------|
-| P1 | Issue #1：`📚` 顯示格式 | 5 min |
-| P2 | Issue #3：Level Summary Popup 測試 | 需localStorage injection |
-| P3 | Issue #4：因數圈顏色邏輯驗證 | 需特殊測試方法 |
-| P4 | Issue #2：`window._sb` 調試工具（可選）| 10 min |
+| 優先 | 問題 | 狀態 |
+|------|------|------|
+| P1 | Issue #1：`📚` 顯示格式 | ✅ 已修復 + 已驗證 |
+| P2 | Issue #3：Level Summary Popup 測試 | ✅ 已完整測試（全部通過）|
+| P3 | Issue #4：因數圈顏色邏輯驗證 | ⚠️ 未驗證（需控制骰仔值）|
+| P4 | Issue #2：`window._sb` 調試工具 | ✅ 已存在（大佬已加入）|
