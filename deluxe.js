@@ -138,7 +138,7 @@
       { id:'perfect_10', emoji:'💯', name:'完璧', desc:'連續10次回答正確', check: () => stats.maxCombo >= 10 },
       { id:'scholar',    emoji:'🧮', name:'因數學者', desc:'查看因數顯示50次', check: () => stats.factorsViewed >= 50 },
       { id:'skip_5',     emoji:'⏭️', name:'跳過達人', desc:'跳過（無夾到）5次', check: () => stats.skipCount >= 5 },
-      { id:'score_50',  emoji:'🏆', name:'50分高手', desc:'總得分達到50分', check: () => stats.totalScore >= 50 },
+      { id:'score_50',  emoji:'🏆', name:'50分高手', desc:'成功次數達到50次', check: () => stats.totalScore >= 50 },
     ];
     let stats = JSON.parse(localStorage.getItem('sb_stats') || '{"correctTotal":0,"maxRoundScore":0,"maxCombo":0,"sbUsed":0,"factorsViewed":0,"skipCount":0,"totalScore":0,"achievements":[]}');
     let unlockedAchs = new Set(stats.achievements);
@@ -148,7 +148,7 @@
     }
     function checkAchievements(extra = {}) {
       Object.assign(stats, extra);
-      stats.totalScore = score;
+      stats.totalScore = successCount;
       let newUnlocks = [];
       for (const ach of ACH_DEFS) {
         if (!unlockedAchs.has(ach.id) && ach.check()) {
@@ -239,14 +239,13 @@
     confirmPicks = function() {
       const prePhase = phase;
       const preSelectedSize = selected.size;
-      const preScore = score;
+      const preSuccessCount = successCount;
       _confirmPicks();
       // After _confirmPicks runs, phase will be 'reveal' and cards will be flipped
-      // We hook into the setTimeout in showFlash / score update
-      // Instead, use a short delay to check results
+      // Use a short delay to check results
       setTimeout(() => {
-        // Determine result based on score change
-        const scoreDiff = score - preScore;
+        // Determine result based on successCount change (each correct = +1)
+        const successDiff = successCount - preSuccessCount;
         if (prePhase === 'squarebun') {
           // Square Bun result
           const isSquare = table[Array.from(selected)[0]]?.sq;
@@ -268,11 +267,11 @@
           checkAchievements();
         } else {
           // Normal pick
-          if (scoreDiff > 0) {
+          if (successDiff > 0) {
             playCorrect();
             addCombo();
             stats.correctTotal++;
-            stats.maxRoundScore = Math.max(stats.maxRoundScore, scoreDiff);
+            stats.maxRoundScore = Math.max(stats.maxRoundScore, 1);
             stats.maxCombo = Math.max(stats.maxCombo, comboStreak);
             // Spawn particles on correct cards
             for (const idx of Array.from(selected)) {
@@ -280,7 +279,7 @@
                 setTimeout(() => spawnParticlesFromCard(idx), 200);
               }
             }
-          } else if (scoreDiff < 0) {
+          } else if (successDiff < 0) {
             playWrong();
             document.body.classList.add('shake');
             setTimeout(() => document.body.classList.remove('shake'), 400);
