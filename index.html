@@ -2,579 +2,302 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>平方包 (Square Bun) - 練習模式</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>平方包 Square Bun - 數學心算卡牌遊戲</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #1a365d;
-      --accent: #ed8936;
-      --accent-light: #f6ad55;
-      --square-bun: #dd6b20;
-      --square-bun-bg: linear-gradient(135deg, #ed8936, #c05621);
-      --card-bg: #ffffff;
-      --text: #1a202c;
-      --bg: #0f2744;
-      --radius: 12px;
+      --bg: #f8f5f0;
+      --accent: #e94560;
+      --accent2: #1a1a2e;
+      --gold: #f5a623;
+      --card-bg: #fff;
+      --card-front: #fff;
+      --text: #2d2d2d;
+      --text-dim: #777;
+      --success: #00c853;
+      --shadow: 0 4px 20px rgba(0,0,0,0.12);
     }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
     body {
       font-family: 'Noto Sans HK', sans-serif;
       background: var(--bg);
-      color: white;
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== HERO ===== */
+    .hero {
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 20px;
-    }
-
-    h1 {
-      color: var(--accent);
-      margin-bottom: 20px;
-      text-align: center;
-    }
-
-    /* Setup Screen */
-    #setup {
-      text-align: center;
-      max-width: 400px;
-    }
-
-    #setup label {
-      display: block;
-      margin-bottom: 10px;
-      font-size: 18px;
-    }
-
-    #setup select {
-      padding: 10px 20px;
-      font-size: 18px;
-      border-radius: var(--radius);
-      border: 2px solid var(--accent);
-      background: var(--primary);
-      color: white;
-      margin-bottom: 20px;
-    }
-
-    .btn {
-      padding: 12px 24px;
-      font-size: 18px;
-      font-weight: 700;
-      border: none;
-      border-radius: var(--radius);
-      cursor: pointer;
-      transition: transform 0.1s, box-shadow 0.1s;
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-    }
-
-    .btn:active {
-      transform: translateY(0);
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: white;
-      box-shadow: 0 4px 12px rgba(237, 137, 54, 0.4);
-    }
-
-    .btn-square-bun {
-      background: var(--square-bun-bg);
-      color: white;
-      font-size: 22px;
-      padding: 15px 30px;
-      box-shadow: 0 4px 16px rgba(221, 107, 32, 0.5);
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { box-shadow: 0 4px 16px rgba(221, 107, 32, 0.5); }
-      50% { box-shadow: 0 4px 24px rgba(221, 107, 32, 0.8); }
-    }
-
-    /* Game Area */
-    #game {
-      display: none;
-      width: 100%;
-      max-width: 800px;
-      text-align: center;
-    }
-
-    .game-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .score {
-      background: var(--primary);
-      padding: 10px 20px;
-      border-radius: var(--radius);
-      font-size: 18px;
-    }
-
-    .dice-area {
-      display: flex;
-      align-items: center;
-      gap: 15px;
       justify-content: center;
-    }
-
-    .dice {
-      width: 60px;
-      height: 60px;
-      background: white;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--primary);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-
-    .target {
-      background: var(--accent);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-weight: 700;
-    }
-
-    .controls {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin: 15px 0;
-    }
-
-    /* Cards */
-    .cards-container {
+      padding: 40px 24px;
+      text-align: center;
+      background: linear-gradient(160deg, #fff5f5 0%, #fef9f0 50%, #f0f4ff 100%);
       position: relative;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(233,69,96,0.08) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(245,166,35,0.08) 0%, transparent 40%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: var(--accent);
+      border-radius: 20px;
+      padding: 6px 18px;
+      font-size: 12px;
+      font-weight: 700;
+      color: white;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-size: 56px;
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 14px;
+      background: linear-gradient(135deg, var(--accent) 0%, #c23a51 50%, var(--gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 18px;
+      color: #555;
+      margin-bottom: 36px;
+      max-width: 340px;
+    }
+
+    .hero-img {
       width: 100%;
       max-width: 500px;
-      height: 400px;
-      margin: 20px auto;
-    }
-
-    .card {
-      position: absolute;
-      width: 80px;
-      height: 110px;
-      background: var(--card-bg);
-      border-radius: var(--radius);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: transform 0.15s, box-shadow 0.15s;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      user-select: none;
-    }
-
-    .card:hover {
-      transform: scale(1.1);
-      z-index: 10;
-    }
-
-    .card.selected {
-      background: #90cdf4;
-      box-shadow: 0 0 0 4px var(--accent);
-    }
-
-    .card.square-bun {
-      background: linear-gradient(135deg, #ed8936, #c05621);
-      color: white;
-    }
-
-    .card.square-bun .card-number {
-      color: white;
-    }
-
-    .card-number {
-      font-size: 28px;
-      font-weight: 700;
-      color: var(--text);
-    }
-
-    .card-divisors {
-      font-size: 10px;
-      color: #718096;
-      margin-top: 4px;
-    }
-
-    .card.square-bun .card-divisors {
-      color: rgba(255,255,255,0.8);
-    }
-
-    /* Message */
-    #message {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: var(--primary);
-      padding: 30px 50px;
-      border-radius: var(--radius);
-      font-size: 24px;
-      font-weight: 700;
-      z-index: 100;
-      display: none;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-    }
-
-    #message.show {
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 36px;
       display: block;
-      animation: popIn 0.3s ease;
     }
 
-    @keyframes popIn {
-      from { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
-      to { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-    }
-
-    /* End Screen */
-    #end-screen {
-      display: none;
-      text-align: center;
-    }
-
-    #end-screen h2 {
-      color: var(--accent);
-      font-size: 32px;
-      margin-bottom: 20px;
-    }
-
-    #end-screen .final-score {
-      font-size: 48px;
-      font-weight: 700;
+    .cta-btn {
+      display: inline-block;
+      padding: 16px 44px;
+      background: linear-gradient(135deg, var(--accent), #c23a51);
       color: white;
-      margin-bottom: 30px;
+      border: none;
+      border-radius: 50px;
+      font-size: 18px;
+      font-weight: 900;
+      cursor: pointer;
+      font-family: 'Noto Sans HK', sans-serif;
+      text-decoration: none;
+      box-shadow: 0 6px 24px rgba(233,69,96,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+      margin-bottom: 12px;
     }
+    .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(233,69,96,0.5); }
+    .cta-btn:active { transform: scale(0.97); }
 
-    /* Responsive */
-    @media (max-width: 600px) {
-      .card {
-        width: 60px;
-        height: 85px;
-      }
-      .card-number {
-        font-size: 20px;
-      }
-      .card-divisors {
-        font-size: 8px;
-      }
-      .cards-container {
-        height: 300px;
-      }
-      .btn-square-bun {
-        font-size: 18px;
-        padding: 12px 24px;
-      }
+    .cta-note { font-size: 12px; color: var(--text-dim); }
+
+    /* ===== SECTION ===== */
+    .section { padding: 64px 24px; max-width: 640px; margin: 0 auto; }
+    .section-label { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+    .section h2 { font-size: 30px; font-weight: 900; margin-bottom: 24px; color: var(--accent2); }
+
+    /* ===== WHAT GRID ===== */
+    .what-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .what-item {
+      background: white;
+      border-radius: 18px;
+      padding: 22px 16px;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      border: 2px solid transparent;
+      transition: border-color 0.15s, transform 0.15s;
     }
+    .what-item:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .what-icon { font-size: 36px; margin-bottom: 10px; }
+    .what-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; color: var(--accent2); }
+    .what-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+    .what-item.highlight { background: linear-gradient(135deg, #fff0f0, #fff5e0); border-color: rgba(233,69,96,0.3); }
+
+    /* ===== HOW TO PLAY ===== */
+    .how { background: white; padding: 64px 24px; box-shadow: 0 -4px 24px rgba(0,0,0,0.06); }
+    .how-inner { max-width: 640px; margin: 0 auto; }
+
+    .step-list { display: flex; flex-direction: column; gap: 18px; margin-bottom: 36px; }
+    .step { display: flex; align-items: flex-start; gap: 16px; }
+    .step-num {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #c23a51);
+      color: white;
+      font-size: 18px; font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 3px 10px rgba(233,69,96,0.3);
+    }
+    .step-body { flex: 1; padding-top: 6px; }
+    .step-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; color: var(--accent2); }
+    .step-desc { font-size: 14px; color: #555; line-height: 1.6; }
+    .step-desc strong { color: var(--accent); }
+
+    /* ===== CARD PREVIEW ===== */
+    .cards-preview { display: flex; justify-content: center; gap: 12px; margin: 28px 0; flex-wrap: wrap; }
+    .preview-card {
+      width: 68px; height: 96px;
+      border-radius: 12px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      box-shadow: var(--shadow);
+      transition: transform 0.15s;
+    }
+    .preview-card:hover { transform: translateY(-4px); }
+    .preview-card.normal { background: white; border: 2px solid #eee; }
+    .preview-card.square { background: linear-gradient(135deg, var(--accent), #c23a51); }
+    .preview-card.square:hover { box-shadow: 0 6px 20px rgba(233,69,96,0.4); }
+    .preview-num { font-size: 24px; font-weight: 900; color: var(--accent2); }
+    .preview-card.square .preview-num { color: white; }
+    .preview-label { font-size: 9px; color: var(--text-dim); margin-top: 3px; }
+    .preview-card.square .preview-label { color: rgba(255,255,255,0.8); }
+
+    .square-note { text-align: center; font-size: 13px; color: var(--text-dim); margin-top: 14px; }
+
+    /* ===== PRACTICE CTA ===== */
+    .practice-cta {
+      background: linear-gradient(135deg, #fff0f0, #fef0f5);
+      border: 2px solid rgba(233,69,96,0.2);
+      border-radius: 24px;
+      padding: 36px 28px;
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto 64px;
+    }
+    .practice-cta h3 { font-size: 24px; font-weight: 900; margin-bottom: 10px; color: var(--accent2); }
+    .practice-cta p { font-size: 14px; color: #666; margin-bottom: 22px; }
+
+    footer { text-align: center; padding: 28px 24px; font-size: 12px; color: var(--text-dim); border-top: 1px solid #eee; }
+
+    @media (min-width: 480px) { .hero h1 { font-size: 68px; } .hero-img { max-width: 560px; } }
   </style>
 </head>
 <body>
-  <h1>平方包 Square Bun</h1>
+  <section class="hero">
+    <div class="hero-badge">🎯 數學心算卡牌遊戲</div>
+    <h1>平方包</h1>
+    <p class="hero-sub">訓練因數倍數心算能力，適合中小學生</p>
+    <img class="hero-img" src="game-intro.png" alt="平方包遊戲截圖" onerror="this.style.display='none'">
+    <a href="practice.html" class="cta-btn">🎮 練習模式</a>
+    <p class="cta-note">經典玩法 · 穩定版本</p>
+    <div style="margin-top:12px;">
+      <a href="deluxe.html" class="cta-btn" style="background:linear-gradient(135deg, var(--gold), #e09000);box-shadow:0 6px 24px rgba(245,166,35,0.4);">✨ 豪華版</a>
+    </div>
+    <p class="cta-note" style="margin-top:4px;">音效 · Combo · 成就系統</p>
+  </section>
 
-  <!-- Setup Screen -->
-  <div id="setup">
-    <label for="player-count">選擇人數（決定桌面卡數）</label>
-    <select id="player-count">
-      <option value="2">2 人</option>
-      <option value="3">3 人</option>
-      <option value="4" selected>4 人</option>
-      <option value="5">5 人</option>
-      <option value="6">6 人</option>
-    </select>
-    <br>
-    <button class="btn btn-primary" onclick="startGame()">開始遊戲</button>
-  </div>
-
-  <!-- Game Area -->
-  <div id="game">
-    <div class="game-header">
-      <div class="score">目前得分：<span id="score">0</span> 張</div>
-      <div class="dice-area">
-        <div class="dice" id="dice1">?</div>
-        <span style="font-size:24px">/</span>
-        <div class="dice" id="dice2">?</div>
-        <span class="target">目標：可被 <span id="target-display">?</span> 整除</span>
+  <section class="section">
+    <div class="section-label">關於遊戲</div>
+    <h2>什麼是平方包？</h2>
+    <div class="what-grid">
+      <div class="what-item highlight">
+        <div class="what-icon">🎯</div>
+        <div class="what-title">訓練心算</div>
+        <div class="what-desc">快速判斷倍數關係，訓練數感</div>
       </div>
-      <button class="btn btn-square-bun" onclick="callSquareBun()">🎤 平方包！</button>
+      <div class="what-item">
+        <div class="what-icon">👥</div>
+        <div class="what-title">2–6人遊戲</div>
+        <div class="what-desc">派對或課堂首選</div>
+      </div>
+      <div class="what-item">
+        <div class="what-icon">🧮</div>
+        <div class="what-title">88張卡牌</div>
+        <div class="what-desc">數字1–88，覆蓋所有因數範圍</div>
+      </div>
+      <div class="what-item">
+        <div class="what-icon">⭐</div>
+        <div class="what-title">特殊卡牌</div>
+        <div class="what-desc">9張平方數卡（1,4,9...），帶來刺激</div>
+      </div>
     </div>
+  </section>
 
-    <div class="controls">
-      <button class="btn btn-primary" onclick="rollDice()">🎲 擲骰</button>
-      <button class="btn btn-primary" onclick="confirmSelection()">✓ 確認</button>
-      <button class="btn btn-primary" onclick="endGame()">結束遊戲</button>
+  <section class="how">
+    <div class="how-inner">
+      <div class="section-label">遊戲玩法</div>
+      <h2>點玩？</h2>
+      <div class="step-list">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <div class="step-title">開卡</div>
+            <div class="step-desc">按「開卡」按鈕，一張一張揭開卡牌。所有卡揭開後才能擲骰。</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <div class="step-title">擲骰</div>
+            <div class="step-desc">擲出兩粒骰子，目標是找出<strong>可被骰子數字整除</strong>的卡牌。</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">🖐️</div>
+          <div class="step-body">
+            <div class="step-title">揀卡（最多2張）</div>
+            <div class="step-desc">你有兩隻手，最多選擇<strong>2張卡</strong>。選可被整除的卡，選錯扣分。</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">🎤</div>
+          <div class="step-body">
+            <div class="step-title">平方包！</div>
+            <div class="step-desc">橙紅色卡是<strong>平方數（1,4,9,16...）</strong>。如有平方包卡可claim，需先按🎤按鈕再揀！</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">➕</div>
+          <div class="step-body">
+            <div class="step-title">補卡</div>
+            <div class="step-desc">確認後卡牌自動補充<strong>一張</strong>。有新平方包卡可claim時記得claim！</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cards-preview">
+        <div class="preview-card normal"><div class="preview-num">24</div><div class="preview-label">普通卡</div></div>
+        <div class="preview-card normal"><div class="preview-num">17</div><div class="preview-label">普通卡</div></div>
+        <div class="preview-card square"><div class="preview-num">9</div><div class="preview-label">平方包!</div></div>
+        <div class="preview-card normal"><div class="preview-num">50</div><div class="preview-label">普通卡</div></div>
+        <div class="preview-card square"><div class="preview-num">36</div><div class="preview-label">平方包!</div></div>
+      </div>
+      <p class="square-note">橙紅色卡 = 平方數（1,4,9,16,25,36,49,64,81）</p>
     </div>
+  </section>
 
-    <div class="cards-container" id="cards-container"></div>
-  </div>
+  <section class="section">
+    <div class="practice-cta">
+      <h3>準備好了嗎？</h3>
+      <p>選擇模式，開始你的練習之旅！</p>
+      <a href="practice.html" class="cta-btn">🎮 練習模式</a>
+      <div style="margin-top:10px;">
+        <a href="deluxe.html" class="cta-btn" style="background:linear-gradient(135deg, var(--gold), #e09000);box-shadow:0 6px 24px rgba(245,166,35,0.4);font-size:15px;padding:13px 32px;">✨ 豪華版</a>
+      </div>
+    </div>
+  </section>
 
-  <!-- Message -->
-  <div id="message"></div>
-
-  <!-- End Screen -->
-  <div id="end-screen">
-    <h2>🏆 包山王誕生！</h2>
-    <div class="final-score"><span id="final-score">0</span> 張</div>
-    <button class="btn btn-primary" onclick="restartGame()">再玩一次</button>
-  </div>
-
-  <script>
-    // ============ CARD DATA ============
-    const SQUARE_NUMBERS = new Set([1, 4, 9, 16, 25, 36, 49, 64, 81]);
-
-    function getDivisors(n) {
-      const divisors = [];
-      for (let i = 1; i <= n; i++) {
-        if (n % i === 0) divisors.push(i);
-      }
-      return divisors;
-    }
-
-    // Generate all 88 cards
-    const cards = [];
-    for (let i = 1; i <= 88; i++) {
-      cards.push({
-        number: i,
-        divisors: getDivisors(i),
-        isSquare: SQUARE_NUMBERS.has(i)
-      });
-    }
-
-    // ============ GAME STATE ============
-    let playerCount = 4;
-    let score = 0;
-    let deck = [];
-    let tableCards = [];
-    let selectedCards = [];
-    let dice = [null, null];
-    let gameActive = false;
-
-    // ============ GAME FUNCTIONS ============
-    function shuffle(array) {
-      const arr = [...array];
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-      }
-      return arr;
-    }
-
-    function startGame() {
-      playerCount = parseInt(document.getElementById('player-count').value);
-      score = 0;
-      deck = shuffle(cards);
-      tableCards = [];
-      selectedCards = [];
-      gameActive = true;
-
-      document.getElementById('setup').style.display = 'none';
-      document.getElementById('game').style.display = 'block';
-      document.getElementById('end-screen').style.display = 'none';
-      document.getElementById('score').textContent = score;
-
-      drawCards(playerCount);
-      showMessage('🎲 請擲骰！');
-    }
-
-    function drawCards(count) {
-      tableCards = [];
-      for (let i = 0; i < count && deck.length > 0; i++) {
-        tableCards.push(deck.pop());
-      }
-      renderCards();
-    }
-
-    function renderCards() {
-      const container = document.getElementById('cards-container');
-      container.innerHTML = '';
-
-      const count = tableCards.length;
-      const centerX = container.offsetWidth / 2 || 250;
-      const centerY = container.offsetHeight / 2 || 200;
-      const radius = Math.min(centerX, centerY) - 60;
-
-      tableCards.forEach((card, index) => {
-        const angle = (index / count) * 2 * Math.PI - Math.PI / 2;
-        const x = centerX + radius * Math.cos(angle) - 40;
-        const y = centerY + radius * Math.sin(angle) - 55;
-
-        const cardEl = document.createElement('div');
-        cardEl.className = 'card' + (card.isSquare ? ' square-bun' : '') + (selectedCards.includes(index) ? ' selected' : '');
-        cardEl.style.left = x + 'px';
-        cardEl.style.top = y + 'px';
-        cardEl.innerHTML = `
-          <span class="card-number">${card.number}</span>
-          <span class="card-divisors">${card.divisors.slice(0, 4).join(', ')}${card.divisors.length > 4 ? '...' : ''}</span>
-        `;
-        cardEl.onclick = () => toggleCard(index);
-        container.appendChild(cardEl);
-      });
-    }
-
-    function toggleCard(index) {
-      if (!gameActive) return;
-      const idx = selectedCards.indexOf(index);
-      if (idx === -1) {
-        selectedCards.push(index);
-      } else {
-        selectedCards.splice(idx, 1);
-      }
-      renderCards();
-    }
-
-    function rollDice() {
-      if (!gameActive) return;
-      dice = [Math.floor(Math.random() * 6) + 1, Math.floor(Math.random() * 6) + 1];
-      document.getElementById('dice1').textContent = dice[0];
-      document.getElementById('dice2').textContent = dice[1];
-      document.getElementById('target-display').textContent = `${dice[0]} 或 ${dice[1]}`;
-      showMessage(`目標：可被 ${dice[0]} 或 ${dice[1]} 整除！`);
-    }
-
-    function confirmSelection() {
-      if (!gameActive) return;
-      if (dice[0] === null) {
-        showMessage('請先擲骰！');
-        return;
-      }
-      if (selectedCards.length === 0) {
-        showMessage('請選擇卡牌！');
-        return;
-      }
-
-      const targetSet = new Set();
-      for (const d of dice) {
-        for (let i = 1; i <= 88; i++) {
-          if (i % d === 0) targetSet.add(i);
-        }
-      }
-
-      let correct = 0;
-      let wrong = [];
-
-      for (const idx of selectedCards) {
-        if (targetSet.has(tableCards[idx].number)) {
-          correct++;
-        } else {
-          wrong.push(idx);
-        }
-      }
-
-      // Process correct cards
-      score += correct;
-      document.getElementById('score').textContent = score;
-
-      // Process wrong cards - return to deck
-      if (wrong.length > 0) {
-        const wrongCards = wrong.map(idx => tableCards[idx]);
-        deck.push(...shuffle(wrongCards));
-        score = Math.max(0, score - wrong.length);
-        document.getElementById('score').textContent = score;
-        showMessage(`答錯 ${wrong.length} 張！扣 ${wrong.length} 分`);
-      } else {
-        showMessage(`正確！+${correct} 張`);
-      }
-
-      // Remove all selected cards from table
-      tableCards = tableCards.filter((_, idx) => !selectedCards.includes(idx));
-      selectedCards = [];
-      dice = [null, null];
-      document.getElementById('dice1').textContent = '?';
-      document.getElementById('dice2').textContent = '?';
-      document.getElementById('target-display').textContent = '?';
-
-      // Check if deck can refill
-      if (deck.length === 0 || (tableCards.length === 0 && deck.length < playerCount)) {
-        endGame();
-        return;
-      }
-
-      // Draw new cards
-      const needed = playerCount - tableCards.length;
-      for (let i = 0; i < needed && deck.length > 0; i++) {
-        tableCards.push(deck.pop());
-      }
-
-      renderCards();
-
-      // Check if game should end
-      if (deck.length === 0 && tableCards.length === 0) {
-        endGame();
-      }
-    }
-
-    function callSquareBun() {
-      if (!gameActive) return;
-      const squareOnTable = tableCards.filter(c => c.isSquare);
-
-      if (squareOnTable.length > 0) {
-        // Correct call
-        const count = squareOnTable.length;
-        score += count;
-        document.getElementById('score').textContent = score;
-        showMessage(`平方包！+${count} 張`);
-
-        // Remove square cards from table
-        tableCards = tableCards.filter(c => !c.isSquare);
-        selectedCards = [];
-
-        // Draw replacement cards
-        const needed = playerCount - tableCards.length;
-        for (let i = 0; i < needed && deck.length > 0; i++) {
-          tableCards.push(deck.pop());
-        }
-
-        renderCards();
-      } else {
-        showMessage('沒有平方數！扣 1 分');
-        score = Math.max(0, score - 1);
-        document.getElementById('score').textContent = score;
-      }
-    }
-
-    function showMessage(text) {
-      const msg = document.getElementById('message');
-      msg.textContent = text;
-      msg.classList.add('show');
-      setTimeout(() => msg.classList.remove('show'), 1500);
-    }
-
-    function endGame() {
-      gameActive = false;
-      document.getElementById('game').style.display = 'none';
-      document.getElementById('end-screen').style.display = 'block';
-      document.getElementById('final-score').textContent = score;
-    }
-
-    function restartGame() {
-      document.getElementById('setup').style.display = 'block';
-      document.getElementById('end-screen').style.display = 'none';
-    }
-
-    // Handle window resize
-    window.addEventListener('resize', () => {
-      if (tableCards.length > 0) renderCards();
-    });
-  </script>
+  <footer><p>平方包 Square Bun · 練習模式</p></footer>
 </body>
 </html>

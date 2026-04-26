@@ -65,11 +65,6 @@
     function updateLevelBadge(){
       const el=document.getElementById('level-badge');
       if(el)el.textContent='Lv.'+currentLevel;
-      const progressEl=document.getElementById('coll-progress-text');
-      if(progressEl){
-        const lvl=LEVELS[currentLevel-1];
-        progressEl.textContent=collected.size+'/'+lvl.max;
-      }
     }
 
     function updateSuccessRateDisplay(){
@@ -81,8 +76,10 @@
     }
     function updateCollectionBadge(){
       const collEl=document.getElementById('coll-count');
+      const progEl=document.getElementById('coll-progress-text');
       const lvl=LEVELS[currentLevel-1];
-      if(collEl&&lvl){collEl.textContent=collected.size+'/'+lvl.max;}
+      if(collEl&&lvl){collEl.textContent=collected.size;}
+      if(progEl&&lvl){progEl.textContent=lvl.max;}
     }
 
     function startRound(){
@@ -431,6 +428,9 @@
         document.getElementById('btn-open').disabled=true;
         document.getElementById('btn-dice').disabled=true;
         document.getElementById('btn-sb').disabled=true;
+        return;
+      }else{
+        setStatus('請先選擇卡牌','');
         return;
       }
 
