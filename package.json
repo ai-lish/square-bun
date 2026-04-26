@@ -1,0 +1,20 @@
+{
+  "name": "square-bun",
+  "version": "1.0.0",
+  "description": "Pure client-side HTML game — 平方包 (Square Bun) 桌遊練習模式。",
+  "main": "deluxe.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^30.3.0",
+    "jest-environment-jsdom": "^30.3.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "testMatch": "[\"**/tests/**/*.test.js\"]"
+  }
+}
