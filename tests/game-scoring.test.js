@@ -171,7 +171,6 @@ describe('Penalty system', () => {
     expect(getSb().winStreak).toBe(0);
   });
 
-
   test('card removed from collected with count 0 moves to penaltySet', () => {
     // Seed collected with count=1
     getSb().simulateCollect(6); // {6: 1}
