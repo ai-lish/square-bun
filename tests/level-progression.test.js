@@ -18,7 +18,6 @@ const { setupDOM, loadGameScript } = require('./helpers/dom-setup');
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getSb() {
-  window.checkLevelCompletion(); // sets window._sb as a side-effect
   return window._sb;
 }
 

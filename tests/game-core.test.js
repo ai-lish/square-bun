@@ -45,10 +45,8 @@ function setDice(d1, d2) {
   Math.random = orig;
 }
 
-/** Returns the _sb debug object (only available after checkLevelCompletion is called). */
+/** Returns the _sb debug object (initialized at game.js load time). */
 function getSb() {
-  // _sb is set inside checkLevelCompletion; call it to ensure it's available.
-  window.checkLevelCompletion();
   return window._sb;
 }
 
@@ -600,6 +598,33 @@ describe('confirmPicks — squarebun mode', () => {
     window.confirmPicks();
     jest.runAllTimers();
     expect(getSb().successCount).toBe(before);
+  });
+
+  test('confirmPicks in squarebun mode with no card selected does not throw or change state', () => {
+    // Bug fix: empty selection in squarebun must return early without TypeError
+    openAllCards(getSb().cardCount);
+    window.triggerSquareBun();
+    // Do NOT select any card
+    const beforeAttempt = getSb().attemptCount;
+    const beforePhase = getSb().phase;
+    expect(() => { window.confirmPicks(); jest.runAllTimers(); }).not.toThrow();
+    expect(getSb().attemptCount).toBe(beforeAttempt);
+    expect(getSb().phase).toBe(beforePhase); // phase unchanged
+  });
+
+  test('wrong square bun pick with non-empty collected increments attemptCount', () => {
+    // Bug fix: wrong squarebun with collected cards must count as an attempt
+    getSb().simulateCollect(4); // add a collected card
+    openAllCards(getSb().cardCount);
+    window.triggerSquareBun();
+    const idx = findNonSquareCardIndex();
+    if (idx === -1) return;
+    window.handleCardClick(idx);
+    const before = getSb().attemptCount;
+    window.confirmPicks();
+    jest.runAllTimers();
+    expect(getSb().attemptCount).toBe(before + 1);
+    expect(getSb().winStreak).toBe(0);
   });
 });
 
