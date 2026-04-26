@@ -18,7 +18,6 @@ const { setupDOM, loadGameScript } = require('./helpers/dom-setup');
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getSb() {
-  window.checkLevelCompletion();
   return window._sb;
 }
 
@@ -136,6 +135,42 @@ describe('Penalty system', () => {
     expect(getSb().attemptCount).toBe(before + 1);
     expect(getSb().winStreak).toBe(0);
   });
+
+  test('wrong pick with non-empty collected: increments attemptCount', () => {
+    // Bug fix: wrong pick with collected cards must count as an attempt
+    getSb().simulateCollect(6); // collected: {6: 1}
+    openAllCards();
+    setDice(5, 7);
+    const wrongIdx = getSb().table.findIndex(c => c.n % 5 !== 0 && c.n % 7 !== 0);
+    if (wrongIdx === -1) return;
+    const before = getSb().attemptCount;
+    window.handleCardClick(wrongIdx);
+    window.confirmPicks();
+    jest.runAllTimers();
+    expect(getSb().attemptCount).toBe(before + 1);
+  });
+
+  test('wrong pick with non-empty collected: resets winStreak to 0', () => {
+    // Bug fix: wrong pick with collected cards must reset win streak
+    getSb().simulateCollect(6);
+    openAllCards();
+    setDice(1, 1);
+    window.handleCardClick(0);
+    window.confirmPicks();
+    jest.runAllTimers();
+    window.handleContinue();
+    // Now winStreak >= 1, and collected has cards
+    expect(getSb().winStreak).toBeGreaterThanOrEqual(1);
+    openAllCards();
+    setDice(5, 7);
+    const wrongIdx = getSb().table.findIndex(c => c.n % 5 !== 0 && c.n % 7 !== 0);
+    if (wrongIdx === -1) return;
+    window.handleCardClick(wrongIdx);
+    window.confirmPicks();
+    jest.runAllTimers();
+    expect(getSb().winStreak).toBe(0);
+  });
+
 
   test('card removed from collected with count 0 moves to penaltySet', () => {
     // Seed collected with count=1
