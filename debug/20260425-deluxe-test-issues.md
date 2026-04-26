@@ -1,7 +1,7 @@
 # 豪華版 Browser 測試問題記錄
 
 **日期：** 2026-04-25
-**測試版本：** `0e3cdfa` → `b4e2578` → `1bcb263` → `f2c5e2d`（Issue #4 修復）→ `183b4c1`（清理 node_modules）
+**測試版本：** `0e3cdfa`（feat/level-progression 已 merge）→ `b4e2578`（Issue #1 修復）→ `1bcb263`（Issue #1 完全修復）
 **測試 URL：** https://ai-lish.github.io/square-bun/deluxe.html?v=5
 
 ---
@@ -174,49 +174,6 @@ if (successDiff > 0) { ... }
 
 ---
 
-### Issue #6：冇揀任何卡時 ✓ 核對 完全無反應 🔴 未修復
-
-**描述：** 擲骰後（骰仔 2, 3），冇揀任何卡，點擊 ✓ 核對，嘗試計數和连胜均無變化。
-
-**根因：** `game.js` 第 383 行：
-```javascript
-if(selected.size>0){
-  // ... evaluate picks ...
-}
-// ❌ 當 selected.size === 0，整個 block 被跳過，函數直接結束！
-```
-
-**實際行為：** 點擊 ✓ 核對後，按鈕變 disabled，但冇任何 stats 更新、冇 status message、冇 UI 反饋。
-
-**預期行為：** 冇揀任何卡 → 應該視為「跳過」，結算統計：
-- 若桌上有目標卡（可被骰仔整除）→ 算答錯，`attemptCount++`, `winStreak=0`
-- 若桌上冇目標卡 → 正確跳過，遊戲繼續
-
-**修復方向：** 在 `if(selected.size>0)` 後加上 `else` 分支：
-```javascript
-if(selected.size>0){
-  // existing logic
-}else{
-  // 計算桌上是否有目標卡
-  const targets = getTargetSet();
-  if(targets.size > 0){
-    // 有目標卡但冇揀 → 答錯
-    wrongCards = Array.from(selected); // empty, but signals wrong
-    attemptCount++; winStreak=0;
-    setStatus('✗ 跳過了目標卡！', '');
-  }else{
-    // 冇目標卡 → 正確跳過
-    setStatus('✓ 跳過（冇目標卡）', '');
-  }
-  phase='reveal';
-  document.getElementById('continue-zone').classList.add('show');
-  document.getElementById('btn-confirm').disabled=true;
-  setTimeout(handleContinue, 500);
-}
-```
-
----
-
 ## 🔧 其他觀察
 
 ### 觀察 #1：豪華版入口標題正常
@@ -238,7 +195,6 @@ if(selected.size>0){
 |------|------|------|
 | P1 | Issue #1：`📚` 顯示格式 | ✅ 已修復 + 已驗證 |
 | P2 | Issue #3：Level Summary Popup 測試 | ✅ 已完整測試（全部通過）|
-| P3 | Issue #4：✓ 核對 按鈕 ReferenceError | ✅ 已修復 `f2c5e2d` |
-| P4 | Issue #6：冇揀卡時 ✓ 核對 無反應 | 🔴 未修復（需加 `else` 分支）|
-| P5 | Issue #5：因數圈顏色邏輯驗證 | ⚠️ 未驗證 |
-| P6 | Issue #2：`window._sb` 調試工具 | ✅ 已存在 |
+| P3 | Issue #4：✓ 核對 按鈕 ReferenceError | ✅ 已修復 `f2c5e2d`（待驗證）|
+| P4 | Issue #5：因數圈顏色邏輯驗證 | ⚠️ 未驗證 |
+| P5 | Issue #2：`window._sb` 調試工具 | ✅ 已存在 |

@@ -247,8 +247,6 @@
         // Determine result based on successCount change (each correct = +1)
         const successDiff = successCount - preSuccessCount;
         if (prePhase === 'squarebun') {
-          // If no card was selected, _confirmPicks returned early — nothing to do
-          if (preSelectedSize === 0) return;
           // Square Bun result
           const isSquare = table[Array.from(selected)[0]]?.sq;
           if (isSquare) {
