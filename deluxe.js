@@ -240,6 +240,41 @@
       const prePhase = phase;
       const preSelectedSize = selected.size;
       const preSuccessCount = successCount;
+
+      // 0 cards → skip branch: re-roll instead of penalty
+      if (preSelectedSize === 0) {
+        phase = 'result';
+        document.getElementById('btn-dice').disabled = true;
+        document.getElementById('btn-dice').className = 'btn btn-ghost';
+        setTimeout(() => {
+          showFlash('skip', '⏭️ 冇夾到！');
+          dice = [null, null];
+          renderDiceSVG(document.getElementById('dice1'), 0);
+          renderDiceSVG(document.getElementById('dice2'), 0);
+          phase = 'open';
+          document.getElementById('btn-dice').disabled = true;
+          setTimeout(() => {
+            if (phase === 'open') {
+              document.getElementById('btn-dice').disabled = false;
+              document.getElementById('btn-dice').className = 'btn btn-green';
+            }
+          }, 1500);
+          document.getElementById('target-badge').textContent = '開卡後擲骰';
+          document.getElementById('target-badge').className = 'target-badge disabled';
+          document.getElementById('cards-grid').classList.remove('dice-rolled');
+          updateConfirmBtn();
+          setTimeout(() => {
+            renderCards(false);
+            setStatus('揀啱就核對，或直接核對跳過', '');
+          }, 500);
+        }, 800);
+        playSkip();
+        resetCombo();
+        stats.skipCount++;
+        checkAchievements();
+        return;
+      }
+
       _confirmPicks();
       // After _confirmPicks runs, phase will be 'reveal' and cards will be flipped
       // Use a short delay to check results
@@ -260,7 +295,7 @@
           }
           checkAchievements();
         } else if (preSelectedSize === 0) {
-          // Skip
+          // Skip (already handled above, but kept for completeness)
           playSkip();
           resetCombo();
           stats.skipCount++;
