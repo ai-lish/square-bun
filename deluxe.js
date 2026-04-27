@@ -241,8 +241,8 @@
       const preSelectedSize = selected.size;
       const preSuccessCount = successCount;
 
-      // 0 cards → skip branch: re-roll instead of penalty
-      if (preSelectedSize === 0) {
+      // 0 cards in dice-rolled phase → skip branch: re-roll instead of penalty
+      if (preSelectedSize === 0 && prePhase !== 'squarebun') {
         phase = 'result';
         document.getElementById('btn-dice').disabled = true;
         document.getElementById('btn-dice').className = 'btn btn-ghost';
