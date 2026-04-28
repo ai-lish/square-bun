@@ -357,4 +357,88 @@
       _doNextRound(removeIndices, correctIndices);
     };
 
+    // --- COLLECTION MODAL ---
+    function openCollection(filter = "all") {
+      const modal = document.getElementById('coll-modal');
+      if (!modal) return;
+      modal.classList.add('show');
+
+      // Tab styling
+      ["all", "legendary", "epic", "rare"].forEach(f => {
+        const btn = document.getElementById("coll-tab-" + f);
+        if (btn) {
+          if (f === filter) {
+            btn.style.background = "#2d2d4e"; btn.style.color = "white";
+          } else {
+            btn.style.background = "transparent"; btn.style.color = "#aaa";
+          }
+        }
+      });
+
+      // Derive rarity from card properties
+      function cardRarity(n) {
+        if (SQUARES.has(n)) return "legendary";
+        const divCount = (getDivisors(n) || []).length;
+        if (divCount >= 6) return "epic";
+        return "rare";
+      }
+
+      const levelMax = LEVELS[currentLevel - 1].max;
+      const cards = ALL_CARDS.filter(c => c.n <= levelMax);
+      const filtered = cards.filter(c => filter === "all" || cardRarity(c.n) === filter);
+
+      const content = document.getElementById("coll-content");
+      if (!content) return;
+      content.innerHTML = "";
+
+      filtered.forEach(card => {
+        const qty = collected.get(card.n) || 0;
+        const wrap = document.createElement("div");
+        wrap.style.cssText = "position:relative;display:flex;flex-direction:column;align-items:center;margin:4px;";
+
+        const cardEl = document.createElement("div");
+        cardEl.style.cssText = "width:56px;height:72px;background:var(--card-bg);border:2px solid var(--border);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;user-select:none;";
+
+        const numEl = document.createElement("div");
+        numEl.style.cssText = "font-size:18px;font-weight:900;color:var(--accent);";
+        numEl.textContent = card.n;
+
+        const divEl = document.createElement("div");
+        divEl.style.cssText = "font-size:9px;color:var(--text-dim);margin-top:2px;";
+        divEl.textContent = card.divs.join("·") || "1";
+
+        cardEl.appendChild(numEl); cardEl.appendChild(divEl);
+        wrap.appendChild(cardEl);
+
+        if (qty > 0) {
+          const badge = document.createElement("div");
+          badge.className = "coll-qty-badge" + (qty >= 10 ? " max" : qty >= 5 ? " high" : "");
+          badge.textContent = "x" + qty;
+          wrap.appendChild(badge);
+        }
+
+        content.appendChild(wrap);
+      });
+
+      // Summary stats (optional elements — present in deluxe.html, absent in deluxe_new.html)
+      const summary = document.getElementById("coll-summary");
+      if (summary) {
+        summary.style.display = "flex";
+        const totalTypes = collected.size;
+        const totalCards = Array.from(collected.values()).reduce((a, b) => a + b, 0);
+        const completion = levelMax > 0 ? Math.round((totalCards / levelMax) * 100) : 0;
+        const typesEl = document.getElementById("coll-total-types");
+        const cardsEl = document.getElementById("coll-total-cards");
+        const compEl = document.getElementById("coll-completion");
+        if (typesEl) typesEl.textContent = totalTypes;
+        if (cardsEl) cardsEl.textContent = totalCards;
+        if (compEl) compEl.textContent = completion;
+      }
+    }
+
+    function closeCollection() {
+      const modal = document.getElementById("coll-modal");
+      if (modal) modal.classList.remove("show");
+    }
+
   
