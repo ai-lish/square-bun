@@ -158,32 +158,57 @@
       }
       if (newUnlocks.length > 0) {
         saveStats();
-        renderAchBadges();
-        showAchNotification(newUnlocks[0]);
-      }
-    }
-    function showAchNotification(ach) {
-      document.getElementById('ach-notify-emoji').textContent = ach.emoji;
-      document.getElementById('ach-notify-name').textContent = ach.name;
-      document.getElementById('ach-notify-desc').textContent = ach.desc;
-      const notify = document.getElementById('ach-notify');
-      notify.classList.add('show');
-      setTimeout(() => notify.classList.remove('show'), 3000);
-    }
-    function renderAchBadges() {
-      const container = document.getElementById('ach-badges');
-      container.innerHTML = '';
-      for (const ach of ACH_DEFS) {
-        if (unlockedAchs.has(ach.id)) {
-          const icon = document.createElement('div');
-          icon.className = 'ach-icon';
-          icon.textContent = ach.emoji;
-          icon.setAttribute('data-tip', ach.name);
-          container.appendChild(icon);
+        updateAchCount();
+        for (const ach of newUnlocks) {
+          showToast('🏆 成就解鎖！', `${ach.emoji} 「${ach.name}」`);
         }
       }
     }
-    renderAchBadges();
+    function showToast(title, message) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = 'achievement-toast';
+      const titleEl = document.createElement('div');
+      titleEl.className = 'toast-title';
+      titleEl.textContent = title;
+      const bodyEl = document.createElement('div');
+      bodyEl.className = 'toast-body';
+      bodyEl.textContent = message;
+      toast.appendChild(titleEl);
+      toast.appendChild(bodyEl);
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('hiding');
+        setTimeout(() => toast.remove(), 350);
+      }, 3000);
+    }
+    function updateAchCount() {
+      const countEl = document.getElementById('ach-count');
+      const totalEl = document.getElementById('ach-total');
+      if (countEl) countEl.textContent = unlockedAchs.size;
+      if (totalEl) totalEl.textContent = ACH_DEFS.length;
+    }
+    function showAchievements() {
+      const list = document.getElementById('ach-list');
+      if (!list) return;
+      list.innerHTML = ACH_DEFS.map(a => {
+        const unlocked = unlockedAchs.has(a.id);
+        return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:10px;background:${unlocked ? 'rgba(245,193,24,0.1)' : 'rgba(255,255,255,0.04)'};border:1px solid ${unlocked ? 'rgba(245,193,24,0.25)' : 'rgba(255,255,255,0.06)'};opacity:${unlocked ? '1' : '0.55'}">
+          <span style="font-size:22px;flex-shrink:0;">${unlocked ? a.emoji : '🔒'}</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:${unlocked ? '#f5c518' : '#aaa'};">${a.name}</div>
+            <div style="font-size:11px;color:#888;margin-top:2px;">${a.desc}</div>
+          </div>
+        </div>`;
+      }).join('');
+      document.getElementById('ach-modal-count').textContent = `${unlockedAchs.size}/${ACH_DEFS.length}`;
+      document.getElementById('ach-modal').classList.add('show');
+    }
+    function closeAchievements() {
+      document.getElementById('ach-modal').classList.remove('show');
+    }
+    updateAchCount();
 
     // --- PARTICLE SYSTEM ---
     const particles = [];
