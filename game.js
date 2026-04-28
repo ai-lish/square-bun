@@ -512,9 +512,6 @@
         document.getElementById('btn-dice').disabled=true;
         document.getElementById('btn-sb').disabled=true;
         return;
-      }else{
-        setStatus('請先選擇卡牌','');
-        return;
       }
 
       // No cards selected — let player re-roll instead of penalty
