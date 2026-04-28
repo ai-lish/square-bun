@@ -461,9 +461,8 @@
       }
 
       if(selected.size>0){
-        const targets=getTargetSet();
         selected.forEach(i=>{
-          if(targets.has(table[i].n))correctCards.push(i);
+          if(dice.some(d=>d!==null&&table[i].n%d===0))correctCards.push(i);
           else wrongCards.push(i);
         });
         phase='reveal';
