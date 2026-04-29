@@ -195,6 +195,7 @@ if (successDiff > 0) { ... }
 |------|------|------|
 | P1 | Issue #1：`📚` 顯示格式 | ✅ 已修復 + 已驗證 |
 | P2 | Issue #3：Level Summary Popup 測試 | ✅ 已完整測試（全部通過）|
-| P3 | Issue #4：✓ 核對 按鈕 ReferenceError | ✅ 已修復 `f2c5e2d`（待驗證）|
-| P4 | Issue #5：因數圈顏色邏輯驗證 | ⚠️ 未驗證 |
-| P5 | Issue #2：`window._sb` 調試工具 | ✅ 已存在 |
+| P3 | Issue #4：✓ 核對 按鈕 ReferenceError | ✅ 已修復 `f2c5e2d` |
+| P4 | Issue #6：冇揀卡時 ✓ 核對 無反應 | ✅ 已修復 `354baf3` + 已驗證 |
+| P5 | Issue #5：因數圈顏色邏輯驗證 | ⚠️ 未驗證 |
+| P6 | Issue #2：`window._sb` 調試工具 | ✅ 已存在 |

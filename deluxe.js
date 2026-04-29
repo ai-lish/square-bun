@@ -158,32 +158,194 @@
       }
       if (newUnlocks.length > 0) {
         saveStats();
-        renderAchBadges();
-        showAchNotification(newUnlocks[0]);
-      }
-    }
-    function showAchNotification(ach) {
-      document.getElementById('ach-notify-emoji').textContent = ach.emoji;
-      document.getElementById('ach-notify-name').textContent = ach.name;
-      document.getElementById('ach-notify-desc').textContent = ach.desc;
-      const notify = document.getElementById('ach-notify');
-      notify.classList.add('show');
-      setTimeout(() => notify.classList.remove('show'), 3000);
-    }
-    function renderAchBadges() {
-      const container = document.getElementById('ach-badges');
-      container.innerHTML = '';
-      for (const ach of ACH_DEFS) {
-        if (unlockedAchs.has(ach.id)) {
-          const icon = document.createElement('div');
-          icon.className = 'ach-icon';
-          icon.textContent = ach.emoji;
-          icon.setAttribute('data-tip', ach.name);
-          container.appendChild(icon);
+        updateAchCount();
+        for (const ach of newUnlocks) {
+          showToast('🏆 成就解鎖！', `${ach.emoji} 「${ach.name}」`);
         }
       }
     }
-    renderAchBadges();
+    function showToast(title, message) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = 'achievement-toast';
+      const titleEl = document.createElement('div');
+      titleEl.className = 'toast-title';
+      titleEl.textContent = title;
+      const bodyEl = document.createElement('div');
+      bodyEl.className = 'toast-body';
+      bodyEl.textContent = message;
+      toast.appendChild(titleEl);
+      toast.appendChild(bodyEl);
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('hiding');
+        setTimeout(() => toast.remove(), 350);
+      }, 3000);
+    }
+    function updateAchCount() {
+      const countEl = document.getElementById('ach-count');
+      const totalEl = document.getElementById('ach-total');
+      if (countEl) countEl.textContent = unlockedAchs.size;
+      if (totalEl) totalEl.textContent = ACH_DEFS.length;
+    }
+    function showAchievements() {
+      const list = document.getElementById('ach-list');
+      if (!list) return;
+      list.innerHTML = ACH_DEFS.map(a => {
+        const unlocked = unlockedAchs.has(a.id);
+        return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:10px;background:${unlocked ? 'rgba(245,193,24,0.1)' : 'rgba(255,255,255,0.04)'};border:1px solid ${unlocked ? 'rgba(245,193,24,0.25)' : 'rgba(255,255,255,0.06)'};opacity:${unlocked ? '1' : '0.55'}">
+          <span style="font-size:22px;flex-shrink:0;">${unlocked ? a.emoji : '🔒'}</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:${unlocked ? '#f5c518' : '#aaa'};">${a.name}</div>
+            <div style="font-size:11px;color:#888;margin-top:2px;">${a.desc}</div>
+          </div>
+        </div>`;
+      }).join('');
+      document.getElementById('ach-modal-count').textContent = `${unlockedAchs.size}/${ACH_DEFS.length}`;
+      document.getElementById('ach-modal').classList.add('show');
+    }
+    function closeAchievements() {
+      document.getElementById('ach-modal').classList.remove('show');
+    }
+    updateAchCount();
+
+    // --- COLLECTION (CARD GALLERY) SYSTEM ---
+    function openCollection(filter = 'all') {
+      const modal = document.getElementById('coll-modal');
+      const content = document.getElementById('coll-content');
+      if (!modal || !content) return;
+
+      const levelMax = window.LEVELS ? window.LEVELS[window.currentLevel - 1].max : 20;
+      const collected = window.collected || new Map();
+
+
+      // Get rarity for a card number
+      function getCardRarity(n) {
+        if (window.SQUARES && window.SQUARES.has && window.SQUARES.has(n)) return 'legendary';
+        if (!window.getDivisors) return 'rare';
+        const divs = window.getDivisors(n);
+        return divs.length >= 6 ? 'epic' : 'rare';
+      }
+
+      // Build cards array
+      const cards = [];
+      for (let n = 1; n <= levelMax; n++) {
+        const qty = collected.get(n) || 0;
+        const rarity = getCardRarity(n);
+        if (filter === 'all' || rarity === filter) {
+          cards.push({ n, qty, rarity });
+        }
+      }
+
+
+      // Render grid (compact: no divisors in grid)
+      content.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px;padding:4px;">' +
+        cards.map(c => {
+          const isCollected = c.qty > 0;
+          const rarityColor = c.rarity === 'legendary' ? '#f5c518' : c.rarity === 'epic' ? '#a855f7' : c.rarity === 'rare' ? '#3b82f6' : '#888';
+          return `<div onclick="${isCollected ? `showCardDetail(${c.n})` : ''}" style="
+            aspect-ratio:3/4;
+            background:${isCollected ? `linear-gradient(135deg,${rarityColor},${rarityColor}99)` : '#2d2d4e'};
+            border-radius:8px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:18px;
+            font-weight:900;
+            color:${isCollected ? '#1a1a2e' : '#555'};
+            position:relative;
+            cursor:${isCollected ? 'pointer' : 'default'};
+            opacity:${isCollected ? '1' : '0.5'};
+            box-shadow:0 2px 6px rgba(0,0,0,0.2);
+            transition:transform 0.15s;
+          ">
+            ${isCollected ? c.n : '🔒'}
+            ${c.qty > 1 ? `<span style="position:absolute;bottom:2px;right:4px;font-size:10px;background:#e53935;color:white;padding:1px 4px;border-radius:4px;font-weight:700;">×${c.qty}</span>` : ''}
+          </div>`;
+        }).join('') + '</div>' +
+        `<div style="margin-top:12px;text-align:center;color:#888;font-size:12px;">${cards.length} 張卡牌</div>`;
+
+
+      // Update tab button styles
+      const tabMap = { all: 'all', legendary: 'leg', epic: 'epic', rare: 'rare' };
+      Object.entries(tabMap).forEach(([key, id]) => {
+        const btn = document.getElementById('coll-tab-' + id);
+        if (btn) {
+          btn.style.background = filter === key ? '#2d2d4e' : 'transparent';
+          btn.style.color = filter === key ? 'white' : '#aaa';
+          btn.style.fontWeight = filter === key ? '700' : '400';
+        }
+      });
+
+      // Update summary stats
+      const summaryEl = document.getElementById('coll-summary');
+      const statsEl = document.getElementById('coll-stats');
+      if (summaryEl) {
+        summaryEl.style.display = 'flex';
+        const totalTypes = collected.size;
+        const totalCards = Array.from(collected.values()).reduce((a, b) => a + b, 0);
+        const completion = Math.round(totalTypes / levelMax * 100);
+        document.getElementById('coll-total-types').textContent = totalTypes;
+        document.getElementById('coll-total-cards').textContent = totalCards;
+        document.getElementById('coll-completion').textContent = completion;
+      }
+      if (statsEl) {
+        statsEl.textContent = `（${collected.size}/${levelMax} 已收集）`;
+      }
+
+      modal.classList.add('show');
+    }
+
+    function showCardDetail(n) {
+      const qty = window.collected.get(n) || 0;
+      const isSquare = window.SQUARES && window.SQUARES.has && window.SQUARES.has(n);
+      const divs = window.getDivisors ? window.getDivisors(n) : [];
+      const rarityLabel = isSquare ? '⭐ 傳說（平方數）' : divs.length >= 6 ? '💎 史詩' : '👑 稀有';
+      const rarityColor = isSquare ? '#f5c518' : divs.length >= 6 ? '#a855f7' : '#3b82f6';
+      const factorCircles = divs.map(d => {
+        const bg = (n / d === d) ? '#f5c518' : '#00c853';
+        return `<div style="width:26px;height:26px;border-radius:50%;background:${bg};color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;">${d}</div>`;
+      }).join('');
+      document.getElementById('detail-card-num').textContent = n;
+      document.getElementById('detail-card-num-display').textContent = n;
+      document.getElementById('detail-rarity').textContent = rarityLabel;
+      document.getElementById('detail-rarity').style.color = rarityColor;
+      document.getElementById('detail-qty').textContent = `收集次數：×${qty}`;
+      document.getElementById('detail-divs').innerHTML = factorCircles;
+      const detailModal = document.getElementById('coll-detail-modal');
+      if (detailModal) detailModal.classList.add('show');
+    }
+
+    function closeCollection() {
+      document.getElementById('coll-modal').classList.remove('show');
+    }
+
+    function closeCardDetail() {
+      const detailModal = document.getElementById('coll-detail-modal');
+      if (detailModal) detailModal.classList.remove('show');
+    }
+
+    // Inject card detail modal HTML
+    function injectCollDetailModal() {
+      if (document.getElementById('coll-detail-modal')) return;
+      const div = document.createElement('div');
+      div.id = 'coll-detail-modal';
+      div.className = 'modal-overlay';
+      div.style.cssText = 'display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.85);z-index:9998;';
+      div.innerHTML = `<div style="background:#1a1a2e;border:2px solid #f5c518;border-radius:20px;padding:28px;max-width:340px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.6);">
+        <h2 style="color:#f5c518;font-size:22px;font-weight:900;margin-bottom:6px;">📚 卡牌 <span id="detail-card-num"></span></h2>
+        <div id="detail-rarity" style="font-size:13px;font-weight:700;margin-bottom:12px;color:#f5c518;"></div>
+        <div style="width:90px;height:120px;background:linear-gradient(135deg,#f5c518,#ff9800);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:900;color:#1a1a2e;margin:0 auto 16px;box-shadow:0 4px 16px rgba(245,166,35,0.4);"><span id="detail-card-num-display"></span></div>
+        <div id="detail-qty" style="color:#aaa;font-size:14px;margin-bottom:10px;"></div>
+        <div style="color:#aaa;font-size:12px;margin-bottom:8px;">因數：</div>
+        <div id="detail-divs" style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;margin-bottom:18px;"></div>
+        <button onclick="closeCardDetail()" style="padding:12px 28px;background:linear-gradient(135deg,#f5c518,#e09000);color:#1a1a2e;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans HK',sans-serif;">關閉</button>
+      </div>`;
+      document.body.appendChild(div);
+    }
+    injectCollDetailModal();
+
 
     // --- PARTICLE SYSTEM ---
     const particles = [];
@@ -240,6 +402,41 @@
       const prePhase = phase;
       const preSelectedSize = selected.size;
       const preSuccessCount = successCount;
+
+      // 0 cards in dice-rolled phase → skip branch: re-roll instead of penalty
+      if (preSelectedSize === 0 && prePhase !== 'squarebun') {
+        phase = 'result';
+        document.getElementById('btn-dice').disabled = true;
+        document.getElementById('btn-dice').className = 'btn btn-ghost';
+        setTimeout(() => {
+          showFlash('skip', '⏭️ 冇夾到！');
+          dice = [null, null];
+          renderDiceSVG(document.getElementById('dice1'), 0);
+          renderDiceSVG(document.getElementById('dice2'), 0);
+          phase = 'open';
+          document.getElementById('btn-dice').disabled = true;
+          setTimeout(() => {
+            if (phase === 'open') {
+              document.getElementById('btn-dice').disabled = false;
+              document.getElementById('btn-dice').className = 'btn btn-green';
+            }
+          }, 1500);
+          document.getElementById('target-badge').textContent = '開卡後擲骰';
+          document.getElementById('target-badge').className = 'target-badge disabled';
+          document.getElementById('cards-grid').classList.remove('dice-rolled');
+          updateConfirmBtn();
+          setTimeout(() => {
+            renderCards(false);
+            setStatus('揀啱就核對，或直接核對跳過', '');
+          }, 500);
+        }, 800);
+        playSkip();
+        resetCombo();
+        stats.skipCount++;
+        checkAchievements();
+        return;
+      }
+
       _confirmPicks();
       // After _confirmPicks runs, phase will be 'reveal' and cards will be flipped
       // Use a short delay to check results
@@ -260,7 +457,7 @@
           }
           checkAchievements();
         } else if (preSelectedSize === 0) {
-          // Skip
+          // Skip (already handled above, but kept for completeness)
           playSkip();
           resetCombo();
           stats.skipCount++;
@@ -279,7 +476,7 @@
                 setTimeout(() => spawnParticlesFromCard(idx), 200);
               }
             }
-          } else if (successDiff < 0) {
+          } else if (wrongCards.length > 0) {
             playWrong();
             document.body.classList.add('shake');
             setTimeout(() => document.body.classList.remove('shake'), 400);
