@@ -439,6 +439,11 @@
     }
 
     /* ===== Hover effects (desktop/iPad with mouse) ===== */
+    @media (max-width: 480px) {
+      .header-title { font-size: 13px; }
+      .header-right-cluster { max-width: 60vw; }
+      .score-badge-hide-mobile { display: none !important; }
+    }
     @media (hover: hover) {
       .p-card:not(.face-down):hover .card-front { box-shadow: 0 4px 16px rgba(233,69,96,0.25); }
       .btn:hover { filter: brightness(1.05); }
@@ -543,7 +548,7 @@
         </div>
         <button id="ach-btn" onclick="showAchievements()" style="background:linear-gradient(135deg,#f5c518,#e09000);border:none;color:white;padding:4px 10px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(245,193,24,0.3);flex-shrink:0;">🏆 <span id="ach-count">0</span>/<span id="ach-total">10</span></button>
         <button id="coll-btn" onclick="openCollection()" style="background:linear-gradient(135deg,#6c5ce7,#a29bfe);border:none;color:white;padding:4px 10px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(108,92,231,0.3);flex-shrink:0;">📚 <span id="coll-count">0</span>/<span id="coll-progress-text">20</span></button>
-        <div class="score-badge" style="border-color:#00c853;color:#00c853;background:#f0fff4;flex-shrink:0;">
+        <div class="score-badge score-badge-hide-mobile" style="border-color:#00c853;color:#00c853;background:#f0fff4;flex-shrink:0;">
           <span id="success-rate">—</span>
         </div>
         <div class="score-badge" style="border-color:#ff6b00;color:#ff6b00;background:#fffaf0;flex-shrink:0;">
