@@ -82,6 +82,86 @@
       if(progEl&&lvl){progEl.textContent=lvl.max;}
     }
 
+    function openCollection(filter="all"){
+      const modal=document.getElementById('coll-modal');
+      if(!modal)return;
+      modal.classList.add('show');
+
+      // Tab styling
+      ["all","legendary","epic","rare"].forEach(f=>{
+        const btn=document.getElementById("coll-tab-"+(f=="all"?"all":f));
+        if(btn){
+          if(f===filter){
+            btn.style.background="#2d2d4e";btn.style.color="white";
+          }else{
+            btn.style.background="transparent";btn.style.color="#aaa";
+          }
+        }
+      });
+
+      // Derive rarity from card properties
+      function cardRarity(n){
+        if(SQUARES.has(n)) return "legendary";
+        const divs=(getDivisors(n)||[]).length;
+        if(divs>=6) return "epic";
+        return "rare";
+      }
+
+      const levelMax=LEVELS[currentLevel-1].max;
+      const cards=ALL_CARDS.filter(c=>c.n<=levelMax);
+      const filtered=cards.filter(c=>filter==="all"||cardRarity(c.n)===filter);
+
+      const content=document.getElementById("coll-content");
+      if(!content){return;}
+      content.innerHTML="";
+
+      filtered.forEach(card=>{
+        const qty=collected.get(card.n)||0;
+        const wrap=document.createElement("div");
+        wrap.style.cssText="position:relative;display:flex;flex-direction:column;align-items:center;margin:4px;";
+
+        const cardEl=document.createElement("div");
+        cardEl.style.cssText="width:56px;height:72px;background:var(--card-bg);border:2px solid var(--border);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;user-select:none;";
+
+        const numEl=document.createElement("div");
+        numEl.style.cssText="font-size:18px;font-weight:900;color:var(--accent);";
+        numEl.textContent=card.n;
+
+        const divEl=document.createElement("div");
+        divEl.style.cssText="font-size:9px;color:var(--text-dim);margin-top:2px;";
+        divEl.textContent=card.divs.join("·")||"1";
+
+        cardEl.appendChild(numEl);cardEl.appendChild(divEl);
+        wrap.appendChild(cardEl);
+
+        if(qty>0){
+          const badge=document.createElement("div");
+          badge.className="coll-qty-badge"+(qty>=10?" max":qty>=5?" high":"");
+          badge.textContent="x"+qty;
+          wrap.appendChild(badge);
+        }
+
+        content.appendChild(wrap);
+      });
+
+      // Summary stats
+      const summary=document.getElementById("coll-summary");
+      if(summary){
+        summary.style.display="flex";
+        const totalTypes=collected.size;
+        const totalCards=Array.from(collected.values()).reduce((a,b)=>a+b,0);
+        const completion=levelMax>0?Math.round((totalCards/levelMax)*100):0;
+        document.getElementById("coll-total-types").textContent=totalTypes;
+        document.getElementById("coll-total-cards").textContent=totalCards;
+        document.getElementById("coll-completion").textContent=completion;
+      }
+    }
+
+    function closeCollection(){
+      const modal=document.getElementById("coll-modal");
+      if(modal)modal.classList.remove("show");
+    }
+
     function startRound(){
       // Level progression: use currentLevel max instead of fixed DELUXE_RANGE
       const levelMax=LEVELS[currentLevel-1].max;
@@ -300,7 +380,7 @@
       }else{
         document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';
         document.getElementById('btn-sb').textContent='🎤 平方包';
-        phase=wasClosed?'closed':'dice-rolled';
+        phase=sbPrevPhase;
         grid.classList.remove('squarebun-mode');
         if(phase==='dice-rolled')grid.classList.add('dice-rolled');
         setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`請選擇卡牌`,'');
@@ -333,6 +413,7 @@
       wrongCards=[];correctCards=[];
 
       if(phase==='squarebun'){
+        if(selected.size===0)return;
         const selectedIdx=Array.from(selected)[0];
         const isSquare=table[selectedIdx].sq;
         wrongCards=isSquare?[]:[selectedIdx];
@@ -361,6 +442,7 @@
               collected.set(lostN,newCount);
             }
             setStatus('✗ 唔係平方數！失去 '+lostN+' 號卡！','');
+            attemptCount++;winStreak=0;
             saveProgress();
           }else{
             attemptCount++;winStreak=0;
@@ -379,9 +461,8 @@
       }
 
       if(selected.size>0){
-        const targets=getTargetSet();
         selected.forEach(i=>{
-          if(targets.has(table[i].n))correctCards.push(i);
+          if(dice.some(d=>d!==null&&table[i].n%d===0))correctCards.push(i);
           else wrongCards.push(i);
         });
         phase='reveal';
@@ -403,6 +484,7 @@
               collected.set(lostN,newCount);
             }
             setStatus(`✗ 答錯！失去 ${lostN} 號卡！`,'');
+            attemptCount++;winStreak=0;
             saveProgress();
           }else{
             attemptCount++;winStreak=0;
@@ -428,9 +510,6 @@
         document.getElementById('btn-open').disabled=true;
         document.getElementById('btn-dice').disabled=true;
         document.getElementById('btn-sb').disabled=true;
-        return;
-      }else{
-        setStatus('請先選擇卡牌','');
         return;
       }
 
@@ -586,63 +665,34 @@
       if(collected.size>=level.max){
         showLevelSummaryPopup();
       }
-    
-    // --- DEBUG EXPOSURE (window._sb for console testing) ---
-    window._sb = {
-      get dice() { return dice; },
-      get table() { return table; },
-      get selected() { return selected; },
-      get collected() { return collected; },
-      get currentLevel() { return currentLevel; },
-      get successCount() { return successCount; },
-      get attemptCount() { return attemptCount; },
-      get winStreak() { return winStreak; },
-      get LEVELS() { return LEVELS; },
-      get levelMax() { return LEVELS[currentLevel-1].max; },
-      get phase() { return phase; },
-      get sbMode() { return sbMode; },
-      get cardCount() { return cardCount; },
-      get deck() { return deck; },
-      get collectedSize() { return collected.size; },
-      get penaltySize() { return penaltySet.size; },
-      triggerRoll: () => rollDice(),
-      triggerConfirm: () => confirmPicks(),
-      triggerSB: () => triggerSquareBun(),
-      openOne: () => openOneCard(),
-      startRound: () => startRound(),
-      checkLevel: () => checkLevelCompletion(),
-      simulateCollect: (n) => { collected.set(n, (collected.get(n)||0)+1); saveProgress(); updateCollectionBadge(); },
-      logState: () => console.table({dice, phase, collected: collected.size, level: currentLevel, streak: winStreak}),
-    };
-    console.log('[Square Bun] Debug exposed. Use window._sb');
-    
-    // --- DEBUG EXPOSURE (window._sb for console testing) ---
-    window._sb = {
-      get dice() { return dice; },
-      get table() { return table; },
-      get selected() { return selected; },
-      get collected() { return collected; },
-      get currentLevel() { return currentLevel; },
-      get successCount() { return successCount; },
-      get attemptCount() { return attemptCount; },
-      get winStreak() { return winStreak; },
-      get LEVELS() { return LEVELS; },
-      get levelMax() { return LEVELS[currentLevel-1].max; },
-      get phase() { return phase; },
-      get sbMode() { return sbMode; },
-      get cardCount() { return cardCount; },
-      get deck() { return deck; },
-      get collectedSize() { return collected.size; },
-      get penaltySize() { return penaltySet.size; },
-      triggerRoll: () => rollDice(),
-      triggerConfirm: () => confirmPicks(),
-      triggerSB: () => triggerSquareBun(),
-      openOne: () => openOneCard(),
-      startRound: () => startRound(),
-      checkLevel: () => checkLevelCompletion(),
-      simulateCollect: (n) => { collected.set(n, (collected.get(n)||0)+1); saveProgress(); updateCollectionBadge(); },
-      logState: () => console.table({dice, phase, collected: collected.size, level: currentLevel, streak: winStreak}),
-    };
-    console.log('[Square Bun] Debug exposed. Use window._sb');
     }
+
+    // --- DEBUG EXPOSURE (window._sb for console testing) ---
+    window._sb = {
+      get dice() { return dice; },
+      get table() { return table; },
+      get selected() { return selected; },
+      get collected() { return collected; },
+      get currentLevel() { return currentLevel; },
+      get successCount() { return successCount; },
+      get attemptCount() { return attemptCount; },
+      get winStreak() { return winStreak; },
+      get LEVELS() { return LEVELS; },
+      get levelMax() { return LEVELS[currentLevel-1].max; },
+      get phase() { return phase; },
+      get sbMode() { return sbMode; },
+      get cardCount() { return cardCount; },
+      get deck() { return deck; },
+      get collectedSize() { return collected.size; },
+      get penaltySize() { return penaltySet.size; },
+      triggerRoll: () => rollDice(),
+      triggerConfirm: () => confirmPicks(),
+      triggerSB: () => triggerSquareBun(),
+      openOne: () => openOneCard(),
+      startRound: () => startRound(),
+      checkLevel: () => checkLevelCompletion(),
+      simulateCollect: (n) => { collected.set(n, (collected.get(n)||0)+1); saveProgress(); updateCollectionBadge(); },
+      logState: () => console.table({dice, phase, collected: collected.size, level: currentLevel, streak: winStreak}),
+    };
+    console.log('[Square Bun] Debug exposed. Use window._sb');
   

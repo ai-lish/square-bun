@@ -346,7 +346,6 @@
     }
     injectCollDetailModal();
 
-
     // --- PARTICLE SYSTEM ---
     const particles = [];
     const canvas = document.getElementById('particles-canvas');
