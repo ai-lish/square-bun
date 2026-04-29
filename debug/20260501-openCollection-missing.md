@@ -5,6 +5,7 @@
 - **URL**：`https://ai-lish.github.io/square-bun/deluxe.html`
 - **當前 commit**：`6704415`（copilot/add-deluxe-ui-redesign-plan merge）
 - **優先順序**：🟡 中
+**日期：** 2026-04-29
 
 ---
 
