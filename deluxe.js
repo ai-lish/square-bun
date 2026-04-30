@@ -216,6 +216,7 @@
       const content = document.getElementById('coll-content');
       if (!modal || !content) return;
 
+      if (!LEVELS || !currentLevel || !collected || !SQUARES || !getDivisors) return;
       const levelMax = LEVELS[currentLevel - 1].max;
 
       // Get rarity for a card number
@@ -295,6 +296,7 @@
     }
 
     function showCardDetail(n) {
+      if (!collected || !SQUARES || !getDivisors) return;
       const qty = collected.get(n) || 0;
       const isSquare = SQUARES.has(n);
       const divs = getDivisors(n);
