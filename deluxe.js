@@ -216,15 +216,13 @@
       const content = document.getElementById('coll-content');
       if (!modal || !content) return;
 
-      const levelMax = window.LEVELS ? window.LEVELS[window.currentLevel - 1].max : 20;
-      const collected = window.collected || new Map();
-
+      if (!LEVELS || !currentLevel || !collected || !SQUARES || !getDivisors) return;
+      const levelMax = LEVELS[currentLevel - 1].max;
 
       // Get rarity for a card number
       function getCardRarity(n) {
-        if (window.SQUARES && window.SQUARES.has && window.SQUARES.has(n)) return 'legendary';
-        if (!window.getDivisors) return 'rare';
-        const divs = window.getDivisors(n);
+        if (SQUARES.has(n)) return 'legendary';
+        const divs = getDivisors(n);
         return divs.length >= 6 ? 'epic' : 'rare';
       }
 
@@ -298,9 +296,10 @@
     }
 
     function showCardDetail(n) {
-      const qty = window.collected.get(n) || 0;
-      const isSquare = window.SQUARES && window.SQUARES.has && window.SQUARES.has(n);
-      const divs = window.getDivisors ? window.getDivisors(n) : [];
+      if (!collected || !SQUARES || !getDivisors) return;
+      const qty = collected.get(n) || 0;
+      const isSquare = SQUARES.has(n);
+      const divs = getDivisors(n);
       const rarityLabel = isSquare ? '⭐ 傳說（平方數）' : divs.length >= 6 ? '💎 史詩' : '👑 稀有';
       const rarityColor = isSquare ? '#f5c518' : divs.length >= 6 ? '#a855f7' : '#3b82f6';
       const factorCircles = divs.map(d => {
