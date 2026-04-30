@@ -493,3 +493,5 @@
     };
 
   
+// Ensure deluxe version is the global handler
+window.openCollection = openCollection;
