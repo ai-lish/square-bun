@@ -28,6 +28,7 @@
         collected: Object.fromEntries(collected),
         penaltySet: Array.from(penaltySet),
         currentLevel,
+        cardCount,
         successCount,
         attemptCount,
         winStreak,
@@ -41,9 +42,11 @@
         collected=new Map(Object.entries(data.collected||{}));
         penaltySet=new Set(data.penaltySet||[]);
         currentLevel=data.currentLevel||1;
+        cardCount=data.cardCount||4;
         successCount=data.successCount||0;
         attemptCount=data.attemptCount||0;
         winStreak=data.winStreak||0;
+        document.getElementById('count-val').textContent=cardCount;
       }catch(e){}
     }
 
