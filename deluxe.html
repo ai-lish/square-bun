@@ -355,6 +355,9 @@
     #level-picker .start-level-btn.is-current { background: #fff8e8; color: #8a5d00; }
     #level-picker .start-level-btn.is-current .level-picker-range { color: #9a6900; }
     #level-picker .start-level-btn.is-available:active { background: #fff8e8; }
+    .download-offline-btn { width: 100%; max-width: 280px; padding: 6px 8px; background: transparent; color: var(--text-dim); border: 1px solid transparent; border-radius: 10px; font-size: 12px; cursor: pointer; font-family: 'Noto Sans HK', sans-serif; transition: color 0.15s, background 0.15s, border-color 0.15s; }
+    .download-offline-btn:hover { color: #9a6900; background: rgba(245,166,35,0.08); border-color: #e8e4de; }
+    .download-offline-btn:disabled { opacity: 0.65; cursor: wait; }
 
     @media (min-width: 400px) { .cards-grid { max-width: 360px; gap: 11px; } .p-card { min-height: 80px; } .card-num { font-size: 28px; } }
 
@@ -550,6 +553,7 @@
     <button class="start-btn" onclick="startGame()">開始練習 🎲</button>
     <div class="level-picker-label">或選擇起始等級</div>
     <div id="level-picker"></div>
+    <button id="download-offline-btn" class="download-offline-btn" type="button" onclick="downloadOfflineZip()" hidden>⬇ 下載離線版（老師用）</button>
   </div>
 
   <div id="game-screen" style="display:none; height:100%; flex-direction:column;">
@@ -653,8 +657,8 @@
 
   
   <script>var CARD_RANGE=20;</script>
-  <script src="game.js?v=20260920-p0"></script>
-  <script src="deluxe.js?v=20260920-p0"></script>
+  <script src="game.js?v=20260920-p1"></script>
+  <script src="deluxe.js?v=20260920-p1"></script>
 
   <!-- Level Completion Summary Overlay -->
   <div id="level-summary-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:800;align-items:center;justify-content:center;">

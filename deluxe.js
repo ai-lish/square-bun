@@ -495,3 +495,101 @@
   
 // Ensure deluxe version is the global handler
 window.openCollection = openCollection;
+
+// --- OFFLINE ZIP DOWNLOAD ---
+const OFFLINE_ZIP_JS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+const OFFLINE_README = [
+  '平方包（豪華版）離線使用說明',
+  '',
+  '1. 解壓後雙擊 deluxe.html 開始遊玩（建議使用 Chrome／Edge）。',
+  '2. 必須先解壓，不可直接在壓縮檔內開啟。',
+  '',
+  '檔案用途：',
+  '- deluxe.html：畫面與樣式。',
+  '- game.js：遊戲規則、等級、卡牌範圍。',
+  '- deluxe.js：收藏、成就等介面。',
+  '',
+  '常見修改位置：',
+  '- game.js 的 LEVELS（等級範圍）。',
+  '',
+  '進度儲存於該電腦該瀏覽器，與線上版互不相通。',
+  '無網絡時字型會以系統字型顯示，不影響遊玩。',
+].join('\n');
+let jsZipLoadPromise=null;
+let offlineZipInProgress=false;
+
+function loadJSZip(){
+  if(window.JSZip)return Promise.resolve(window.JSZip);
+  if(jsZipLoadPromise)return jsZipLoadPromise;
+  jsZipLoadPromise=new Promise((resolve,reject)=>{
+    const script=document.createElement('script');
+    script.src=OFFLINE_ZIP_JS_URL;
+    script.async=true;
+    script.onload=()=>window.JSZip?resolve(window.JSZip):reject(new Error('JSZip unavailable'));
+    script.onerror=()=>reject(new Error('JSZip load failed'));
+    document.head.appendChild(script);
+  }).catch(error=>{
+    jsZipLoadPromise=null;
+    throw error;
+  });
+  return jsZipLoadPromise;
+}
+
+function getOfflineZipDate(){
+  const now=new Date();
+  const year=now.getFullYear();
+  const month=String(now.getMonth()+1).padStart(2,'0');
+  const day=String(now.getDate()).padStart(2,'0');
+  return ''+year+month+day;
+}
+
+async function downloadOfflineZip(){
+  const button=document.getElementById('download-offline-btn');
+  if(!button||offlineZipInProgress)return;
+  offlineZipInProgress=true;
+  const originalText=button.textContent;
+  button.textContent='打包中…';
+  button.disabled=true;
+  let objectUrl=null;
+  try{
+    const JSZip=await loadJSZip();
+    const sourceFiles=['deluxe.html','game.js','deluxe.js'];
+    const contents={};
+    for(const fileName of sourceFiles){
+      const response=await fetch(new URL(fileName,document.baseURI),{cache:'no-store'});
+      if(response.status!==200)throw new Error('Source fetch failed: '+fileName);
+      contents[fileName]=await response.text();
+    }
+    const offlineHtml=contents['deluxe.html'].replace(/((?:<script\b[^>]*\bsrc=["'])(?:\.\/)?(?:game|deluxe)\.js)\?v=[^"']*(["'])/gi,'$1$2');
+    const zip=new JSZip();
+    const folder=zip.folder('square-bun');
+    folder.file('deluxe.html',offlineHtml);
+    folder.file('game.js',contents['game.js']);
+    folder.file('deluxe.js',contents['deluxe.js']);
+    folder.file('使用說明.txt',OFFLINE_README);
+    const blob=await zip.generateAsync({type:'blob'});
+    objectUrl=URL.createObjectURL(blob);
+    const link=document.createElement('a');
+    link.href=objectUrl;
+    link.download='square-bun-deluxe-'+getOfflineZipDate()+'.zip';
+    link.style.display='none';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }catch(error){
+    window.alert('下載失敗，請稍後再試');
+  }finally{
+    if(objectUrl)setTimeout(()=>URL.revokeObjectURL(objectUrl),0);
+    button.textContent=originalText;
+    button.disabled=false;
+    offlineZipInProgress=false;
+  }
+}
+
+function setupOfflineDownloadButton(){
+  const button=document.getElementById('download-offline-btn');
+  if(!button)return;
+  button.hidden=location.protocol==='file:';
+}
+
+setupOfflineDownloadButton();
