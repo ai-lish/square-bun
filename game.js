@@ -55,14 +55,26 @@
     function closeRules(){document.getElementById('rules-modal').classList.remove('show');}
     function shuffle(a){const r=Array.from(a);for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
 
-    function startGame(){
-      loadProgress();
+    function enterGame(){
       document.getElementById('setup-screen').style.display='none';
       document.getElementById('game-screen').style.display='flex';
       updateLevelBadge();
       updateCollectionBadge();
       updateSuccessRateDisplay();
       startRound();
+    }
+
+    function startGame(){
+      loadProgress();
+      enterGame();
+    }
+
+    function startAtLevel(n){
+      loadProgress();
+      if(!Number.isInteger(n) || n<1 || n>LEVELS.length)return;
+      currentLevel=n;
+      saveProgress();
+      enterGame();
     }
 
     function updateLevelBadge(){
@@ -698,4 +710,3 @@
       logState: () => console.table({dice, phase, collected: collected.size, level: currentLevel, streak: winStreak}),
     };
     console.log('[Square Bun] Debug exposed. Use window._sb');
-  

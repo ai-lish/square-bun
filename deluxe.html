@@ -343,6 +343,8 @@
     .setup-rules-link { color: var(--text-dim); font-size: 14px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
     .start-btn { width: 100%; max-width: 280px; padding: 16px; font-size: 17px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: white; border: none; border-radius: 14px; font-weight: 900; cursor: pointer; font-family: 'Noto Sans HK', sans-serif; box-shadow: 0 6px 20px rgba(233,69,96,0.4); transition: transform 0.15s; }
     .start-btn:active { transform: scale(0.97); }
+    .start-level-btn { width: 100%; max-width: 280px; padding: 12px 16px; font-size: 14px; background: white; color: #9a6900; border: 2px solid var(--gold); border-radius: 14px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans HK', sans-serif; box-shadow: 0 2px 8px rgba(245,166,35,0.15); transition: transform 0.15s, background 0.15s; }
+    .start-level-btn:active { transform: scale(0.97); background: #fff8e8; }
 
     @media (min-width: 400px) { .cards-grid { max-width: 360px; gap: 11px; } .p-card { min-height: 80px; } .card-num { font-size: 28px; } }
 
@@ -536,6 +538,7 @@
     </div>
     <div class="setup-rules-link" onclick="showRules()">📖 查看遊戲規則</div>
     <button class="start-btn" onclick="startGame()">開始練習 🎲</button>
+    <button class="start-level-btn" onclick="startAtLevel(2)">⚡ 直接進入 Lv.2（1–100）</button>
   </div>
 
   <div id="game-screen" style="display:none; height:100%; flex-direction:column;">
