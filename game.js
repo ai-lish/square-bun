@@ -72,9 +72,40 @@
     function startAtLevel(n){
       loadProgress();
       if(!Number.isInteger(n) || n<1 || n>LEVELS.length)return;
+      if(n<currentLevel)return;
       currentLevel=n;
       saveProgress();
       enterGame();
+    }
+
+    function renderLevelPicker(){
+      const picker=document.getElementById('level-picker');
+      if(!picker)return;
+      loadProgress();
+      picker.innerHTML='';
+      LEVELS.forEach(level=>{
+        const n=level.level;
+        const btn=document.createElement('button');
+        btn.type='button';
+        btn.className='start-level-btn';
+        btn.setAttribute('onclick','startAtLevel('+n+')');
+        btn.disabled=n<currentLevel;
+        if(n<currentLevel)btn.classList.add('is-completed');
+        if(n===currentLevel)btn.classList.add('is-current');
+        if(n>currentLevel)btn.classList.add('is-available');
+
+        const nameEl=document.createElement('span');
+        nameEl.className='level-picker-name';
+        nameEl.textContent='Lv.'+n;
+        const rangeEl=document.createElement('span');
+        rangeEl.className='level-picker-range';
+        rangeEl.textContent='1–'+level.max;
+        const statusEl=document.createElement('span');
+        statusEl.className='level-picker-status';
+        statusEl.textContent=n<currentLevel?'✓ 已完成':n===currentLevel?'目前':'';
+        btn.append(nameEl,rangeEl,statusEl);
+        picker.appendChild(btn);
+      });
     }
 
     function updateLevelBadge(){
@@ -710,3 +741,4 @@
       logState: () => console.table({dice, phase, collected: collected.size, level: currentLevel, streak: winStreak}),
     };
     console.log('[Square Bun] Debug exposed. Use window._sb');
+    renderLevelPicker();

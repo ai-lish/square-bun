@@ -345,6 +345,16 @@
     .start-btn:active { transform: scale(0.97); }
     .start-level-btn { width: 100%; max-width: 280px; padding: 12px 16px; font-size: 14px; background: white; color: #9a6900; border: 2px solid var(--gold); border-radius: 14px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans HK', sans-serif; box-shadow: 0 2px 8px rgba(245,166,35,0.15); transition: transform 0.15s, background 0.15s; }
     .start-level-btn:active { transform: scale(0.97); background: #fff8e8; }
+    .level-picker-label { color: var(--text-dim); font-size: 12px; }
+    #level-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 280px; }
+    #level-picker .start-level-btn { max-width: none; min-width: 0; padding: 9px 4px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; line-height: 1.2; }
+    #level-picker .start-level-btn:disabled { background: #f0efed; color: #aaa; border-color: #d9d5cf; box-shadow: none; cursor: not-allowed; }
+    .level-picker-name { font-size: 15px; font-weight: 900; }
+    .level-picker-range { font-size: 11px; font-weight: 400; color: var(--text-dim); white-space: nowrap; }
+    .level-picker-status { min-height: 14px; font-size: 10px; font-weight: 700; }
+    #level-picker .start-level-btn.is-current { background: #fff8e8; color: #8a5d00; }
+    #level-picker .start-level-btn.is-current .level-picker-range { color: #9a6900; }
+    #level-picker .start-level-btn.is-available:active { background: #fff8e8; }
 
     @media (min-width: 400px) { .cards-grid { max-width: 360px; gap: 11px; } .p-card { min-height: 80px; } .card-num { font-size: 28px; } }
 
@@ -538,7 +548,8 @@
     </div>
     <div class="setup-rules-link" onclick="showRules()">📖 查看遊戲規則</div>
     <button class="start-btn" onclick="startGame()">開始練習 🎲</button>
-    <button class="start-level-btn" onclick="startAtLevel(2)">⚡ 直接進入 Lv.2（1–100）</button>
+    <div class="level-picker-label">或選擇起始等級</div>
+    <div id="level-picker"></div>
   </div>
 
   <div id="game-screen" style="display:none; height:100%; flex-direction:column;">
@@ -642,8 +653,8 @@
 
   
   <script>var CARD_RANGE=20;</script>
-  <script src="game.js"></script>
-  <script src="deluxe.js"></script>
+  <script src="game.js?v=20260920"></script>
+  <script src="deluxe.js?v=20260920"></script>
 
   <!-- Level Completion Summary Overlay -->
   <div id="level-summary-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:800;align-items:center;justify-content:center;">
