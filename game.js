@@ -1,9 +1,4 @@
 
-    const SQUARES = new Set([1,4,9,16,25,36,49,64,81]);
-    function getDivisors(n){const d=[];for(let i=1;i<=n;i++)if(n%i===0)d.push(i);return d;}
-    const ALL_CARDS=[];for(let i=1;i<=88;i++){ALL_CARDS.push({n:i,divs:getDivisors(i),sq:SQUARES.has(i)});}
-    const DELUXE_RANGE=typeof CARD_RANGE!=='undefined'?CARD_RANGE:88; // Default 88 (practice); deluxe sets CARD_RANGE=20 before loading
-
     // --- LEVEL PROGRESSION SYSTEM ---
     const LEVELS = [
       { level: 1, max: 20 },
@@ -13,6 +8,11 @@
       { level: 5, max: 1000 },
       { level: 6, max: 2000 },
     ];
+    const MAX_CARD = Math.max(...LEVELS.map(level=>level.max));
+    const SQUARES = new Set(Array.from({length:Math.floor(Math.sqrt(MAX_CARD))},(_,i)=>(i+1)*(i+1)));
+    function getDivisors(n){const d=[];for(let i=1;i<=n;i++)if(n%i===0)d.push(i);return d;}
+    const ALL_CARDS=[];for(let i=1;i<=MAX_CARD;i++){ALL_CARDS.push({n:i,divs:getDivisors(i),sq:SQUARES.has(i)});}
+    const DELUXE_RANGE=typeof CARD_RANGE!=='undefined'?CARD_RANGE:88; // Default 88 (practice); deluxe sets CARD_RANGE=20 before loading
     let currentLevel = 1;  // default Lv.1 (1-20)
     let penaltySet = new Set();  // cards lost due to wrong picks
 
@@ -39,8 +39,15 @@
         const raw=localStorage.getItem('sb_squarebun');
         if(!raw)return;
         const data=JSON.parse(raw);
-        collected=new Map(Object.entries(data.collected||{}));
-        penaltySet=new Set(data.penaltySet||[]);
+        collected=new Map();
+        Object.entries(data.collected||{}).forEach(([k,v])=>{
+          const cardNumber=Number(k);
+          const count=Number(v);
+          if(Number.isInteger(cardNumber)&&Number.isFinite(count)){
+            collected.set(cardNumber,(collected.get(cardNumber)||0)+count);
+          }
+        });
+        penaltySet=new Set((data.penaltySet||[]).map(Number).filter(Number.isInteger));
         currentLevel=data.currentLevel||1;
         cardCount=data.cardCount||4;
         successCount=data.successCount||0;
@@ -102,7 +109,7 @@
         rangeEl.textContent='1–'+level.max;
         const statusEl=document.createElement('span');
         statusEl.className='level-picker-status';
-        statusEl.textContent=n<currentLevel?'✓ 已完成':n===currentLevel?'目前':'';
+        statusEl.textContent=n===currentLevel?'目前':'';
         btn.append(nameEl,rangeEl,statusEl);
         picker.appendChild(btn);
       });
@@ -448,7 +455,7 @@
     function getTargetSet(){
       const s=new Set();
       if(dice[0]===null)return s;
-      const maxN=DELUXE_RANGE;
+      const maxN=LEVELS[currentLevel-1].max;
       for(const d of dice)for(let i=1;i<=maxN;i++)if(i%d===0)s.add(i);
       return s;
     }
