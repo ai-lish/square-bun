@@ -4,683 +4,1387 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>平方包 - 豪華版</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@400;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Noto+Sans+HK:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #f5f3ef;
-      --primary: #1a1a2e;
-      --accent: #e94560;
-      --accent-dark: #c23a51;
-      --gold: #f5a623;
-      --card-bg: #fff;
-      --card-front: #fff;
-      --card-shadow: 0 3px 12px rgba(0,0,0,0.1);
-      --text: #2d2d2d;
-      --text-dim: #888;
-      --success: #00c853;
-      --danger: #ff3b5c;
-      --border: #e8e4de;
+      --table: #1D1B3F;
+      --panel: #2A2752;
+      --felt: #26234B;
+      --felt-edge: #2E2A5C;
+      --ink: #16142E;
+      --cream: #FFF6E5;
+      --dim: #B9B4E0;
+      --orange: #FF8A3D;
+      --gold: #FFC93C;
+      --teal: #3DDBC4;
+      --coral: #FF5A5F;
+      --legendary: #FFC93C;
+      --epic: #B57BFF;
+      --rare: #4FA3FF;
+      --table-dot: radial-gradient(rgba(255,246,229,0.07) 1.5px, transparent 1.5px);
+      --hard-shadow: 0 4px 0 var(--ink);
+      --large-shadow: 0 6px 0 var(--ink);
+      --stroke: 3px solid var(--ink);
+      --large-stroke: 4px solid var(--ink);
     }
+
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body { height: 100%; overflow: hidden; touch-action: manipulation; }
-    body { font-family: 'Noto Sans HK', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100dvh; }
+    html, body { width: 100%; height: 100%; min-height: 100dvh; overflow: hidden; touch-action: manipulation; }
+    body {
+      display: flex;
+      flex-direction: column;
+      background-color: var(--table);
+      background-image: var(--table-dot);
+      background-size: 22px 22px;
+      color: var(--cream);
+      font-family: 'Noto Sans HK', sans-serif;
+    }
+    button { font: inherit; }
+    .icon-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+    .icon { width: 20px; height: 20px; flex: 0 0 auto; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+    .icon-lg { width: 24px; height: 24px; }
+    .number-face, .level-badge, .stat-value, .count-display, .collection-number,
+    .summary-range, .mini-number, .card-num, .card-back-number, .factor-circle {
+      font-family: 'Lilita One', 'Noto Sans HK', sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
 
-    /* ===== HEADER ===== */
-    .header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 16px; background: white; flex-shrink: 0; border-bottom: 1px solid var(--border);
+    .game-button, .controls .btn, .icon-button, .count-btn, .start-level-btn, .card-front, .coll-tab, .modal-close,
+    .download-offline-btn, .start-btn, #btn-continue, .summary-action {
+      -webkit-appearance: none;
+      appearance: none;
     }
-    .header-title { font-size: 17px; font-weight: 900; color: var(--accent); }
-    .score-badge { background: #fff0f3; border: 2px solid var(--accent); border-radius: 20px; padding: 5px 14px; font-size: 13px; font-weight: 700; color: var(--accent); }
-    .score-badge span { color: var(--accent-dark); }
-    .score-badge .score-delta {
-      display: inline-block; font-size: 12px; font-weight: 900; margin-left: 4px;
-      animation: scoreDelta 0.9s ease-out forwards; pointer-events: none;
+    .game-button, .controls .btn, .icon-button, .count-btn, .start-level-btn, .coll-tab, .modal-close,
+    .download-offline-btn, .start-btn, #btn-continue, .summary-action {
+      border: var(--stroke);
+      border-radius: 16px;
+      box-shadow: var(--hard-shadow);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease, background-color 0.12s ease;
     }
-    .score-badge .score-delta.pos { color: var(--success); }
-    .score-badge .score-delta.neg { color: var(--danger); }
-    @keyframes scoreDelta {
-      0%  { opacity: 1; transform: translateY(0); }
-      60% { opacity: 1; transform: translateY(-12px); }
-      100%{ opacity: 0; transform: translateY(-18px); }
+    .game-button:active:not(:disabled), .controls .btn:active:not(:disabled), .icon-button:active, .count-btn:active, .start-level-btn:active:not(:disabled),
+    .coll-tab:active, .modal-close:active, .download-offline-btn:active:not(:disabled), .start-btn:active,
+    #btn-continue:active, .summary-action:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 var(--ink);
     }
-    .rules-btn { background: transparent; border: none; color: var(--text-dim); font-size: 22px; cursor: pointer; padding: 4px 8px; font-family: 'Noto Sans HK', sans-serif; }
+    button:focus-visible, [role="button"]:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
 
-    /* ===== DELUXE: Combo Display ===== */
-    .combo-display {
-      display: none;
+    /* Inline icon symbols; included in the HTML so the offline copy stays complete. */
+    .icon-sprite symbol { overflow: visible; }
+
+    /* ===== Start screen ===== */
+    #setup-screen {
+      width: min(100%, 540px);
+      min-height: 100%;
+      height: 100%;
+      margin: 0 auto;
+      padding: 14px 20px max(18px, env(safe-area-inset-bottom));
+      display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 4px;
+      justify-content: flex-start;
+      gap: 12px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+    .setup-topline { width: 100%; min-height: 44px; display: flex; justify-content: flex-end; gap: 8px; }
+    .icon-button {
+      width: 44px;
+      height: 44px;
+      flex: 0 0 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      cursor: pointer;
+      color: var(--cream);
+      background: var(--panel);
+    }
+    .icon-button .icon { width: 21px; height: 21px; }
+    .setup-logo { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+    .mascot-logo { width: 92px; height: 84px; overflow: visible; }
+    .setup-logo h1 {
+      color: var(--cream);
+      font-size: 48px;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: 4px;
+      -webkit-text-stroke: 3px var(--ink);
+      paint-order: stroke fill;
+      text-shadow: 0 5px 0 var(--ink);
+    }
+    .setup-logo p {
+      margin-top: 6px;
+      padding: 5px 14px;
+      border: var(--stroke);
+      border-radius: 999px;
+      background: var(--orange);
+      color: var(--ink);
       font-size: 13px;
       font-weight: 900;
-      padding: 4px 10px;
+      letter-spacing: 1px;
+    }
+    .setup-card-count {
+      width: 100%;
+      padding: 12px 16px 13px;
+      border: var(--stroke);
+      border-radius: 22px;
+      background: var(--panel);
+      box-shadow: var(--large-shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .setup-card-count label { color: var(--dim); font-size: 14px; font-weight: 700; }
+    .count-selector { display: flex; align-items: center; justify-content: center; gap: 22px; }
+    .count-btn {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'Lilita One', sans-serif;
+      font-size: 26px;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .count-display { min-width: 68px; color: var(--gold); font-size: 44px; line-height: 1; text-align: center; text-shadow: 0 4px 0 var(--ink); }
+    .count-display .count-unit { color: var(--dim); font: 700 13px 'Noto Sans HK', sans-serif; text-shadow: none; }
+    #card-fan { height: 42px; min-width: 150px; display: flex; align-items: flex-end; justify-content: center; }
+    .fan-card {
+      width: 25px;
+      height: 36px;
+      margin-left: -3px;
+      border: 2.5px solid var(--ink);
+      border-radius: 7px;
+      background: var(--orange);
+      box-shadow: 0 3px 0 var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: rotate(var(--fan-rotation, 0deg));
+    }
+    .fan-card::after { content: ''; width: 10px; height: 10px; border: 2px solid var(--ink); border-radius: 3px; background: var(--gold); }
+    .start-btn {
+      width: 100%;
+      min-height: 60px;
+      border: var(--large-stroke);
       border-radius: 20px;
-      background: #fff;
-      border: 2px solid var(--gold);
-      box-shadow: 0 2px 8px rgba(245,166,35,0.3);
-      transition: all 0.3s;
+      background: var(--orange);
+      box-shadow: 0 6px 0 var(--ink);
+      color: var(--ink);
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      cursor: pointer;
     }
-    .combo-display.active { display: flex; }
-    .combo-display.fire { background: linear-gradient(135deg, #ff6b00, #ff4500); color: white; border-color: #ff4500; animation: comboPulse 0.5s ease; }
-    .combo-display.super { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #5a3000; border-color: #ffd700; animation: comboPulse 0.5s ease, comboGlow 1s infinite; }
-    @keyframes comboPulse { 0%{transform:scale(1)} 50%{transform:scale(1.2)} 100%{transform:scale(1)} }
-    @keyframes comboGlow { 0%,100%{box-shadow:0 2px 12px rgba(255,215,0,0.5)} 50%{box-shadow:0 2px 24px rgba(255,215,0,0.9)} }
-    .combo-display .combo-fire { font-size: 16px; }
-    .combo-display .combo-count { font-size: 15px; }
+    .level-picker-label { color: var(--dim); font-size: 13px; font-weight: 700; text-align: center; }
+    #level-picker { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    #level-picker .start-level-btn {
+      min-width: 0;
+      min-height: 62px;
+      padding: 7px 4px;
+      border-radius: 16px;
+      background: var(--cream);
+      color: var(--ink);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      line-height: 1.15;
+    }
+    #level-picker .start-level-btn.is-current { background: var(--gold); }
+    #level-picker .start-level-btn.is-available { background: var(--cream); }
+    #level-picker .start-level-btn.is-completed { background: var(--teal); }
+    #level-picker .start-level-btn:disabled { background: var(--panel); color: var(--dim); opacity: 0.72; cursor: not-allowed; box-shadow: none; }
+    .level-picker-name { font: 20px/1 'Lilita One', sans-serif; }
+    .level-picker-range { font-size: 11px; font-weight: 700; }
+    .level-picker-status { min-height: 13px; font-size: 10px; font-weight: 900; }
+    .setup-footer { width: 100%; margin-top: auto; padding-top: 4px; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 18px; }
+    .setup-rules-link { padding: 4px; color: var(--gold); font-size: 13px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .download-offline-btn {
+      padding: 5px 8px;
+      border-color: transparent;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--dim);
+      box-shadow: none;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .download-offline-btn:disabled { opacity: 0.65; cursor: wait; }
 
-    /* ===== DELUXE: Achievement Toast ===== */
-    @keyframes slideInRight {
-      from { transform: translateX(120%); opacity: 0; }
-      to   { transform: translateX(0);    opacity: 1; }
-    }
-    @keyframes slideOutRight {
-      from { transform: translateX(0);    opacity: 1; }
-      to   { transform: translateX(120%); opacity: 0; }
-    }
-    #toast-container {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 9999;
+    /* ===== Game header and live stats ===== */
+    #game-screen {
+      width: min(100%, 1680px);
+      height: 100%;
+      min-height: 0;
+      margin: 0 auto;
+      padding: 9px 12px max(9px, env(safe-area-inset-bottom));
       display: flex;
       flex-direction: column;
       gap: 8px;
-      pointer-events: none;
+      overflow: hidden;
     }
-    .achievement-toast {
-      background: rgba(20,20,30,0.95);
-      border: 2px solid #f5c518;
-      border-radius: 12px;
-      padding: 12px 16px;
-      min-width: 220px;
-      max-width: 280px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-      animation: slideInRight 0.4s ease-out;
-      pointer-events: auto;
-    }
-    .achievement-toast.hiding { animation: slideOutRight 0.35s ease-in forwards; }
-    .achievement-toast .toast-title { color: #f5c518; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
-    .achievement-toast .toast-body { color: white; font-size: 13px; font-weight: 700; margin-top: 3px; }
-
-    /* ===== DELUXE: Particles ===== */
-    #particles-canvas {
-      position: fixed; top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-      z-index: 400;
-    }
-
-    /* ===== DELUXE: Screen Shake ===== */
-    @keyframes screenShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
-    body.shake { animation: screenShake 0.4s ease; }
-
-    /* ===== DELUXE: Sound Toggle ===== */
-    .sound-toggle {
-      background: transparent;
-      border: none;
-      font-size: 18px;
-      cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 8px;
-      transition: background 0.15s;
-    }
-    .sound-toggle:hover { background: rgba(0,0,0,0.05); }
-    .sound-toggle.muted { opacity: 0.4; }
-
-    /* ===== DELUXE: Collection Grid ===== */
-    .coll-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
-      gap: 6px;
-      padding: 4px;
-    }
-
-    /* ===== DELUXE: Modal Overlay (shared) ===== */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7);
-      z-index: 600;
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-overlay.show { display: flex; }
-
-    /* ===== DICE ZONE ===== */
-    .dice-zone {
-      display: flex; align-items: center; justify-content: center;
-      gap: 14px; padding: 10px 16px; background: white; flex-shrink: 0; border-bottom: 1px solid var(--border);
-    }
-    .dice-pair { display: flex; align-items: center; gap: 10px; }
-    .dice {
-      width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
-      background: #fefefe; border: 2px solid #e0e0e0;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-      transition: transform 0.2s;
-    }
-    .dice.rolling { animation: diceRoll 0.5s ease-out; }
-    @keyframes diceRoll { 0%{transform:rotate(0deg) scale(1)} 50%{transform:rotate(180deg) scale(0.8)} 100%{transform:rotate(360deg) scale(1)} }
-    .dice svg { display: block; border-radius: 10px; }
-    .dice-slash { font-size: 22px; color: #ccc; font-weight: 300; }
-    .target-badge {
-      background: var(--accent); color: white; border-radius: 12px;
-      padding: 7px 14px; font-size: 13px; font-weight: 700;
-      min-width: 90px; text-align: center;
-      box-shadow: 0 3px 10px rgba(233,69,96,0.3);
-    }
-    .target-badge.disabled { background: #ddd; color: #999; box-shadow: none; }
-    .target-badge.gold-bg { background: var(--gold); box-shadow: 0 3px 10px rgba(245,166,35,0.4); }
-    .btn-sb-dice {
-      padding: 7px 14px; font-size: 12px; font-weight: 700;
-      border: none; border-radius: 10px; cursor: pointer;
-      font-family: 'Noto Sans HK', sans-serif;
-      background: linear-gradient(135deg, var(--gold), #e09000);
-      color: white; box-shadow: 0 3px 8px rgba(245,166,35,0.4);
-      transition: transform 0.1s, opacity 0.1s;
-      min-height: 38px;
-    }
-    .btn-sb-dice:active { transform: scale(0.95); }
-    .btn-sb-dice:disabled { opacity: 0.35; cursor: not-allowed; }
-    .btn-sb-dice.active { background: var(--accent); box-shadow: 0 3px 8px rgba(233,69,96,0.4); }
-
-    /* ===== CARD AREA ===== */
-    .card-area {
-      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 10px; overflow: hidden; position: relative;
-    }
-    .open-status { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; min-height: 28px; }
-    .open-status-text { font-size: 12px; color: var(--text-dim); }
-    .open-dots { display: flex; gap: 5px; }
-    .open-dot { width: 8px; height: 8px; border-radius: 50%; background: #e8e4de; border: 2px solid #ccc; transition: background 0.2s, border-color 0.2s; }
-    .open-dot.revealed { background: var(--accent); border-color: var(--accent); }
-
-    .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; width: 100%; max-width: 300px; }
-
-    .p-card {
-      aspect-ratio: 3/4; border-radius: 12px;
-      box-shadow: var(--card-shadow); border: 2px solid transparent; min-height: 68px;
-      position: relative; perspective: 900px;
-    }
-    .p-card-inner {
-      width: 100%; height: 100%; position: relative;
-      transform-style: preserve-3d; transition: transform 0.5s;
-    }
-    .p-card.flipped .p-card-inner { transform: rotateY(180deg); }
-    .card-face {
-      position: absolute; inset: 0;
-      backface-visibility: hidden;
-      border-radius: 10px;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-    }
-    .card-front {
-      background: white; cursor: pointer; border: 2px solid transparent;
-      transition: transform 0.12s, box-shadow 0.12s, background 0.12s, border-color 0.12s;
-    }
-    .card-front:active { transform: scale(0.95); }
-    .p-card.face-down .card-front { background: linear-gradient(135deg, #f0ece6, #e8e4de); cursor: default; border-color: #d8d4cc; }
-    .p-card.face-down .card-front:active { transform: none; }
-    .p-card.face-down .card-front .card-back { font-size: 26px; color: #aaa; font-weight: 900; }
-    .card-back {
-      background: white; transform: rotateY(180deg); border: 2px solid #e0e0e0;
-      overflow: hidden; padding: 4px;
-    }
-    /* Phase-based card backgrounds */
-    .cards-grid.dice-rolled .card-front:not(.p-card.face-down .card-front) { background: rgba(0, 200, 83, 0.12); }
-    .cards-grid.dice-rolled .card-front.selected { background: var(--accent) !important; }
-    .cards-grid.squarebun-mode .card-front { background: rgba(255, 152, 0, 0.15); }
-    .cards-grid.squarebun-mode .card-front.selected { background: var(--gold) !important; }
-    .card-front.selected { transform: scale(1.05); box-shadow: 0 6px 14px rgba(233,69,96,0.4); }
-    .card-front.square-bun-card { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); animation: sbPulse 1.5s infinite; }
-    .card-front.hint { background: rgba(0,200,83,0.12); border-color: var(--success); }
-    .card-front.hint::after { content: '✓'; position: absolute; top: 3px; right: 5px; font-size: 10px; color: var(--success); }
-    @keyframes sbPulse { 0%,100%{box-shadow:0 3px 10px rgba(233,69,96,0.3)} 50%{box-shadow:0 3px 20px rgba(233,69,96,0.6)} }
-    @keyframes correctPop { 0%{transform:scale(1)} 50%{transform:scale(1.15)} 100%{transform:scale(1)} }
-    @keyframes wrongShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
-    .card-num { font-size: 24px; font-weight: 900; color: var(--primary); }
-    .card-divs { font-size: 8px; color: var(--text-dim); margin-top: 2px; text-align: center; line-height: 1.2; padding: 0 3px; }
-    .card-front.selected .card-divs { color: rgba(255,255,255,0.85); }
-    .card-front.square-bun-card .card-num { color: white; }
-    .card-front.square-bun-card.selected { background: var(--gold) !important; animation: none; box-shadow: 0 6px 14px rgba(245,166,35,0.5); }
-    /* Factor reveal (card back) */
-    .card-back-number { font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 2px; }
-    .factor-rows { display: flex; flex-direction: column; gap: 2px; width: 100%; }
-    .factor-row { display: flex; justify-content: center; gap: 2px; }
-    .factor-circle {
-      width: 18px; height: 18px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 7px; font-weight: 900;
-    }
-    .factor-circle.green { background: #00c853; color: white; }
-    .factor-circle.orange { background: #ff9800; color: white; }
-    .factor-circle.red { background: #f44336; color: white; }
-    .factor-circle.grey { background: #ddd; color: #888; }
-    /* Continue button zone */
-    #continue-zone { display: none; text-align: center; padding: 10px; background: #f5f5f5; border-top: 1px solid var(--border); flex-shrink: 0; }
-    #continue-zone.show { display: block; }
-    #btn-continue { background: var(--accent); color: white; border: none; border-radius: 10px; padding: 10px 32px; font-size: 15px; font-weight: 900; cursor: pointer; }
-
-    /* ===== DIVS TOOLTIP (click card to show divisors) ===== */
-    .card-divs-tooltip {
-      position: fixed; background: #1a1a2e; color: white; border-radius: 10px;
-      padding: 8px 14px; font-size: 13px; font-weight: 600; z-index: 300;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.3); pointer-events: none;
-      opacity: 0; transition: opacity 0.15s; white-space: nowrap;
-    }
-    .card-divs-tooltip.show { opacity: 1; }
-    .card-divs-tooltip .tip-num { font-size: 16px; font-weight: 900; color: #ffd700; margin-bottom: 3px; }
-    .card-divs-tooltip .tip-divs { color: #a8d8ea; font-size: 12px; }
-
-    /* ===== STATUS ===== */
-    .status-bar {
-      text-align: center; padding: 7px 14px; font-size: 13px; font-weight: 700;
-      color: var(--text-dim); flex-shrink: 0; min-height: 34px;
-      display: flex; align-items: center; justify-content: center; background: white;
-    }
-    .status-bar.success { color: var(--success); }
-    .status-bar.danger { color: var(--danger); }
-    .status-bar.gold { color: #d4910e; }
-    .status-bar.info { color: #0097a7; }
-
-    /* ===== BOTTOM CONTROLS ===== */
-    .controls {
-      display: flex; gap: 7px; padding: 9px 12px;
-      padding-bottom: max(9px, env(safe-area-inset-bottom));
-      background: white; flex-shrink: 0; border-top: 1px solid var(--border);
-    }
-    .btn {
-      flex: 1; padding: 12px 5px; font-size: 12px; font-weight: 700;
-      border: none; border-radius: 11px; cursor: pointer;
-      transition: transform 0.1s, opacity 0.1s; font-family: 'Noto Sans HK', sans-serif; min-height: 46px;
-    }
-    .btn:active { transform: scale(0.95); }
-    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
-    .btn:disabled:active { transform: none; }
-    .btn-primary { background: var(--accent); color: white; box-shadow: 0 3px 8px rgba(233,69,96,0.3); }
-    .btn-secondary { background: #f0f0f5; color: var(--primary); }
-    .btn-ghost { background: #f5f5f5; color: var(--text-dim); }
-    .btn-green { background: linear-gradient(135deg, #38a169, #276749); color: white; box-shadow: 0 3px 8px rgba(56,161,105,0.4); }
-    .btn-gold { background: linear-gradient(135deg, var(--gold), #e09000); color: white; box-shadow: 0 3px 8px rgba(245,166,35,0.4); }
-    .btn-red { background: linear-gradient(135deg, #e53e3e, #c53030); color: white; box-shadow: 0 3px 8px rgba(229,62,62,0.4); }
-    @keyframes btnPulse {
-      0%  { transform: scale(1); }
-      40% { transform: scale(1.08); }
-      70% { transform: scale(0.97); }
-      100%{ transform: scale(1); }
-    }
-    .btn.pulse-ok  { animation: btnPulse 0.45s ease; }
-    .btn.pulse-bad { animation: btnPulse 0.45s ease; box-shadow: 0 0 0 3px var(--danger); }
-
-    /* ===== RULES MODAL ===== */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 300; padding: 20px; }
-    .modal-overlay.show { display: flex; }
-    .modal { background: white; border-radius: 20px; padding: 26px; max-width: 340px; width: 100%; max-height: 80vh; overflow-y: auto; }
-    .modal h2 { font-size: 20px; font-weight: 900; color: var(--accent); margin-bottom: 18px; text-align: center; }
-    .modal-rule { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
-    .modal-rule-icon { font-size: 20px; flex-shrink: 0; width: 30px; text-align: center; }
-    .modal-rule-text { font-size: 13px; color: var(--text); line-height: 1.6; }
-    .modal-rule-text strong { color: var(--accent); }
-    .modal-close { width: 100%; margin-top: 18px; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans HK', sans-serif; }
-
-    /* ===== SETUP SCREEN ===== */
-    #setup-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 28px 24px; gap: 22px; background: linear-gradient(160deg, #fff5f5 0%, #faf8f4 100%); }
-    .setup-logo { text-align: center; }
-    .setup-logo h1 { font-size: 34px; font-weight: 900; background: linear-gradient(135deg, var(--accent) 0%, var(--gold) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 6px; }
-    .setup-logo p { color: var(--text-dim); font-size: 15px; }
-    .setup-card-count { width: 100%; max-width: 280px; }
-    .setup-card-count label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 10px; text-align: center; }
-    .count-selector { display: flex; align-items: center; justify-content: center; gap: 16px; }
-    .count-btn { width: 46px; height: 46px; border-radius: 50%; border: 2px solid var(--accent); background: white; color: var(--accent); font-size: 22px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans HK', sans-serif; transition: all 0.15s; box-shadow: 0 2px 8px rgba(233,69,96,0.15); }
-    .count-btn:active { background: var(--accent); color: white; }
-    .count-display { font-size: 32px; font-weight: 900; width: 50px; text-align: center; color: var(--accent); }
-    .count-display span { font-size: 13px; font-weight: 400; color: var(--text-dim); }
-    .setup-btns { display: flex; gap: 10px; width: 100%; max-width: 280px; }
-    .setup-btn { flex: 1; padding: 15px 12px; border-radius: 14px; border: 2px solid #e8e4de; background: white; color: var(--text); font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; transition: all 0.15s; font-family: 'Noto Sans HK', sans-serif; }
-    .setup-btn:active { border-color: var(--accent); background: #fff0f3; }
-    .setup-btn .btn-label { font-size: 15px; margin-bottom: 3px; color: var(--accent); }
-    .setup-btn .btn-desc { font-size: 11px; color: var(--text-dim); font-weight: 400; }
-    .setup-rules-link { color: var(--text-dim); font-size: 14px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-    .start-btn { width: 100%; max-width: 280px; padding: 16px; font-size: 17px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: white; border: none; border-radius: 14px; font-weight: 900; cursor: pointer; font-family: 'Noto Sans HK', sans-serif; box-shadow: 0 6px 20px rgba(233,69,96,0.4); transition: transform 0.15s; }
-    .start-btn:active { transform: scale(0.97); }
-    .start-level-btn { width: 100%; max-width: 280px; padding: 12px 16px; font-size: 14px; background: white; color: #9a6900; border: 2px solid var(--gold); border-radius: 14px; font-weight: 700; cursor: pointer; font-family: 'Noto Sans HK', sans-serif; box-shadow: 0 2px 8px rgba(245,166,35,0.15); transition: transform 0.15s, background 0.15s; }
-    .start-level-btn:active { transform: scale(0.97); background: #fff8e8; }
-    .level-picker-label { color: var(--text-dim); font-size: 12px; }
-    #level-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 280px; }
-    #level-picker .start-level-btn { max-width: none; min-width: 0; padding: 9px 4px 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; line-height: 1.2; }
-    #level-picker .start-level-btn:disabled { background: #f0efed; color: #aaa; border-color: #d9d5cf; box-shadow: none; cursor: not-allowed; }
-    .level-picker-name { font-size: 15px; font-weight: 900; }
-    .level-picker-range { font-size: 11px; font-weight: 400; color: var(--text-dim); white-space: nowrap; }
-    .level-picker-status { min-height: 14px; font-size: 10px; font-weight: 700; }
-    #level-picker .start-level-btn.is-current { background: #fff8e8; color: #8a5d00; }
-    #level-picker .start-level-btn.is-current .level-picker-range { color: #9a6900; }
-    #level-picker .start-level-btn.is-available:active { background: #fff8e8; }
-    .download-offline-btn { width: 100%; max-width: 280px; padding: 6px 8px; background: transparent; color: var(--text-dim); border: 1px solid transparent; border-radius: 10px; font-size: 12px; cursor: pointer; font-family: 'Noto Sans HK', sans-serif; transition: color 0.15s, background 0.15s, border-color 0.15s; }
-    .download-offline-btn:hover { color: #9a6900; background: rgba(245,166,35,0.08); border-color: #e8e4de; }
-    .download-offline-btn:disabled { opacity: 0.65; cursor: wait; }
-
-    @media (min-width: 400px) { .cards-grid { max-width: 360px; gap: 11px; } .p-card { min-height: 80px; } .card-num { font-size: 28px; } }
-
-    /* ===== 500px+ — Phablet / small tablet ===== */
-    @media (min-width: 500px) {
-      .cards-grid { max-width: 420px; gap: 12px; }
-      .p-card { min-height: 88px; border-radius: 14px; }
-      .card-num { font-size: 30px; }
-      .card-divs { font-size: 10px; }
-      .btn { font-size: 13px; padding: 13px 6px; }
-      .header { padding: 12px 20px; }
-      .dice-zone { gap: 18px; padding: 12px 20px; }
-      .controls { padding: 12px 16px; gap: 10px; }
-    }
-
-    /* ===== 768px+ — iPad / tablet ===== */
-    @media (min-width: 768px) {
-      .cards-grid { max-width: 520px; gap: 14px; }
-      .p-card { min-height: 110px; border-radius: 16px; }
-      .card-num { font-size: 36px; }
-      .card-divs { font-size: 11px; }
-      .card-front.hint::after { top: 6px; right: 8px; font-size: 12px; }
-      .dice { width: 56px; height: 56px; border-radius: 14px; }
-      .dice-slash { font-size: 22px; }
-      .dice-zone { gap: 24px; padding: 16px 32px; }
-      .header { padding: 14px 28px; }
-      .header-title { font-size: 20px; }
-      .score-badge { font-size: 15px; padding: 6px 18px; }
-      .btn { font-size: 15px; padding: 15px 8px; border-radius: 13px; min-height: 52px; }
-      .btn-sb-dice { font-size: 16px; padding: 12px 20px; }
-      .controls { padding: 14px 24px; gap: 12px; }
-      .open-status-text { font-size: 14px; }
-      .status-bar { font-size: 15px; padding: 10px 24px; }
-      .factor-circle { width: 22px; height: 22px; font-size: 9px; }
-      #continue-zone { padding: 14px; }
-      #btn-continue { padding: 12px 40px; font-size: 16px; }
-      .modal { max-width: 500px; padding: 32px; border-radius: 24px; }
-      .modal h2 { font-size: 24px; }
-      .modal-rule { font-size: 15px; gap: 14px; }
-      #setup-screen { padding: 40px 32px; gap: 28px; }
-      .setup-logo h1 { font-size: 44px; }
-      .setup-logo p { font-size: 18px; }
-      .setup-card-count { max-width: 340px; }
-      .setup-card-count label { font-size: 15px; }
-      .start-btn { max-width: 340px; font-size: 20px; padding: 18px; }
-    }
-
-    /* ===== 1024px+ — iPad landscape / Desktop ===== */
-    @media (min-width: 1024px) {
-      body { max-width: 900px; margin: 0 auto; }
-      /* Single row — flex, no wrap, horizontal scroll if cards overflow */
-      .card-area { overflow-x: hidden; justify-content: flex-start; }
-      .cards-grid {
-        display: flex;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        gap: 14px;
-        justify-content: center;
-        max-width: 100%;
-        padding-bottom: 4px;
-      }
-      .p-card {
-        flex: 0 0 auto;
-        min-height: 140px;
-        min-width: 130px;
-        max-width: 160px;
-      }
-      .card-num { font-size: 44px; }
-      .card-divs { font-size: 12px; }
-      .card-front.hint::after { top: 8px; right: 10px; font-size: 14px; }
-      .dice { width: 64px; height: 64px; border-radius: 16px; }
-      .dice-zone { gap: 30px; padding: 18px 40px; }
-      .header { padding: 16px 36px; }
-      .header-title { font-size: 22px; }
-      .score-badge { font-size: 16px; }
-      .btn { font-size: 16px; padding: 16px 10px; border-radius: 14px; min-height: 56px; }
-      .btn-sb-dice { font-size: 18px; padding: 14px 26px; }
-      .controls { padding: 16px 32px; gap: 14px; }
-      .open-status-text { font-size: 15px; }
-      .status-bar { font-size: 16px; padding: 12px 32px; }
-      .factor-circle { width: 26px; height: 26px; font-size: 10px; }
-      #continue-zone { padding: 16px; }
-      #btn-continue { padding: 14px 48px; font-size: 17px; }
-      .modal { max-width: 600px; padding: 36px; }
-      .modal h2 { font-size: 26px; }
-      .modal-rule { font-size: 16px; }
-      #setup-screen { padding: 56px 40px; gap: 36px; }
-      .setup-logo h1 { font-size: 56px; }
-      .setup-logo p { font-size: 20px; }
-      .setup-card-count { max-width: 400px; }
-      .setup-card-count label { font-size: 16px; }
-      .start-btn { max-width: 400px; font-size: 22px; padding: 20px; border-radius: 18px; }
-      .setup-rules-link { font-size: 16px; }
-    }
-
-    /* ===== Hover effects (desktop/iPad with mouse) ===== */
-    @media (max-width: 480px) {
-      .header-title { font-size: 13px; }
-      .header-right-cluster { max-width: 60vw; }
-      .score-badge-hide-mobile { display: none !important; }
-    }
-    @media (hover: hover) {
-      .p-card:not(.face-down):hover .card-front { box-shadow: 0 4px 16px rgba(233,69,96,0.25); }
-      .btn:hover { filter: brightness(1.05); }
-      .btn:active { transform: scale(0.97); }
-      .start-btn:hover { transform: scale(1.02); }
-    }
-
-    /* ===== FIX: Header Cluster Overflow ===== */
     .header {
-      flex-wrap: nowrap !important;
-      overflow: hidden;
-    }
-    .header-left {
-      display: flex;
+      flex: 0 0 auto;
+      min-height: 52px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas: "brand actions" "stats stats";
       align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
+      gap: 8px 10px;
     }
-    .header-right-cluster {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      flex-shrink: 0;
-      overflow: hidden;
-      max-width: 55vw;
+    .header-left { grid-area: brand; min-width: 0; display: flex; align-items: center; gap: 6px; }
+    .brand-mark { width: 34px; height: 32px; flex: 0 0 34px; }
+    .header-title { color: var(--cream); font-size: 18px; font-weight: 900; white-space: nowrap; text-shadow: 0 3px 0 var(--ink); }
+    .level-badge {
+      padding: 2px 8px;
+      border: 2.5px solid var(--ink);
+      border-radius: 999px;
+      background: var(--gold);
+      color: var(--ink);
+      font-size: 14px;
+      white-space: nowrap;
     }
-
-    /* Combo display: always in DOM, animate in/out */
-    .combo-display {
-      display: flex !important;
-      opacity: 0;
-      transform: scale(0.85);
-      transition: opacity 0.25s, transform 0.25s;
-      flex-shrink: 0;
-      min-width: 44px;
-    }
-    .combo-display.active {
-      opacity: 1;
-      transform: scale(1);
-    }
-
-    /* Card tooltip: avoid header overlap */
-    .card-divs-tooltip {
-      z-index: 200;
-    }
-
-    /* Score badges: prevent squishing */
-    .score-badge {
-      min-width: 36px;
-      flex-shrink: 0;
+    .header-right-cluster { grid-area: actions; display: flex; align-items: center; justify-content: flex-end; gap: 5px; }
+    .header-right-cluster .icon-button { width: 44px; height: 44px; flex-basis: 44px; border-radius: 13px; }
+    .header-right-cluster .icon-button .icon { width: 20px; height: 20px; }
+    .count-icon-button { position: relative; }
+    .corner-count {
+      position: absolute;
+      right: -7px;
+      bottom: -7px;
+      min-width: 21px;
+      height: 18px;
+      padding: 0 4px;
+      border: 1.5px solid var(--ink);
+      border-radius: 999px;
+      background: var(--ink);
+      color: var(--cream);
+      font: 11px/15px 'Lilita One', sans-serif;
+      white-space: nowrap;
       text-align: center;
     }
-    #coll-btn {
-      flex-shrink: 0;
-      min-width: 58px;
+    #ach-btn { background: var(--gold); color: var(--ink); }
+    #coll-btn { background: var(--epic); color: var(--ink); }
+    .sound-toggle.muted { opacity: 0.62; color: var(--dim); }
+    .stats-strip { grid-area: stats; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+    .stat-card {
+      min-width: 0;
+      min-height: 52px;
+      padding: 4px 8px;
+      border: var(--stroke);
+      border-radius: 14px;
+      background: var(--panel);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.15;
     }
-
-    /* ===== Collection Modal Enhancements (Plan B) ===== */
-    .coll-qty-badge {
+    .stat-label { color: var(--dim); font-size: 10px; font-weight: 700; }
+    .stat-value { color: var(--teal); font-size: 19px; line-height: 1.1; }
+    .stat-streak .stat-value { color: var(--orange); }
+    .streak-value { display: inline-flex; align-items: center; gap: 3px; }
+    .streak-value .icon { width: 14px; height: 14px; color: var(--orange); fill: var(--orange); stroke-width: 1.4; }
+    .stat-collection { align-items: stretch; padding: 5px 9px; gap: 3px; }
+    .collection-stat-line { display: flex; justify-content: space-between; gap: 6px; color: var(--dim); font-size: 10px; font-weight: 700; }
+    .collection-stat-line strong { color: var(--cream); font: 14px 'Lilita One', sans-serif; }
+    .progress-track { width: 100%; height: 7px; border-radius: 999px; background: var(--ink); overflow: hidden; }
+    .progress-fill { width: 0; height: 100%; border-radius: inherit; background: var(--epic); transition: width 0.25s ease; }
+    .stat-streak { position: relative; }
+    .combo-display {
       position: absolute;
-      top: -6px;
-      right: -6px;
-      background: var(--accent);
-      color: white;
-      font-size: 11px;
+      top: 2px;
+      right: 4px;
+      min-height: 18px;
+      padding: 0 4px;
+      border: 1.5px solid var(--ink);
+      border-radius: 999px;
+      background: var(--gold);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      opacity: 0;
+      transform: scale(0.85);
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+    }
+    .combo-display.active { opacity: 1; transform: scale(1); }
+    .combo-display.fire { background: var(--orange); }
+    .combo-display.super { background: var(--gold); }
+    .combo-display .icon { width: 11px; height: 11px; fill: currentColor; stroke-width: 1.2; }
+    .combo-count { font: 10px 'Lilita One', sans-serif; }
+
+    /* ===== Game board ===== */
+    .game-columns { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
+    .action-column, .table-column { display: contents; }
+    .dice-zone {
+      grid-row: 1;
+      width: 100%;
+      min-width: 0;
+      min-height: 104px;
+      padding: 9px 10px;
+      border: var(--stroke);
+      border-radius: 20px;
+      background: var(--panel);
+      box-shadow: var(--large-shadow);
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 4px 10px;
+    }
+    .dice-pair { grid-column: 1; grid-row: 1 / span 2; display: flex; align-items: center; gap: 5px; }
+    .dice {
+      width: 44px;
+      height: 44px;
+      flex: 0 0 auto;
+      border: var(--stroke);
+      border-radius: 13px;
+      background: var(--cream);
+      box-shadow: 0 3px 0 var(--ink);
+      transition: transform 0.2s ease;
+    }
+    .dice svg { display: block; width: 100%; height: 100%; border-radius: 10px; }
+    .dice.rolling { animation: diceRoll 0.5s ease-out; }
+    @keyframes diceRoll { 0%{transform:rotate(0) scale(1)} 50%{transform:rotate(180deg) scale(.82)} 100%{transform:rotate(360deg) scale(1)} }
+    .dice-slash { color: var(--dim); font: 18px 'Lilita One', sans-serif; }
+    .target-badge { grid-column: 2; grid-row: 1; color: var(--cream); font-size: 12px; font-weight: 900; line-height: 1.2; }
+    .target-badge.disabled { color: var(--dim); }
+    .target-badge.gold-bg { color: var(--gold); }
+    .target-detail { grid-column: 2; grid-row: 2; min-width: 0; color: var(--cream); font-size: 14px; font-weight: 900; }
+    .target-detail strong { color: var(--gold); font: 20px 'Lilita One', sans-serif; }
+    .btn-sb-dice {
+      grid-column: 1 / -1;
+      grid-row: 3;
+      min-height: 40px;
+      width: 100%;
+      border: var(--stroke);
+      border-radius: 14px;
+      background: var(--gold);
+      color: var(--ink);
+      box-shadow: var(--hard-shadow);
+      font-size: 14px;
       font-weight: 900;
-      min-width: 22px;
-      height: 22px;
-      border-radius: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+    .btn-sb-dice .icon { width: 18px; height: 18px; }
+    .btn-sb-dice:disabled { opacity: 0.48; cursor: not-allowed; }
+    .btn-sb-dice.active { background: var(--orange); }
+
+    .card-area {
+      grid-row: 2;
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      padding: 2px 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: center;
+    }
+    .table-heading { display: none; }
+    .open-status { min-height: 24px; flex: 0 0 auto; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .open-status-text { color: var(--dim); font-size: 11px; font-weight: 700; }
+    .open-dots { display: flex; gap: 5px; }
+    .open-dot { width: 10px; height: 10px; border: 2px solid var(--dim); border-radius: 50%; background: var(--panel); transition: background 0.2s, border-color 0.2s; }
+    .open-dot.revealed { border-color: var(--ink); background: var(--orange); }
+    .cards-grid {
+      width: 100%;
+      min-width: 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+      align-content: center;
+      justify-content: center;
+    }
+    .cards-grid.cards-5plus { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .p-card {
+      position: relative;
+      min-width: 0;
+      height: clamp(118px, 19dvh, 158px);
+      perspective: 900px;
+      filter: drop-shadow(0 3px 0 var(--ink));
+    }
+    .p-card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.5s; }
+    .p-card.flipped .p-card-inner { transform: rotateY(180deg); }
+    .card-face {
+      position: absolute;
+      inset: 0;
+      border-radius: 18px;
+      backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .card-front {
+      position: absolute;
+      border: var(--stroke);
+      background: var(--cream);
+      color: var(--ink);
+      cursor: pointer;
+      transition: transform 0.12s, box-shadow 0.12s, background 0.12s, border-color 0.12s;
+    }
+    .card-front:active { transform: translateY(2px); }
+    .p-card.face-down .card-front { border: var(--large-stroke); background: var(--orange); cursor: default; }
+    .p-card.face-down .card-front:active { transform: none; }
+    .card-back-pattern { width: 64px; height: 54px; color: var(--gold); }
+    .p-card.face-down .card-num { position: absolute; opacity: 0; }
+    .card-back { transform: rotateY(180deg); overflow: hidden; padding: 4px; border: var(--stroke); background: var(--cream); color: var(--ink); }
+    .cards-grid.dice-rolled .card-front { background: var(--cream); }
+    .cards-grid.dice-rolled .card-front.selected { background: var(--orange); }
+    .cards-grid.squarebun-mode .card-front { background: var(--felt-edge); }
+    .cards-grid.squarebun-mode .p-card.square-bun-card .card-front { background: var(--gold); }
+    .card-front.selected {
+      z-index: 1;
+      transform: translateY(-8px);
+      border-color: var(--ink);
+      background: var(--orange) !important;
+      box-shadow: 0 4px 0 var(--ink);
+    }
+    .card-selected-mark {
+      position: absolute;
+      z-index: 2;
+      top: -9px;
+      right: -9px;
+      width: 27px;
+      height: 27px;
+      border: 2px solid var(--cream);
+      border-radius: 50%;
+      background: var(--ink);
+      color: var(--gold);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      z-index: 10;
     }
-    .coll-qty-badge.high { background: var(--gold); color: white; }
-    .coll-qty-badge.max { background: linear-gradient(135deg, #ff6b00, #ff4500); }
+    .card-selected-mark .icon { width: 15px; height: 15px; stroke-width: 3; }
+    .card-front.square-bun-card { background: var(--gold); }
+    .card-front.hint { border-color: var(--teal); box-shadow: inset 0 0 0 2px var(--teal); }
+    .hint-mark { display: none; position: absolute; bottom: 7px; right: 8px; color: var(--teal); }
+    .card-front.hint .hint-mark, .p-card.hint .hint-mark { display: inline-flex; }
+    .p-card.hint .card-front { border-color: var(--teal); box-shadow: inset 0 0 0 2px var(--teal); }
+    .hint-mark .icon { width: 17px; height: 17px; fill: currentColor; stroke-width: 1.5; }
+    .card-front.selected .hint-mark { display: none; }
+    .card-shortcut {
+      display: none;
+      position: absolute;
+      z-index: 3;
+      top: 8px;
+      left: 9px;
+      min-width: 24px;
+      height: 24px;
+      padding: 0 5px;
+      border: 2px solid var(--ink);
+      border-radius: 7px;
+      background: var(--ink);
+      color: var(--cream);
+      font: 13px/20px 'Lilita One', sans-serif;
+      text-align: center;
+    }
+    .card-num { color: var(--ink); font-size: clamp(35px, 11vw, 52px); line-height: 1; }
+    .card-divs { margin-top: 4px; padding: 0 4px; color: var(--dim); font-size: 9px; text-align: center; line-height: 1.2; }
+    .card-front.selected .card-divs { color: var(--ink); }
+    .card-front.square-bun-card .card-num { color: var(--ink); }
+    @keyframes sbPulse { 0%,100%{box-shadow:0 4px 0 var(--ink)} 50%{box-shadow:0 7px 0 var(--ink)} }
+    .p-card.square-bun-card:not(.face-down) .card-front { animation: sbPulse 1.5s infinite; }
+    .p-card.adding { animation: cardAdd 0.3s ease-out; }
+    @keyframes cardAdd { from{opacity:0;transform:translateY(12px) scale(.94)} to{opacity:1;transform:translateY(0) scale(1)} }
+
+    .card-back-number { margin-bottom: 2px; color: var(--ink); font-size: 20px; line-height: 1; }
+    .factor-rows { width: 100%; display: flex; flex-direction: column; gap: 2px; }
+    .factor-row { display: flex; justify-content: center; gap: 2px; }
+    .factor-circle {
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink);
+      font-size: 8px;
+      line-height: 1;
+    }
+    .factor-circle.green { background: var(--teal); }
+    .factor-circle.red { border-color: var(--coral); background: var(--cream); }
+    .factor-circle.orange { background: var(--gold); }
+    .factor-circle.grey { border-color: var(--dim); background: var(--panel); color: var(--dim); }
+
+    #continue-zone {
+      display: none;
+      position: absolute;
+      z-index: 5;
+      inset: auto 0 8px;
+      padding: 8px;
+      text-align: center;
+      pointer-events: none;
+    }
+    #continue-zone.show { display: block; }
+    #btn-continue { min-width: 150px; min-height: 42px; padding: 8px 24px; border-color: var(--ink); background: var(--gold); color: var(--ink); cursor: pointer; pointer-events: auto; font-weight: 900; }
+
+    .card-divs-tooltip {
+      position: fixed;
+      z-index: 550;
+      max-width: calc(100vw - 24px);
+      padding: 9px 13px;
+      border: var(--stroke);
+      border-radius: 14px;
+      background: var(--panel);
+      color: var(--cream);
+      box-shadow: var(--large-shadow);
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 0.15s, transform 0.15s;
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .card-divs-tooltip.show { opacity: 1; transform: translateY(0); }
+    .card-divs-tooltip .tip-num { color: var(--gold); font: 18px 'Lilita One', sans-serif; }
+    .card-divs-tooltip .tip-divs { color: var(--dim); font-size: 11px; }
+
+    .status-bar {
+      grid-row: 3;
+      min-height: 38px;
+      padding: 6px 10px;
+      border: var(--stroke);
+      border-radius: 15px;
+      background: var(--panel);
+      color: var(--cream);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      flex: 0 0 auto;
+      font-size: 12px;
+      font-weight: 900;
+      text-align: center;
+      line-height: 1.3;
+    }
+    .status-icon { width: 18px; height: 18px; flex: 0 0 18px; color: currentColor; display: inline-flex; }
+    .status-icon .icon { width: 100%; height: 100%; }
+    .status-bar.success { background: var(--teal); color: var(--ink); }
+    .status-bar.danger { background: var(--coral); color: var(--ink); }
+    .status-bar.gold { background: var(--gold); color: var(--ink); }
+    .status-bar.info { color: var(--dim); }
+
+    .controls {
+      grid-row: 4;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 7px;
+      padding: 1px 0 0;
+      flex: 0 0 auto;
+    }
+    .game-button, .controls .btn {
+      min-width: 0;
+      min-height: 54px;
+      padding: 5px 4px;
+      color: var(--ink);
+      background: var(--cream);
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+    .game-button .icon, .controls .btn .icon { width: 18px; height: 18px; }
+    .game-button:disabled, .controls .btn:disabled { opacity: 0.46; cursor: not-allowed; box-shadow: 0 2px 0 var(--ink); }
+    .game-button:disabled:active, .controls .btn:disabled:active { transform: none; }
+    .btn-primary, .controls .btn.btn-primary { background: var(--teal); color: var(--ink); }
+    .btn-secondary, .controls .btn.btn-secondary { background: var(--cream); color: var(--ink); }
+    .btn-ghost, .controls .btn.btn-ghost { background: var(--panel); color: var(--dim); }
+    .btn-green, .controls .btn.btn-green { background: var(--teal); color: var(--ink); }
+    .btn-gold, .controls .btn.btn-gold { background: var(--gold); color: var(--ink); }
+    .btn-red, .controls .btn.btn-red { background: var(--coral); color: var(--ink); }
+    .btn.pulse-ok { animation: buttonPulse 0.45s ease; }
+    .btn.pulse-bad { animation: buttonPulse 0.45s ease; box-shadow: 0 0 0 3px var(--coral); }
+    .score-delta { position: absolute; z-index: 4; font: 13px 'Lilita One', sans-serif; pointer-events: none; }
+    .score-delta.pos { color: var(--teal); }
+    .score-delta.neg { color: var(--coral); }
+    @keyframes buttonPulse { 0%{transform:scale(1)} 40%{transform:scale(1.06)} 70%{transform:scale(.98)} 100%{transform:scale(1)} }
+
+    /* ===== Desktop side panels ===== */
+    .desktop-sidebar { display: none; }
+    .desktop-panel {
+      padding: 13px;
+      border: var(--stroke);
+      border-radius: 20px;
+      background: var(--panel);
+      box-shadow: var(--large-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+    .desktop-panel-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: 900; }
+    .desktop-panel-heading button { border: 0; padding: 2px; background: none; color: var(--gold); font-size: 11px; font-weight: 700; text-decoration: underline; cursor: pointer; }
+    .desktop-collection-count { display: flex; justify-content: space-between; color: var(--dim); font-size: 11px; font-weight: 700; }
+    .desktop-collection-count strong { color: var(--cream); font: 14px 'Lilita One', sans-serif; }
+    #desktop-collection-preview {
+      max-height: 208px;
+      overflow-y: auto;
+      width: 100%;
+      border: 0;
+      padding: 2px;
+      background: transparent;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      align-content: start;
+      gap: 4px;
+      padding: 2px;
+      scrollbar-color: var(--dim) var(--ink);
+    }
+    .mini-card {
+      min-width: 0;
+      aspect-ratio: 1;
+      border: 2px solid var(--ink);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink);
+      font: 12px 'Lilita One', sans-serif;
+    }
+    .mini-card.rarity-legendary { --rarity: var(--legendary); }
+    .mini-card.rarity-epic { --rarity: var(--epic); }
+    .mini-card.rarity-rare { --rarity: var(--rare); }
+    .mini-card.is-collected { background: var(--rarity); }
+    .mini-card.is-missing { border-style: dashed; background: var(--table); color: var(--dim); }
+    #desktop-achievement-count { color: var(--gold); font: 14px 'Lilita One', sans-serif; }
+    #desktop-achievement-list { display: flex; flex-direction: column; gap: 7px; }
+    .desktop-achievement { min-width: 0; display: flex; align-items: center; gap: 8px; }
+    .desktop-achievement-icon {
+      width: 28px;
+      height: 28px;
+      flex: 0 0 28px;
+      border: 2px solid var(--ink);
+      border-radius: 9px;
+      background: var(--gold);
+      color: var(--ink);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .desktop-achievement-icon .icon { width: 15px; height: 15px; stroke-width: 3; }
+    .desktop-achievement.is-locked .desktop-achievement-icon { background: var(--felt-edge); color: var(--dim); }
+    .desktop-achievement-copy { min-width: 0; display: flex; flex-direction: column; }
+    .desktop-achievement-copy strong { color: var(--cream); font-size: 11px; line-height: 1.2; }
+    .desktop-achievement-copy span { color: var(--dim); font-size: 9px; line-height: 1.2; }
+    .desktop-achievement.is-locked { opacity: 0.62; }
+    .shortcut-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px 8px; color: var(--dim); font-size: 10px; font-weight: 700; }
+    .shortcut-item { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .shortcut-key { min-width: 28px; padding: 1px 6px; border: 2px solid var(--ink); border-radius: 7px; background: var(--cream); color: var(--ink); font: 12px/18px 'Lilita One', sans-serif; text-align: center; }
+    .shortcut-key.key-gold { background: var(--gold); }
+
+    /* ===== Modals, collection, achievements ===== */
+    .modal-overlay {
+      position: fixed;
+      z-index: 700;
+      inset: 0;
+      padding: 16px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(13, 11, 35, 0.84);
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      width: min(100%, 560px);
+      max-height: min(86dvh, 820px);
+      padding: 19px;
+      border: var(--large-stroke);
+      border-radius: 24px;
+      background: var(--panel);
+      box-shadow: 0 8px 0 var(--ink);
+      color: var(--cream);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .modal h2 { margin-bottom: 13px; color: var(--gold); font-size: 21px; font-weight: 900; text-align: center; }
+    .modal-rule { display: flex; align-items: flex-start; gap: 10px; margin: 5px 0 11px; }
+    .modal-rule-icon {
+      width: 30px;
+      height: 30px;
+      flex: 0 0 30px;
+      border: 2px solid var(--ink);
+      border-radius: 10px;
+      background: var(--gold);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font: 14px 'Lilita One', sans-serif;
+    }
+    .modal-rule-icon .icon { width: 17px; height: 17px; }
+    .modal-rule-text { color: var(--cream); font-size: 12px; line-height: 1.55; }
+    .modal-rule-text strong { color: var(--gold); }
+    .modal-close { width: 100%; min-height: 46px; margin-top: 10px; background: var(--orange); color: var(--ink); font-size: 14px; font-weight: 900; cursor: pointer; }
+    .achievement-modal { width: min(100%, 470px); }
+    #ach-modal h2 { flex: 0 0 auto; }
+    #ach-list { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; }
+    .achievement-row {
+      padding: 9px 10px;
+      border: 2px solid var(--felt-edge);
+      border-radius: 13px;
+      background: rgba(22, 20, 46, 0.38);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .achievement-row.is-unlocked { border-color: var(--gold); background: rgba(255, 201, 60, 0.1); }
+    .achievement-icon {
+      width: 34px;
+      height: 34px;
+      flex: 0 0 34px;
+      border: 2px solid var(--ink);
+      border-radius: 11px;
+      background: var(--gold);
+      color: var(--ink);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .achievement-icon .icon { width: 19px; height: 19px; }
+    .achievement-row.is-locked .achievement-icon { background: var(--felt-edge); color: var(--dim); }
+    .achievement-copy strong { display: block; color: var(--gold); font-size: 12px; }
+    .achievement-row.is-locked .achievement-copy strong { color: var(--dim); }
+    .achievement-copy span { display: block; margin-top: 2px; color: var(--dim); font-size: 10px; }
+
+    #coll-modal .modal { width: min(100%, 720px); }
+    .collection-title { display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .collection-title .icon { color: var(--epic); }
+    #coll-stats { color: var(--dim); font-size: 11px; font-weight: 500; }
+    .collection-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 9px; }
+    .coll-tab {
+      min-height: 36px;
+      padding: 4px 10px;
+      background: var(--panel);
+      color: var(--cream);
+      font-size: 11px;
+      font-weight: 900;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .coll-tab.active { background: var(--cream); color: var(--ink); }
+    .rarity-dot { width: 10px; height: 10px; border: 2px solid var(--ink); border-radius: 4px; background: var(--cream); }
+    .rarity-dot.legendary { background: var(--legendary); }
+    .rarity-dot.epic { background: var(--epic); }
+    .rarity-dot.rare { background: var(--rare); }
+    .coll-summary { flex: 0 0 auto; display: none; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; margin: 0 0 9px; }
+    .coll-summary-item { padding: 5px 3px; border: 2px solid var(--ink); border-radius: 12px; background: var(--felt-edge); text-align: center; }
+    .coll-summary-value { color: var(--orange); font: 22px 'Lilita One', sans-serif; line-height: 1.1; }
+    .coll-summary-item:nth-child(2) .coll-summary-value { color: var(--gold); }
+    .coll-summary-item:nth-child(3) .coll-summary-value { color: var(--teal); }
+    .coll-summary-label { color: var(--dim); font-size: 9px; font-weight: 700; }
+    #coll-content { min-height: 0; flex: 1 1 auto; overflow-y: auto; padding: 4px 2px 8px; scrollbar-color: var(--dim) var(--ink); }
+    .coll-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 8px; padding: 4px 2px 10px; }
+    .collection-card {
+      position: relative;
+      min-width: 0;
+      min-height: 78px;
+      padding: 12px 3px 7px;
+      border: var(--stroke);
+      border-radius: 13px;
+      box-shadow: var(--hard-shadow);
+      background: var(--cream);
+      color: var(--ink);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      overflow: visible;
+    }
+    button.collection-card { width: 100%; cursor: pointer; }
+    .collection-card.rarity-legendary { --rarity-color: var(--legendary); }
+    .collection-card.rarity-epic { --rarity-color: var(--epic); }
+    .collection-card.rarity-rare { --rarity-color: var(--rare); }
+    .collection-card.is-collected::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 10px;
+      border-bottom: 2px solid var(--ink);
+      border-radius: 9px 9px 0 0;
+      background: var(--rarity-color);
+    }
+    .collection-number { color: var(--ink); font-size: 25px; line-height: 1; }
+    .collection-card.is-missing { border-style: dashed; border-color: var(--dim); box-shadow: none; background: var(--panel); }
+    .collection-card.is-missing .collection-number { color: var(--dim); font-size: 21px; }
+    .collection-missing-label { color: var(--dim); font-size: 9px; font-weight: 700; }
+    .coll-qty-badge {
+      position: absolute;
+      z-index: 2;
+      right: -5px;
+      bottom: -7px;
+      min-width: 24px;
+      height: 19px;
+      padding: 0 5px;
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      background: var(--ink);
+      color: var(--gold);
+      font: 11px/15px 'Lilita One', sans-serif;
+      text-align: center;
+    }
+    .coll-qty-badge.high { color: var(--epic); }
+    .coll-qty-badge.max { color: var(--orange); }
+    .collection-total { padding: 4px; color: var(--dim); font-size: 10px; font-weight: 700; text-align: center; }
+    .rarity-legend { flex: 0 0 auto; padding-top: 7px; border-top: 2px solid var(--felt-edge); display: flex; flex-wrap: wrap; justify-content: center; gap: 5px 12px; color: var(--dim); font-size: 9px; font-weight: 700; }
+    .rarity-legend-item { display: inline-flex; align-items: center; gap: 5px; }
+
+    #coll-detail-modal .modal { width: min(100%, 370px); text-align: center; }
+    #coll-detail-modal { z-index: 720; }
+    .detail-card-preview {
+      width: 84px;
+      height: 112px;
+      margin: 4px auto 11px;
+      border: var(--large-stroke);
+      border-radius: 16px;
+      background: var(--gold);
+      box-shadow: var(--large-shadow);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font: 38px 'Lilita One', sans-serif;
+    }
+    #detail-rarity { margin-bottom: 8px; color: var(--gold); font-size: 12px; font-weight: 900; }
+    #detail-rarity.rarity-legendary { color: var(--legendary); }
+    #detail-rarity.rarity-epic { color: var(--epic); }
+    #detail-rarity.rarity-rare { color: var(--rare); }
+    #detail-qty { margin-bottom: 8px; color: var(--dim); font-size: 12px; }
+    .detail-factors-label { color: var(--dim); font-size: 10px; }
+    #detail-divs { margin: 6px 0 8px; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
+    #detail-divs .factor-circle { width: 25px; height: 25px; font-size: 10px; }
+
+    /* ===== Celebration, particles, toast, shake ===== */
+    #toast-container { position: fixed; z-index: 1100; top: 12px; right: 12px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+    .achievement-toast {
+      min-width: 220px;
+      max-width: min(310px, calc(100vw - 24px));
+      padding: 11px 14px;
+      border: var(--stroke);
+      border-radius: 15px;
+      background: var(--panel);
+      color: var(--cream);
+      box-shadow: var(--large-shadow);
+      display: grid;
+      grid-template-columns: 30px minmax(0, 1fr);
+      align-items: center;
+      gap: 7px;
+      animation: slideInRight 0.35s ease-out;
+      pointer-events: auto;
+    }
+    .achievement-toast .toast-mark { grid-row: span 2; width: 28px; height: 28px; border: 2px solid var(--ink); border-radius: 9px; background: var(--gold); color: var(--ink); display: flex; align-items: center; justify-content: center; }
+    .toast-mark .icon { width: 17px; height: 17px; }
+    .achievement-toast .toast-title { color: var(--gold); font-size: 10px; font-weight: 900; }
+    .achievement-toast .toast-body { color: var(--cream); font-size: 12px; font-weight: 700; }
+    .achievement-toast.hiding { animation: slideOutRight 0.3s ease-in forwards; }
+    @keyframes slideInRight { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
+    @keyframes slideOutRight { from{transform:translateX(0);opacity:1} to{transform:translateX(110%);opacity:0} }
+    #particles-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 500; pointer-events: none; }
+    @keyframes screenShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+    body.shake { animation: screenShake 0.4s ease; }
+    .combo-flash { position: fixed; z-index: 650; top: 38%; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; color: var(--gold); font-size: 28px; font-weight: 900; text-shadow: 0 3px 0 var(--ink); pointer-events: none; animation: comboFlash 1s ease forwards; }
+    .combo-flash .icon { width: 30px; height: 30px; fill: currentColor; stroke: currentColor; }
+    @keyframes comboFlash { 0%{opacity:1;transform:translateX(-50%) scale(1)} 50%{transform:translateX(-50%) scale(1.25)} 100%{opacity:0;transform:translateX(-50%) translateY(-30px) scale(.8)} }
+
+    /* ===== Level clear overlay ===== */
+    .summary-overlay {
+      position: fixed;
+      z-index: 1000;
+      inset: 0;
+      padding: 18px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: rgba(13, 11, 35, 0.9);
+    }
+    .summary-content {
+      position: relative;
+      z-index: 1;
+      width: min(100%, 430px);
+      max-height: 94dvh;
+      padding: 20px 20px 16px;
+      border: var(--large-stroke);
+      border-radius: 25px;
+      background: var(--panel);
+      box-shadow: 0 8px 0 var(--ink);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      overflow-y: auto;
+      text-align: center;
+    }
+    .summary-stars { margin-top: -2px; display: flex; align-items: flex-end; gap: 3px; color: var(--gold); }
+    .summary-stars .icon { width: 39px; height: 39px; fill: currentColor; stroke: var(--ink); stroke-width: 1.5; }
+    .summary-stars .icon:nth-child(2) { width: 55px; height: 55px; margin-bottom: 6px; }
+    .summary-plaque { width: 100%; padding: 15px 15px 12px; border: var(--large-stroke); border-radius: 22px; background: var(--orange); box-shadow: 0 7px 0 var(--ink); color: var(--ink); font-size: 42px; font-weight: 900; line-height: 1; letter-spacing: 4px; }
+    .summary-range { color: var(--gold); font-size: 30px; line-height: 1; text-shadow: 0 3px 0 var(--ink); }
+    .summary-subtitle { color: var(--cream); font-size: 14px; font-weight: 900; }
+    .summary-scoreboard { width: 100%; padding: 10px 14px; border: var(--stroke); border-radius: 17px; background: var(--felt-edge); display: flex; flex-direction: column; gap: 7px; }
+    .summary-score-row { display: flex; justify-content: space-between; gap: 12px; color: var(--dim); font-size: 12px; font-weight: 700; }
+    .summary-score-row strong { color: var(--teal); font: 18px 'Lilita One', sans-serif; }
+    .summary-score-row:nth-child(2) strong { color: var(--cream); }
+    .summary-score-row:nth-child(3) strong { color: var(--orange); }
+    .summary-actions { width: 100%; margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
+    .summary-action { width: 100%; min-height: 46px; padding: 8px 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; color: var(--ink); font-size: 13px; font-weight: 900; cursor: pointer; }
+    .summary-action .icon { width: 18px; height: 18px; }
+    #expand-btn { background: var(--gold); }
+    .summary-action.secondary { min-height: 42px; background: var(--cream); }
+    .summary-action.reset { min-height: 38px; border-color: transparent; background: transparent; box-shadow: none; color: var(--dim); font-size: 11px; text-decoration: underline; }
+    .confetti { position: absolute; z-index: 0; width: 12px; height: 17px; border: 2px solid var(--ink); border-radius: 3px; }
+    .confetti:nth-of-type(4n) { background: var(--orange); }
+    .confetti:nth-of-type(4n + 1) { background: var(--gold); }
+    .confetti:nth-of-type(4n + 2) { background: var(--teal); }
+    .confetti:nth-of-type(4n + 3) { background: var(--epic); }
+
+    /* Collection and level detail styles on tablet and larger mobile. */
+    @media (min-width: 500px) {
+      #setup-screen { justify-content: center; padding: 18px 30px; gap: 14px; }
+      .mascot-logo { width: 100px; height: 90px; }
+      .setup-logo h1 { font-size: 54px; }
+      .setup-card-count { max-width: 440px; padding: 14px 22px; }
+      .start-btn { max-width: 440px; min-height: 66px; font-size: 22px; }
+      #level-picker { max-width: 440px; gap: 10px; }
+      .setup-footer { max-width: 440px; }
+      #game-screen { padding-right: 18px; padding-left: 18px; }
+      .header { gap: 9px 14px; }
+      .header-title { font-size: 20px; }
+      .header-right-cluster { gap: 7px; }
+      .header-right-cluster .icon-button { width: 44px; height: 44px; flex-basis: 44px; }
+      .stat-card { min-height: 56px; }
+      .stat-label, .collection-stat-line { font-size: 11px; }
+      .stat-value { font-size: 21px; }
+      .dice-zone { min-height: 116px; padding: 12px 15px; gap: 5px 14px; }
+      .dice { width: 52px; height: 52px; }
+      .btn-sb-dice { min-height: 44px; font-size: 15px; }
+      .cards-grid { gap: 12px; }
+      .p-card { height: clamp(150px, 19dvh, 190px); }
+      .card-num { font-size: clamp(48px, 7vw, 64px); }
+      .game-button, .controls .btn { min-height: 60px; font-size: 13px; }
+      .modal { padding: 22px; }
+      .coll-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 11px; }
+      .collection-card { min-height: 92px; }
+      .collection-number { font-size: 30px; }
+    }
+
+    /* iPad landscape layout: 340px action rail and felt table. */
+    @media (min-width: 768px) and (max-width: 1199px) and (orientation: landscape) {
+      body { background-size: 24px 24px; }
+      #game-screen { width: 100%; padding: 12px 20px 15px; gap: 11px; }
+      .header {
+        min-height: 58px;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-areas: "brand stats actions";
+        gap: 12px;
+      }
+      .brand-mark { width: 42px; height: 39px; flex-basis: 42px; }
+      .header-title { font-size: 24px; }
+      .level-badge { padding: 3px 10px; font-size: 16px; }
+      .header .stats-strip { display: flex; justify-content: center; gap: 8px; }
+      .header .stat-card { min-width: 100px; min-height: 46px; padding: 3px 9px; border-radius: 13px; }
+      .header .stat-value { font-size: 18px; }
+      .header .stat-collection { min-width: 142px; }
+      .header .stat-label, .header .collection-stat-line { font-size: 9px; }
+      .header .collection-stat-line strong { font-size: 12px; }
+      .header-right-cluster { gap: 6px; }
+      .header-right-cluster .icon-button { width: 43px; height: 43px; flex-basis: 43px; }
+      .game-columns { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px; }
+      .action-column { display: flex; min-width: 0; flex-direction: column; gap: 11px; }
+      .table-column { display: flex; min-width: 0; flex-direction: column; }
+      .desktop-sidebar { display: none; }
+      .dice-zone { min-height: 0; padding: 16px; border-radius: 22px; box-shadow: var(--large-shadow); display: flex; flex-direction: column; gap: 10px; }
+      .dice-pair { display: flex; gap: 9px; }
+      .dice { width: 64px; height: 64px; border-radius: 17px; }
+      .dice-slash { display: none; }
+      .target-badge { font-size: 13px; }
+      .target-detail { font-size: 17px; text-align: center; }
+      .target-detail strong { font-size: 25px; }
+      .btn-sb-dice { min-height: 58px; font-size: 18px; border-width: 4px; border-radius: 19px; box-shadow: var(--large-shadow); }
+      .controls { margin-top: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 0; }
+      .game-button, .controls .btn { min-height: 58px; border-radius: 17px; font-size: 15px; }
+      #btn-confirm { grid-column: 1 / -1; min-height: 68px; border-width: 4px; background: var(--orange); color: var(--ink); box-shadow: var(--large-shadow); font-size: 18px; }
+      .card-area { flex: 1; padding: 15px; border: var(--stroke); border-radius: 24px; background: var(--felt); box-shadow: inset 0 0 0 6px var(--felt-edge); display: flex; justify-content: center; }
+      .table-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: var(--cream); font-weight: 900; }
+      .open-status { justify-content: flex-end; margin: 0 0 10px; }
+      .cards-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-content: center; }
+      .cards-grid.cards-5plus { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .p-card { height: clamp(190px, 31dvh, 270px); }
+      .card-face { border-radius: 21px; }
+      .card-front { border-width: 4px; }
+      .card-back { border-width: 4px; }
+      .card-num { font-size: clamp(54px, 7vw, 88px); }
+      .card-back-number { font-size: 25px; }
+      .factor-circle { width: 23px; height: 23px; font-size: 10px; }
+      .card-area .status-bar { margin-top: 12px; min-height: 48px; font-size: 14px; }
+      .status-bar { grid-row: auto; }
+      .score-badge-hide-mobile { display: flex; }
+    }
+
+    /* iPad portrait follows the phone stack, scaled up. */
+    @media (min-width: 768px) and (max-width: 1199px) and (orientation: portrait) {
+      body { background-size: 24px 24px; }
+      #game-screen { padding: 18px 26px max(18px, env(safe-area-inset-bottom)); gap: 12px; }
+      .header { min-height: 62px; }
+      .brand-mark { width: 42px; height: 39px; flex-basis: 42px; }
+      .header-title { font-size: 25px; }
+      .header-right-cluster .icon-button { width: 48px; height: 48px; flex-basis: 48px; }
+      .stat-card { min-height: 62px; }
+      .stat-label, .collection-stat-line { font-size: 13px; }
+      .stat-value { font-size: 26px; }
+      .dice-zone { min-height: 132px; padding: 16px 20px; }
+      .dice { width: 62px; height: 62px; }
+      .target-badge { font-size: 15px; }
+      .target-detail { font-size: 18px; }
+      .target-detail strong { font-size: 28px; }
+      .btn-sb-dice { min-height: 50px; font-size: 17px; }
+      .cards-grid { gap: 16px; }
+      .p-card { height: clamp(190px, 20dvh, 250px); }
+      .card-num { font-size: clamp(64px, 9vw, 88px); }
+      .game-button, .controls .btn { min-height: 68px; font-size: 16px; }
+      .game-columns { gap: 0; }
+      .desktop-sidebar { display: none; }
+    }
+
+    /* Desktop: three columns; wrapping keeps every panel inside narrow windows. */
+    @media (min-width: 1200px) {
+      body { height: auto; min-height: 100dvh; overflow-x: hidden; overflow-y: auto; background-size: 24px 24px; }
+      #setup-screen { min-height: 100dvh; height: auto; padding: 22px 30px; gap: 14px; justify-content: center; }
+      .mascot-logo { width: 104px; height: 96px; }
+      .setup-logo h1 { font-size: 58px; }
+      .setup-card-count { max-width: 470px; padding: 16px 24px; }
+      .start-btn { max-width: 470px; min-height: 70px; font-size: 24px; }
+      #level-picker { max-width: 470px; gap: 10px; }
+      #level-picker .start-level-btn { min-height: 68px; }
+      .setup-footer { max-width: 470px; }
+      #game-screen { height: auto; min-height: 100dvh; padding: 16px 22px 20px; gap: 14px; overflow: visible; }
+      .header { min-height: 58px; grid-template-columns: auto minmax(260px, 1fr) auto; grid-template-areas: "brand stats actions"; gap: 15px; }
+      .brand-mark { width: 46px; height: 43px; flex-basis: 46px; }
+      .header-title { font-size: 27px; }
+      .level-badge { padding: 3px 11px; font-size: 17px; }
+      .header .stats-strip { display: flex; justify-content: center; gap: 8px; }
+      .header .stat-card { min-width: 116px; min-height: 48px; padding: 3px 12px; flex-direction: row; gap: 9px; border-radius: 14px; }
+      .header .stat-label { font-size: 12px; }
+      .header .stat-value { font-size: 22px; }
+      .header .stat-collection { min-width: 174px; flex-direction: column; align-items: stretch; gap: 3px; }
+      .header .collection-stat-line { font-size: 10px; }
+      .header .collection-stat-line strong { font-size: 14px; }
+      .header-right-cluster { gap: 8px; }
+      .header-right-cluster .icon-button { width: 46px; height: 46px; flex-basis: 46px; }
+      .game-columns { display: flex; flex-wrap: wrap; align-items: stretch; gap: 16px; }
+      .action-column { flex: 0 1 250px; min-width: 230px; display: flex; flex-direction: column; gap: 12px; }
+      .table-column { flex: 1 1 520px; min-width: 420px; display: flex; flex-direction: column; }
+      .desktop-sidebar { flex: 0 1 250px; min-width: 225px; max-height: calc(100dvh - 100px); overflow-y: auto; display: flex; flex-direction: column; gap: 12px; scrollbar-color: var(--dim) var(--ink); }
+      .desktop-panel { padding: 12px; border-radius: 18px; gap: 8px; }
+      .desktop-panel-heading { font-size: 13px; }
+      #desktop-collection-preview { grid-template-columns: repeat(5, minmax(0, 1fr)); max-height: 160px; }
+      .desktop-collection-count { font-size: 11px; }
+      .desktop-achievement { gap: 7px; }
+      .desktop-achievement-icon { width: 25px; height: 25px; flex-basis: 25px; border-radius: 8px; }
+      .desktop-achievement-copy strong { font-size: 11px; }
+      .desktop-achievement-copy span { font-size: 10px; }
+      .shortcut-list { font-size: 10px; gap: 6px 5px; }
+      .shortcut-key { font-size: 12px; }
+      .dice-zone { min-height: 0; padding: 15px 16px; border-radius: 22px; box-shadow: var(--large-shadow); display: flex; flex-direction: column; gap: 9px; }
+      .dice-pair { gap: 9px; }
+      .dice { width: 58px; height: 58px; }
+      .dice-slash { display: none; }
+      .target-badge { font-size: 12px; }
+      .target-detail { font-size: 16px; text-align: center; }
+      .target-detail strong { font-size: 23px; }
+      .btn-sb-dice { min-height: 54px; border-width: 4px; border-radius: 18px; box-shadow: var(--large-shadow); font-size: 17px; }
+      .controls { margin-top: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; padding: 0; }
+      .game-button, .controls .btn { min-height: 54px; border-radius: 15px; font-size: 13px; }
+      #btn-confirm { grid-column: 1 / -1; min-height: 62px; border-width: 4px; box-shadow: var(--large-shadow); background: var(--orange); color: var(--ink); font-size: 17px; }
+      .card-area { flex: 1; min-height: 430px; padding: 18px 16px; border: var(--stroke); border-radius: 23px; background: var(--felt); box-shadow: inset 0 0 0 6px var(--felt-edge); }
+      .table-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; color: var(--cream); font-weight: 900; }
+      .open-status { justify-content: flex-end; margin: 0 0 9px; }
+      .open-status-text { font-size: 12px; }
+      .cards-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; align-content: center; }
+      .cards-grid.cards-5plus { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .p-card { height: clamp(195px, 29dvh, 265px); }
+      .card-face { border-radius: 22px; }
+      .card-front { border-width: 4px; }
+      .card-back { border-width: 4px; }
+      .card-num { font-size: clamp(54px, 6.1vw, 88px); }
+      .card-back-number { font-size: 27px; }
+      .factor-circle { width: 22px; height: 22px; font-size: 10px; }
+      .card-shortcut { display: block; }
+      .status-bar { min-height: 46px; margin-top: 10px; font-size: 13px; }
+      .desktop-sidebar .shortcut-panel { margin-top: auto; }
+    }
+
+    @media (hover: hover) {
+      .icon-button:hover, .game-button:hover:not(:disabled), .controls .btn:hover:not(:disabled), .start-btn:hover, .coll-tab:hover { filter: brightness(1.08); }
+      .p-card:not(.face-down):hover .card-front { box-shadow: 0 5px 0 var(--ink); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+    }
   </style>
 </head>
-<body>
+<body data-ui-style="game">
+  <svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-sound" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M18.5 5.5a9 9 0 0 1 0 13"></path></symbol>
+    <symbol id="i-muted" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4z"></path><path d="m16 9 5 6m0-6-5 6"></path></symbol>
+    <symbol id="i-rules" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6"></path><path d="M12 17.5h.01"></path></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0z"></path><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4"></path><path d="M12 13v4M8.5 20h7M10 17h4"></path></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><rect x="4" y="5" width="10" height="14" rx="2"></rect><path d="m14 7.5 4.5 1.2a1.5 1.5 0 0 1 1 1.8L17 19"></path></symbol>
+    <symbol id="i-dice" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"></rect><circle cx="8.5" cy="8.5" r="1.2" fill="currentColor"></circle><circle cx="15.5" cy="15.5" r="1.2" fill="currentColor"></circle><circle cx="12" cy="12" r="1.2" fill="currentColor"></circle></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 7.5-2"></path></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5 9.5 17 19 7"></path></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3"></path></symbol>
+    <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-4-1-6 1-9z"></path></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2.5 2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17l-5.9 3.3 1.3-6.5-4.9-4.5 6.6-.8z"></path></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"></path></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7"></path><path d="M20 4v5h-5"></path></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3"></path></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"></path></symbol>
+    <symbol id="i-bread" viewBox="0 0 104 96"><rect x="10" y="28" width="84" height="62" rx="22" fill="var(--cream)" stroke="var(--ink)" stroke-width="5"></rect><path d="M30 34q22-14 44 0" fill="none" stroke="var(--orange)" stroke-width="6" stroke-linecap="round"></path><circle cx="38" cy="56" r="6" fill="var(--ink)"></circle><circle cx="66" cy="56" r="6" fill="var(--ink)"></circle><path d="M46 65q6 6 12 0" fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"></path></symbol>
+  </svg>
+
   <div id="setup-screen">
-    <div class="setup-logo"><h1>🎯 平方包</h1><p>練習模式 · 獨自修煉</p></div>
-    <div class="setup-card-count">
-      <label>桌面卡數（2–6張）</label>
-      <div class="count-selector">
-        <button class="count-btn" onclick="adjustCount(-1)">−</button>
-        <div class="count-display"><span id="count-val">4</span><span> 張</span></div>
-        <button class="count-btn" onclick="adjustCount(1)">+</button>
-      </div>
+    <div class="setup-topline">
+      <button class="icon-button sound-toggle" type="button" onclick="toggleSound()" aria-label="音效" title="音效"><svg class="icon"><use href="#i-sound"></use></svg></button>
+      <button class="icon-button" type="button" onclick="showRules()" aria-label="遊戲規則" title="遊戲規則"><svg class="icon"><use href="#i-rules"></use></svg></button>
     </div>
-    <div class="setup-rules-link" onclick="showRules()">📖 查看遊戲規則</div>
-    <button class="start-btn" onclick="startGame()">開始練習 🎲</button>
+    <div class="setup-logo">
+      <svg class="mascot-logo" viewBox="0 0 104 96" aria-hidden="true">
+        <path d="M38 14c-4-5 4-8 0-13M52 12c-4-5 4-8 0-13M66 14c-4-5 4-8 0-13" fill="none" stroke="#B9B4E0" stroke-width="3" stroke-linecap="round"></path>
+        <rect x="10" y="28" width="84" height="62" rx="22" fill="#16142E"></rect>
+        <rect x="10" y="22" width="84" height="62" rx="22" fill="#FFF6E5" stroke="#16142E" stroke-width="4"></rect>
+        <path d="M30 34q22-14 44 0M40 30l4 8M52 27v9M64 30l-4 8" fill="none" stroke="#FF8A3D" stroke-width="4" stroke-linecap="round"></path>
+        <circle cx="38" cy="56" r="4.5" fill="#16142E"></circle><circle cx="66" cy="56" r="4.5" fill="#16142E"></circle>
+        <path d="M46 64q6 6 12 0" fill="none" stroke="#16142E" stroke-width="3.5" stroke-linecap="round"></path>
+        <ellipse cx="28" cy="66" rx="6" ry="3.5" fill="#FF8A3D" opacity=".55"></ellipse><ellipse cx="76" cy="66" rx="6" ry="3.5" fill="#FF8A3D" opacity=".55"></ellipse>
+        <circle cx="88" cy="22" r="13" fill="#FFC93C" stroke="#16142E" stroke-width="3.5"></circle>
+        <text x="88" y="28" text-anchor="middle" font-family="Lilita One, sans-serif" font-size="17" fill="#16142E">x²</text>
+      </svg>
+      <h1>平方包</h1>
+      <p>數學心算卡牌遊戲</p>
+    </div>
+    <div class="setup-card-count">
+      <label>桌面卡數（2–6 張）</label>
+      <div class="count-selector">
+        <button class="count-btn" type="button" onclick="adjustCount(-1)" aria-label="減少卡數">−</button>
+        <div class="count-display"><span id="count-val">4</span><span class="count-unit"> 張</span></div>
+        <button class="count-btn" type="button" onclick="adjustCount(1)" aria-label="增加卡數">+</button>
+      </div>
+      <div id="card-fan" aria-hidden="true"></div>
+    </div>
+    <button class="start-btn" type="button" onclick="startGame()">開始遊戲</button>
     <div class="level-picker-label">或選擇起始等級</div>
     <div id="level-picker"></div>
-    <button id="download-offline-btn" class="download-offline-btn" type="button" onclick="downloadOfflineZip()" hidden>⬇ 下載離線版（老師用）</button>
+    <div class="setup-footer">
+      <div class="setup-rules-link" onclick="showRules()">查看遊戲規則</div>
+      <button id="download-offline-btn" class="download-offline-btn" type="button" onclick="downloadOfflineZip()" hidden><svg class="icon"><use href="#i-back" transform="rotate(-90 12 12)"></use></svg> 下載離線版（老師用）</button>
+    </div>
   </div>
 
-  <div id="game-screen" style="display:none; height:100%; flex-direction:column;">
-    <div class="header">
-      <div class="header-left"><div class="header-title">🎯 平方包</div><span id="level-badge" style="background:var(--gold);color:white;border-radius:12px;padding:2px 10px;font-size:12px;font-weight:900;">Lv.1</span></div>
+  <div id="game-screen" style="display:none">
+    <header class="header">
+      <div class="header-left">
+        <svg class="brand-mark icon"><use href="#i-bread"></use></svg>
+        <span class="header-title">平方包</span>
+        <span id="level-badge" class="level-badge">Lv.1</span>
+      </div>
       <div class="header-right-cluster">
-        <div class="combo-display" id="combo-display">
-          <span class="combo-fire">🔥</span>
-          <span class="combo-count" id="combo-count">0</span>
+        <button id="ach-btn" class="icon-button count-icon-button" type="button" onclick="showAchievements()" aria-label="成就" title="成就">
+          <svg class="icon"><use href="#i-trophy"></use></svg><span class="corner-count"><span id="ach-count">0</span>/<span id="ach-total">10</span></span>
+        </button>
+        <button id="coll-btn" class="icon-button count-icon-button" type="button" onclick="openCollection()" aria-label="卡牌圖鑑" title="卡牌圖鑑">
+          <svg class="icon"><use href="#i-book"></use></svg><span class="corner-count"><span id="coll-count">0</span>/<span id="coll-progress-text">20</span></span>
+        </button>
+        <button class="icon-button sound-toggle" id="sound-toggle" type="button" onclick="toggleSound()" aria-label="音效" title="音效"><svg class="icon"><use href="#i-sound"></use></svg></button>
+        <button class="icon-button" type="button" onclick="showRules()" aria-label="遊戲規則" title="遊戲規則"><svg class="icon"><use href="#i-rules"></use></svg></button>
+      </div>
+      <div class="stats-strip">
+        <div class="stat-card">
+          <span class="stat-label">成功率</span>
+          <span class="stat-value" id="success-rate">—</span>
         </div>
-        <button id="ach-btn" onclick="showAchievements()" style="background:linear-gradient(135deg,#f5c518,#e09000);border:none;color:white;padding:4px 10px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(245,193,24,0.3);flex-shrink:0;">🏆 <span id="ach-count">0</span>/<span id="ach-total">10</span></button>
-        <button id="coll-btn" onclick="openCollection()" style="background:linear-gradient(135deg,#6c5ce7,#a29bfe);border:none;color:white;padding:4px 10px;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(108,92,231,0.3);flex-shrink:0;">📚 <span id="coll-count">0</span>/<span id="coll-progress-text">20</span></button>
-        <div class="score-badge score-badge-hide-mobile" style="border-color:#00c853;color:#00c853;background:#f0fff4;flex-shrink:0;">
-          <span id="success-rate">—</span>
+        <div class="stat-card stat-streak">
+          <span class="stat-label">連勝</span>
+          <span class="stat-value streak-value"><svg class="icon"><use href="#i-flame"></use></svg><span id="win-streak">0</span></span>
+          <div class="combo-display" id="combo-display" aria-live="polite"><svg class="icon"><use href="#i-flame"></use></svg><span class="combo-count" id="combo-count">0</span></div>
         </div>
-        <div class="score-badge" style="border-color:#ff6b00;color:#ff6b00;background:#fffaf0;flex-shrink:0;">
-          🔥 <span id="win-streak">0</span>
+        <div class="stat-card stat-collection">
+          <div class="collection-stat-line"><span>收集</span><strong><span id="coll-count-stat">0</span>/<span id="coll-progress-stat">20</span></strong></div>
+          <div class="progress-track"><div class="progress-fill" id="collection-progress-fill"></div></div>
         </div>
-        <button class="sound-toggle" id="sound-toggle" onclick="toggleSound()" title="音效" style="flex-shrink:0;">🔊</button>
-        <button class="rules-btn" onclick="showRules()" style="flex-shrink:0;">📖</button>
       </div>
-    </div>
-    <div class="dice-zone">
-      <div class="dice-pair">
-        <div class="dice" id="dice1"></div>
-        <span class="dice-slash">/</span>
-        <div class="dice" id="dice2"></div>
-      </div>
-      <button class="btn btn-gold btn-sb-dice" id="btn-sb" onclick="triggerSquareBun()">🎤 平方包</button>
-      <div class="target-badge disabled" id="target-badge">開卡後擲骰</div>
-    </div>
-    <div class="card-area">
-      <div class="open-status">
-        <span class="open-status-text" id="open-status-text">已開 0 / 4 張</span>
-        <div class="open-dots" id="open-dots"></div>
-      </div>
-      <div class="cards-grid" id="cards-grid"></div>
-      <div id="continue-zone">
-        <button id="btn-continue" onclick="handleContinue()">繼續 ▶</button>
-      </div>
-    </div>
-    <div class="card-divs-tooltip" id="divs-tooltip"></div>
-    <div class="status-bar" id="status-bar">請先開卡</div>
-    <div class="controls">
-      <button class="btn btn-secondary" id="btn-open" onclick="openOneCard()">🔓 開卡</button>
-      <button class="btn btn-primary" id="btn-dice" onclick="rollDice()" disabled>🎲 擲骰</button>
-      <button class="btn btn-ghost" id="btn-sb" onclick="triggerSquareBun()" disabled>🎤 平方包</button>
-      <button class="btn btn-ghost" id="btn-confirm" onclick="confirmPicks()" disabled>✓ 核對</button>
-    </div>
+    </header>
+
+    <main class="game-columns">
+      <aside class="action-column">
+        <section class="dice-zone">
+          <div class="dice-pair">
+            <div class="dice" id="dice1" aria-label="第一粒骰"></div>
+            <span class="dice-slash">/</span>
+            <div class="dice" id="dice2" aria-label="第二粒骰"></div>
+          </div>
+          <div class="target-badge disabled" id="target-badge">開卡後擲骰</div>
+          <div class="target-detail" id="target-detail">目標：可被整除</div>
+          <button class="btn btn-gold btn-sb-dice" id="btn-sb" type="button" onclick="triggerSquareBun()"><svg class="icon"><use href="#i-mic"></use></svg><span>平方包！</span></button>
+        </section>
+        <div class="controls">
+          <button class="btn game-button btn-secondary" id="btn-open" type="button" onclick="openOneCard()"><svg class="icon"><use href="#i-lock"></use></svg><span>開卡</span></button>
+          <button class="btn game-button btn-primary" id="btn-dice" type="button" onclick="rollDice()" disabled><svg class="icon"><use href="#i-dice"></use></svg><span>擲骰</span></button>
+          <button class="btn game-button btn-ghost" id="btn-confirm" type="button" onclick="confirmPicks()" disabled><svg class="icon"><use href="#i-check"></use></svg><span>核對</span></button>
+        </div>
+      </aside>
+
+      <section class="table-column">
+        <div class="card-area">
+          <div class="table-heading"><span>枱面</span></div>
+          <div class="open-status">
+            <span class="open-status-text" id="open-status-text">已開 0 / 4 張</span>
+            <div class="open-dots" id="open-dots"></div>
+          </div>
+          <div class="cards-grid" id="cards-grid"></div>
+          <div id="continue-zone"><button id="btn-continue" type="button" onclick="handleContinue()">繼續</button></div>
+        </div>
+        <div class="card-divs-tooltip" id="divs-tooltip"></div>
+        <div class="status-bar" id="status-bar">請先開卡</div>
+      </section>
+
+      <aside class="desktop-sidebar">
+        <section class="desktop-panel">
+          <div class="desktop-panel-heading"><span>卡牌圖鑑</span><button type="button" onclick="openCollection('all')">查看全部</button></div>
+          <div class="desktop-collection-count"><span>已收集</span><strong><span id="desktop-coll-count">0</span>/<span id="desktop-coll-total">20</span></strong></div>
+          <div class="progress-track"><div class="progress-fill" id="desktop-collection-progress"></div></div>
+          <button class="desktop-collection-preview" id="desktop-collection-preview" type="button" aria-label="開啟卡牌圖鑑" onclick="openCollection('all')"></button>
+        </section>
+        <section class="desktop-panel">
+          <div class="desktop-panel-heading"><span>成就</span><span id="desktop-achievement-count">0/10</span></div>
+          <div id="desktop-achievement-list"></div>
+        </section>
+        <section class="desktop-panel shortcut-panel">
+          <div class="desktop-panel-heading">鍵盤快捷鍵</div>
+          <div class="shortcut-list">
+            <span class="shortcut-item"><span class="shortcut-key">1–6</span>揀卡</span>
+            <span class="shortcut-item"><span class="shortcut-key">Space</span>擲骰</span>
+            <span class="shortcut-item"><span class="shortcut-key">Enter</span>核對</span>
+            <span class="shortcut-item"><span class="shortcut-key key-gold">S</span>平方包</span>
+          </div>
+        </section>
+      </aside>
+    </main>
   </div>
 
   <div class="modal-overlay" id="rules-modal">
     <div class="modal">
-      <h2>📖 遊戲規則</h2>
-      <div class="modal-rule"><div class="modal-rule-icon">1️⃣</div><div class="modal-rule-text">開卡：按「開卡」按鈕，一張一張揭開卡牌。所有卡揭開後才能擲骰。</div></div>
-      <div class="modal-rule"><div class="modal-rule-icon">2️⃣</div><div class="modal-rule-text">擲骰：擲出兩粒骰子，目標是找出<strong>可被骰子數字整除</strong>的卡牌。</div></div>
-      <div class="modal-rule"><div class="modal-rule-icon">🎤</div><div class="modal-rule-text"><strong>平方包</strong>：擲骰後可隨時按，選擇一張<strong>平方數卡（1,4,9,16...）</strong>，直接收走得分。</div></div>
-      <div class="modal-rule"><div class="modal-rule-icon">🖐️</div><div class="modal-rule-text">揀卡：<strong>最多選擇 2 張卡</strong>（兩隻手）。選擇可被整除的卡。</div></div>
-      <div class="modal-rule"><div class="modal-rule-icon">➕</div><div class="modal-rule-text">補卡：確認後卡牌自動補充<strong>一張</strong>。</div></div>
-      <div class="modal-rule"><div class="modal-rule-icon">✅</div><div class="modal-rule-text">結算：揀啱加分，揀錯扣分。如果冇啱嘅卡，直接確認跳過。平方包卡自動得分。</div></div>
-      <button class="modal-close" onclick="closeRules()">知道了！</button>
+      <h2>遊戲規則</h2>
+      <div class="modal-rule"><div class="modal-rule-icon">1</div><div class="modal-rule-text">開卡：按「開卡」按鈕，一張一張揭開卡牌。所有卡揭開後才能擲骰。</div></div>
+      <div class="modal-rule"><div class="modal-rule-icon">2</div><div class="modal-rule-text">擲骰：擲出兩粒骰子，目標是找出<strong>可被骰子數字整除</strong>的卡牌。</div></div>
+      <div class="modal-rule"><div class="modal-rule-icon"><svg class="icon"><use href="#i-mic"></use></svg></div><div class="modal-rule-text"><strong>平方包</strong>：擲骰後可隨時按，選擇一張<strong>平方數卡（1、4、9、16…）</strong>，直接收走得分。</div></div>
+      <div class="modal-rule"><div class="modal-rule-icon">4</div><div class="modal-rule-text">揀卡：<strong>最多選擇 2 張卡</strong>。選擇可被整除的卡。</div></div>
+      <div class="modal-rule"><div class="modal-rule-icon"><svg class="icon"><use href="#i-dice"></use></svg></div><div class="modal-rule-text">補卡：確認後卡牌自動補充<strong>一張</strong>。</div></div>
+      <div class="modal-rule"><div class="modal-rule-icon"><svg class="icon"><use href="#i-check"></use></svg></div><div class="modal-rule-text">結算：揀啱加分，揀錯扣分。如果冇啱嘅卡，直接確認跳過。平方包卡自動得分。</div></div>
+      <button class="modal-close" type="button" onclick="closeRules()">知道了</button>
     </div>
   </div>
 
   <div id="toast-container"></div>
   <div class="modal-overlay" id="ach-modal" onclick="closeAchievements()">
-    <div onclick="event.stopPropagation()" style="background:#1a1a2e;border:2px solid #f5c518;border-radius:20px;padding:26px;max-width:420px;width:90%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,0.6);">
-      <h2 style="color:#f5c518;font-size:20px;font-weight:900;margin-bottom:14px;text-align:center;">🏆 成就 (<span id="ach-modal-count">0/10</span>)</h2>
-      <div id="ach-list" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
-      <button onclick="closeAchievements()" style="width:100%;margin-top:16px;padding:14px;background:linear-gradient(135deg,#f5c518,#e09000);color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans HK',sans-serif;">關閉</button>
+    <div class="modal achievement-modal" onclick="event.stopPropagation()">
+      <h2>成就 <span id="ach-modal-count">0/10</span></h2>
+      <div id="ach-list"></div>
+      <button class="modal-close" type="button" onclick="closeAchievements()">關閉</button>
     </div>
   </div>
+
   <div class="modal-overlay" id="coll-modal">
-    <div class="modal" style="max-width:620px;max-height:80vh;display:flex;flex-direction:column;">
-      <h2 style="display:flex;align-items:center;gap:8px;">📚 卡牌圖鑑 <span id="coll-stats" style="font-size:14px;color:#aaa;font-weight:400;"></span></h2>
-      <div style="display:flex;gap:6px;margin:8px 0;flex-wrap:wrap;">
-        <button id="coll-tab-all" onclick="openCollection('all')" style="background:#2d2d4e;color:white;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;border:none;">全部</button>
-        <button id="coll-tab-leg" onclick="openCollection('legendary')" style="background:transparent;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;color:#aaa;font-size:13px;">⭐ 傳說</button>
-        <button id="coll-tab-epic" onclick="openCollection('epic')" style="background:transparent;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;color:#aaa;font-size:13px;">💎 史詩</button>
-        <button id="coll-tab-rare" onclick="openCollection('rare')" style="background:transparent;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;color:#aaa;font-size:13px;">👑 稀有</button>
+    <div class="modal">
+      <h2 class="collection-title"><svg class="icon"><use href="#i-book"></use></svg>卡牌圖鑑 <span id="coll-stats"></span></h2>
+      <div class="collection-tabs">
+        <button class="coll-tab active" id="coll-tab-all" type="button" onclick="openCollection('all')"><span class="rarity-dot"></span>全部</button>
+        <button class="coll-tab" id="coll-tab-leg" type="button" onclick="openCollection('legendary')"><span class="rarity-dot legendary"></span>傳說</button>
+        <button class="coll-tab" id="coll-tab-epic" type="button" onclick="openCollection('epic')"><span class="rarity-dot epic"></span>史詩</button>
+        <button class="coll-tab" id="coll-tab-rare" type="button" onclick="openCollection('rare')"><span class="rarity-dot rare"></span>稀有</button>
       </div>
-      <div class="coll-summary" id="coll-summary" style="display:none;justify-content:space-around;padding:8px 0;margin-bottom:8px;border-bottom:1px solid var(--border);">
-        <div style="text-align:center;">
-          <div style="font-size:20px;font-weight:900;color:var(--accent);"><span id="coll-total-types">0</span></div>
-          <div style="font-size:11px;color:var(--text-dim);">種</div>
-        </div>
-        <div style="text-align:center;">
-          <div style="font-size:20px;font-weight:900;color:var(--gold);"><span id="coll-total-cards">0</span></div>
-          <div style="font-size:11px;color:var(--text-dim);">張</div>
-        </div>
-        <div style="text-align:center;">
-          <div style="font-size:20px;font-weight:900;color:var(--success);"><span id="coll-completion">0</span>%</div>
-          <div style="font-size:11px;color:var(--text-dim);">完成</div>
-        </div>
+      <div class="coll-summary" id="coll-summary">
+        <div class="coll-summary-item"><div class="coll-summary-value"><span id="coll-total-types">0</span></div><div class="coll-summary-label">種</div></div>
+        <div class="coll-summary-item"><div class="coll-summary-value"><span id="coll-total-cards">0</span></div><div class="coll-summary-label">張</div></div>
+        <div class="coll-summary-item"><div class="coll-summary-value"><span id="coll-completion">0</span>%</div><div class="coll-summary-label">完成</div></div>
       </div>
-      <div id="coll-content" style="flex:1;overflow-y:auto;padding:4px 0;"></div>
-      <button class="modal-close" onclick="closeCollection()" style="margin-top:8px;">關閉</button>
+      <div id="coll-content"></div>
+      <div class="rarity-legend">
+        <span class="rarity-legend-item"><span class="rarity-dot legendary"></span>傳說＝平方數</span>
+        <span class="rarity-legend-item"><span class="rarity-dot epic"></span>史詩＝6 個或以上因數</span>
+        <span class="rarity-legend-item"><span class="rarity-dot rare"></span>稀有＝其他</span>
+      </div>
+      <button class="modal-close" type="button" onclick="closeCollection()">關閉</button>
     </div>
   </div>
   <canvas id="particles-canvas"></canvas>
 
-  
   <script>var CARD_RANGE=20;</script>
-  <script src="game.js?v=20260920-p1"></script>
-  <script src="deluxe.js?v=20260920-p1"></script>
+  <script src="game.js?v=20261004-ui-game-style"></script>
+  <script src="deluxe.js?v=20261004-ui-game-style"></script>
 
-  <!-- Level Completion Summary Overlay -->
-  <div id="level-summary-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:800;align-items:center;justify-content:center;">
-    <div style="background:#1a1a2e;border:3px solid #f5c518;border-radius:24px;padding:36px;max-width:380px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.6);">
-      <div style="font-size:56px;margin-bottom:12px;">🎉</div>
-      <h2 style="color:#f5c518;font-size:26px;margin-bottom:8px;">完成！</h2>
-      <p style="color:#f5c518;font-size:20px;margin-bottom:20px;"><span id="summary-range">1-20</span> 全部收集！</p>
-      <div style="background:rgba(255,255,255,0.08);border-radius:14px;padding:16px;margin-bottom:24px;">
-        <div style="display:flex;justify-content:space-between;margin-bottom:10px;font-size:15px;">
-          <span style="color:#aaa;">成功率</span>
-          <span id="summary-rate" style="color:white;font-weight:900;">85%</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:15px;">
-          <span style="color:#aaa;">已收集</span>
-          <span id="summary-collected" style="color:white;font-weight:900;">20/20</span>
-        </div>
+  <div class="summary-overlay" id="level-summary-overlay" style="display:none">
+    <span class="confetti" style="left:5%;top:14%;transform:rotate(24deg)"></span>
+    <span class="confetti" style="left:17%;top:22%;transform:rotate(-18deg)"></span>
+    <span class="confetti" style="left:29%;top:11%;transform:rotate(34deg)"></span>
+    <span class="confetti" style="left:42%;top:19%;transform:rotate(-29deg)"></span>
+    <span class="confetti" style="left:55%;top:10%;transform:rotate(18deg)"></span>
+    <span class="confetti" style="left:68%;top:23%;transform:rotate(-12deg)"></span>
+    <span class="confetti" style="left:82%;top:13%;transform:rotate(31deg)"></span>
+    <span class="confetti" style="left:94%;top:24%;transform:rotate(-22deg)"></span>
+    <span class="confetti" style="left:9%;top:45%;transform:rotate(-14deg)"></span>
+    <span class="confetti" style="left:91%;top:49%;transform:rotate(26deg)"></span>
+    <span class="confetti" style="left:15%;top:75%;transform:rotate(32deg)"></span>
+    <span class="confetti" style="left:31%;top:87%;transform:rotate(-19deg)"></span>
+    <span class="confetti" style="left:48%;top:79%;transform:rotate(13deg)"></span>
+    <span class="confetti" style="left:67%;top:89%;transform:rotate(-34deg)"></span>
+    <span class="confetti" style="left:84%;top:77%;transform:rotate(22deg)"></span>
+    <span class="confetti" style="left:97%;top:91%;transform:rotate(-27deg)"></span>
+    <div class="summary-content">
+      <div class="summary-stars" aria-hidden="true"><svg class="icon"><use href="#i-star"></use></svg><svg class="icon"><use href="#i-star"></use></svg><svg class="icon"><use href="#i-star"></use></svg></div>
+      <h2 class="summary-plaque">過關！</h2>
+      <div>
+        <div class="summary-range" id="summary-range">1–20</div>
+        <div class="summary-subtitle">全部卡牌收集完成</div>
       </div>
-      <button id="expand-btn" onclick="expandRange()" style="width:100%;padding:14px;background:linear-gradient(135deg,#f5c518,#e09000);color:white;border:none;border-radius:14px;font-size:16px;font-weight:900;cursor:pointer;margin-bottom:10px;font-family:'Noto Sans HK',sans-serif;box-shadow:0 4px 12px rgba(245,166,35,0.4);">🔓 開放更大範圍（<span id="next-range">1-100</span>）</button>
-      <button onclick="keepPlaying()" style="width:100%;padding:14px;background:#2d2d4e;color:white;border:2px solid #4a4a6a;border-radius:14px;font-size:16px;font-weight:900;cursor:pointer;margin-bottom:10px;font-family:'Noto Sans HK',sans-serif;">🔄 繼續遊玩（保持 <span id="current-range">1-20</span>）</button>
-      <button onclick="resetProgress()" style="width:100%;padding:12px;background:#333;color:#aaa;border:none;border-radius:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans HK',sans-serif;">🗑️ 重置進度</button>
+      <div class="summary-scoreboard">
+        <div class="summary-score-row"><span>成功率</span><strong id="summary-rate">—</strong></div>
+        <div class="summary-score-row"><span>已收集</span><strong id="summary-collected">0/20</strong></div>
+        <div class="summary-score-row"><span>本輪連勝</span><strong id="summary-streak">0</strong></div>
+      </div>
+      <div class="summary-actions">
+        <button id="expand-btn" class="summary-action" type="button" onclick="expandRange()"><svg class="icon"><use href="#i-lock"></use></svg>開放更大範圍（<span id="next-range">1–100</span>）</button>
+        <button class="summary-action secondary" type="button" onclick="keepPlaying()"><svg class="icon"><use href="#i-refresh"></use></svg>繼續遊玩（保持 <span id="current-range">1–20</span>）</button>
+        <button class="summary-action reset" type="button" onclick="resetProgress()"><svg class="icon"><use href="#i-trash"></use></svg>重置進度</button>
+      </div>
     </div>
   </div>
-
 </body>
 </html>
