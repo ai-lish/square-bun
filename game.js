@@ -11,6 +11,7 @@
     const MAX_CARD = Math.max(...LEVELS.map(level=>level.max));
     const SQUARES = new Set(Array.from({length:Math.floor(Math.sqrt(MAX_CARD))},(_,i)=>(i+1)*(i+1)));
     function getDivisors(n){const d=[];for(let i=1;i<=n;i++)if(n%i===0)d.push(i);return d;}
+    function isGameStyleDesign(){return document.body&&document.body.dataset.uiStyle==='game';}
     const ALL_CARDS=[];for(let i=1;i<=MAX_CARD;i++){ALL_CARDS.push({n:i,divs:getDivisors(i),sq:SQUARES.has(i)});}
     const DELUXE_RANGE=typeof CARD_RANGE!=='undefined'?CARD_RANGE:88; // Default 88 (practice); deluxe sets CARD_RANGE=20 before loading
     let currentLevel = 1;  // default Lv.1 (1-20)
@@ -54,10 +55,33 @@
         attemptCount=data.attemptCount||0;
         winStreak=data.winStreak||0;
         document.getElementById('count-val').textContent=cardCount;
+        renderCardFan();
       }catch(e){}
     }
 
-    function adjustCount(delta){cardCount=Math.max(2,Math.min(6,cardCount+delta));document.getElementById('count-val').textContent=cardCount;}
+    function renderCardFan(){
+      const fan=document.getElementById('card-fan');
+      if(!fan)return;
+      fan.replaceChildren();
+      for(let i=0;i<cardCount;i++){
+        const card=document.createElement('span');
+        card.className='fan-card';
+        card.style.setProperty('--fan-rotation',((i-(cardCount-1)/2)*7)+'deg');
+        fan.appendChild(card);
+      }
+    }
+    function adjustCount(delta){cardCount=Math.max(2,Math.min(6,cardCount+delta));document.getElementById('count-val').textContent=cardCount;renderCardFan();}
+    function setSquareBunButtonLabel(cancel){
+      const btn=document.getElementById('btn-sb');
+      if(!btn)return;
+      if(isGameStyleDesign()){
+        btn.innerHTML=cancel
+          ? '<svg class="icon"><use href="#i-x"></use></svg><span>取消</span>'
+          : '<svg class="icon"><use href="#i-mic"></use></svg><span>平方包！</span>';
+      }else{
+        btn.textContent=cancel?'✕ 取消':'🎤 平方包';
+      }
+    }
     function showRules(){document.getElementById('rules-modal').classList.add('show');}
     function closeRules(){document.getElementById('rules-modal').classList.remove('show');}
     function shuffle(a){const r=Array.from(a);for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}return r;}
@@ -89,6 +113,7 @@
       const picker=document.getElementById('level-picker');
       if(!picker)return;
       loadProgress();
+      renderCardFan();
       picker.innerHTML='';
       LEVELS.forEach(level=>{
         const n=level.level;
@@ -130,9 +155,15 @@
     function updateCollectionBadge(){
       const collEl=document.getElementById('coll-count');
       const progEl=document.getElementById('coll-progress-text');
+      const statCollEl=document.getElementById('coll-count-stat');
+      const statProgEl=document.getElementById('coll-progress-stat');
+      const progressFill=document.getElementById('collection-progress-fill');
       const lvl=LEVELS[currentLevel-1];
       if(collEl&&lvl){collEl.textContent=collected.size;}
       if(progEl&&lvl){progEl.textContent=lvl.max;}
+      if(statCollEl&&lvl){statCollEl.textContent=collected.size;}
+      if(statProgEl&&lvl){statProgEl.textContent=lvl.max;}
+      if(progressFill&&lvl){progressFill.style.width=Math.min(100,collected.size/lvl.max*100)+'%';}
     }
 
     function openCollection(filter="all"){
@@ -227,7 +258,7 @@
       document.getElementById('status-bar').textContent='請按「開卡」揭開卡牌';document.getElementById('status-bar').className='status-bar';
       document.getElementById('btn-open').disabled=false;document.getElementById('btn-open').className='btn btn-green';
       document.getElementById('btn-dice').disabled=true;document.getElementById('btn-dice').className='btn btn-ghost';
-      document.getElementById('btn-sb').disabled=false;document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';document.getElementById('btn-sb').textContent='🎤 平方包';
+      document.getElementById('btn-sb').disabled=false;document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';setSquareBunButtonLabel(false);
       document.getElementById('btn-confirm').disabled=true;document.getElementById('btn-confirm').className='btn btn-ghost';
       const grid=document.getElementById('cards-grid');grid.classList.remove('dice-rolled','squarebun-mode');
       renderOpenDots();renderCards(false);
@@ -257,6 +288,7 @@
 
     function renderCards(showDivs){
       const grid=document.getElementById('cards-grid');grid.innerHTML='';
+      if(isGameStyleDesign())grid.classList.toggle('cards-5plus',cardCount>=5);
       table.forEach((card,i)=>{
         const wrapper=document.createElement('div');
         let cls='p-card';
@@ -271,14 +303,39 @@
         const back=document.createElement('div');back.className='card-face card-back';
 
         if(!revealed[i]){
-          // Face down: show "?" on the front face (card back side of flip)
-          front.innerHTML='<div class="card-num">?</div>';
+          if(isGameStyleDesign()){
+            // Decorative artwork only; card visibility and phase remain unchanged.
+            front.innerHTML='<div class="card-back-pattern" aria-hidden="true"><svg viewBox="0 0 72 60" width="72" height="60"><rect x="7" y="5" width="58" height="50" rx="12" fill="none" stroke="currentColor" stroke-width="4"/><rect x="25" y="18" width="22" height="22" rx="5" fill="#FFC93C" stroke="#16142E" stroke-width="3"/><path d="M18 13h4m28 34h4" stroke="#16142E" stroke-width="3" stroke-linecap="round"/></svg></div><div class="card-num">?</div>';
+          }else{
+            front.innerHTML='<div class="card-num">?</div>';
+          }
         }else{
           const divsHtml=showDivs?`<div class="card-divs">${card.divs.slice(0,3).join(', ')}${card.divs.length>3?'...':''}</div>`:'';
           front.innerHTML=`<div class="card-num">${card.n}</div>${divsHtml}`;
           front.onclick=()=>handleCardClick(i);
           // Back face is pre-filled with factor display (used during reveal phase)
           back.innerHTML=renderFactorBack(card);
+        }
+        if(isGameStyleDesign()&&revealed[i]&&selected.has(i)){
+          const mark=document.createElement('span');
+          mark.className='card-selected-mark';
+          mark.setAttribute('aria-hidden','true');
+          mark.innerHTML='<svg class="icon"><use href="#i-check"></use></svg>';
+          front.appendChild(mark);
+        }
+        if(isGameStyleDesign()&&revealed[i]){
+          const hintMark=document.createElement('span');
+          hintMark.className='hint-mark';
+          hintMark.setAttribute('aria-hidden','true');
+          hintMark.innerHTML='<svg class="icon"><use href="#i-star"></use></svg>';
+          front.appendChild(hintMark);
+        }
+        if(isGameStyleDesign()){
+          const shortcut=document.createElement('span');
+          shortcut.className='card-shortcut';
+          shortcut.textContent=String(i+1);
+          shortcut.setAttribute('aria-hidden','true');
+          wrapper.appendChild(shortcut);
         }
         if(card._new){wrapper.classList.add('adding');card._new=false;}
 
@@ -369,17 +426,37 @@
       }else if(phase==='dice-rolled'){
         setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`揀啱就核對，或直接核對跳過`,selected.size>0?'gold':'');
       }else if(phase==='squarebun'){
-        setStatus('🎤 平方包：選擇一張平方數卡','');
+        setStatus('平方包：選擇一張平方數卡','');
       }
     }
-    function setStatus(msg,cls){const el=document.getElementById('status-bar');el.textContent=msg;el.className='status-bar'+(cls?' '+cls:'');}
+    function renderStatusContent(el,msg,forcedIcon){
+      const text=String(msg),iconName=forcedIcon
+        || (text.startsWith('平方包')?'mic':text.startsWith('唔係平方數')||text.startsWith('答錯')?'x':text.startsWith('全對')?'check':null);
+      if(!isGameStyleDesign()){
+        const legacyPrefix={mic:'🎤',x:'✗',check:'✓',refresh:'⏭️'}[iconName];
+        el.textContent=legacyPrefix?legacyPrefix+' '+text:text;
+        return;
+      }
+      el.replaceChildren();
+      if(iconName){
+        const icon=document.createElement('span');
+        icon.className='status-icon';
+        icon.setAttribute('aria-hidden','true');
+        icon.innerHTML='<svg class="icon"><use href="#i-'+iconName+'"></use></svg>';
+        el.appendChild(icon);
+      }
+      el.appendChild(document.createTextNode(text));
+    }
+    function setStatus(msg,cls){const el=document.getElementById('status-bar');renderStatusContent(el,msg);el.className='status-bar'+(cls?' '+cls:'');}
 
     // Render a die face as SVG — val 0 shows "?"
     function renderDiceSVG(el,val){
-      const pip=(x,y)=>`<circle cx="${x}" cy="${y}" r="3.5" fill="#222"/>`;
-      const bg='fill="#fefefe"';
+      const pipColor=isGameStyleDesign()?'#16142E':'#222';
+      const questionColor=isGameStyleDesign()?'#B9B4E0':'#ccc';
+      const pip=(x,y)=>`<circle cx="${x}" cy="${y}" r="3.5" fill="${pipColor}"/>`;
+      const bg=isGameStyleDesign()?'fill="#FFF6E5"':'fill="#fefefe"';
       let circles='';
-      if(val===0){circles=`<text x="22" y="30" text-anchor="middle" font-size="22" font-weight="900" fill="#ccc" font-family="system-ui">?</text>`;}
+      if(val===0){circles=`<text x="22" y="30" text-anchor="middle" font-size="22" font-weight="900" fill="${questionColor}" font-family="system-ui">?</text>`;}
       else if(val===1){circles=pip(22,22);}
       else if(val===2){circles=pip(10,10)+pip(34,34);}
       else if(val===3){circles=pip(10,10)+pip(22,22)+pip(34,34);}
@@ -423,16 +500,16 @@
       if(sbMode){
         selected.clear();
         document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice active';
-        document.getElementById('btn-sb').textContent='✕ 取消';
+        setSquareBunButtonLabel(true);
         sbPrevPhase=phase;
         phase='squarebun';
         grid.classList.remove('dice-rolled');
         grid.classList.add('squarebun-mode');
-        setStatus('🎤 平方包：選擇一張卡牌','');
+        setStatus('平方包：選擇一張卡牌','');
         updateConfirmBtn();
       }else{
         document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';
-        document.getElementById('btn-sb').textContent='🎤 平方包';
+        setSquareBunButtonLabel(false);
         phase=sbPrevPhase;
         grid.classList.remove('squarebun-mode');
         if(phase==='dice-rolled')grid.classList.add('dice-rolled');
@@ -479,7 +556,7 @@
           const n=table[selectedIdx].n;
           collected.set(n,(collected.get(n)||0)+1);
           successCount++;attemptCount++;winStreak++;
-          setStatus('🎤 平方包！ 成功！','gold');
+          setStatus('平方包！ 成功！','gold');
           checkLevelCompletion();
           saveProgress();
         }else{
@@ -494,12 +571,12 @@
             }else{
               collected.set(lostN,newCount);
             }
-            setStatus('✗ 唔係平方數！失去 '+lostN+' 號卡！','');
+            setStatus('唔係平方數！失去 '+lostN+' 號卡！','');
             attemptCount++;winStreak=0;
             saveProgress();
           }else{
             attemptCount++;winStreak=0;
-            setStatus('✗ 唔係平方數！ 失敗','');
+            setStatus('唔係平方數！ 失敗','');
             saveProgress();
           }
         }
@@ -536,12 +613,12 @@
             }else{
               collected.set(lostN,newCount);
             }
-            setStatus(`✗ 答錯！失去 ${lostN} 號卡！`,'');
+            setStatus(`答錯！失去 ${lostN} 號卡！`,'');
             attemptCount++;winStreak=0;
             saveProgress();
           }else{
             attemptCount++;winStreak=0;
-            setStatus(`✗ 答錯！ 失敗`,'');
+            setStatus(`答錯！ 失敗`,'');
             saveProgress();
           }
           // Deluxe: correct cards are added to collected (count +1)
@@ -552,7 +629,7 @@
             collected.set(n,(collected.get(n)||0)+1);
           });
           successCount++;attemptCount++;winStreak++;
-          setStatus(`✓ 全對！ 成功！`,'success');
+          setStatus(`全對！ 成功！`,'success');
           checkLevelCompletion();
           saveProgress();
         }
@@ -572,7 +649,7 @@
       document.getElementById('btn-dice').disabled=true;
       document.getElementById('btn-dice').className='btn btn-ghost';
       setTimeout(()=>{
-        showFlash('skip','⏭️ 冇夾到！');
+        showFlash('skip','冇夾到！');
         // Clear dice and set phase='open' so player can re-roll
         dice=[null,null];
         renderDiceSVG(document.getElementById('dice1'),0);
@@ -632,7 +709,7 @@
       document.getElementById('target-badge').textContent='開卡後擲骰';document.getElementById('target-badge').className='target-badge disabled';
       document.getElementById('btn-open').disabled=false;document.getElementById('btn-open').className='btn btn-green';
       document.getElementById('btn-dice').disabled=true;document.getElementById('btn-dice').className='btn btn-ghost';
-      document.getElementById('btn-sb').disabled=false;document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';document.getElementById('btn-sb').textContent='🎤 平方包';
+      document.getElementById('btn-sb').disabled=false;document.getElementById('btn-sb').className='btn btn-gold btn-sb-dice';setSquareBunButtonLabel(false);
       document.getElementById('btn-confirm').disabled=true;document.getElementById('btn-confirm').className='btn btn-ghost';
       const grid=document.getElementById('cards-grid');grid.classList.remove('dice-rolled','squarebun-mode');
       setStatus('請按「開卡」揭開新一回合','');
@@ -645,9 +722,9 @@
       const scoreEl=document.getElementById('score');
       // 1. Status bar flash
       const colorMap={success:'success',danger:'danger',gold:'gold',skip:'info'};
-      const iconMap={success:'✓',danger:'✗',gold:'🎤',skip:'⏭️'};
+      const iconMap={success:'check',danger:'x',gold:'mic',skip:'refresh'};
       statusEl.className='status-bar '+colorMap[type];
-      statusEl.textContent=iconMap[type]+' '+text+(sub?('  '+sub):'');
+      renderStatusContent(statusEl,text+(sub?('  '+sub):''),iconMap[type]);
       // 2. Success rate delta animation (+1 success / -1 failure)
       if(type==='success'||type==='danger'||type==='gold'){
         const deltaVal=type==='success'?1:-1;
@@ -705,6 +782,8 @@
       document.getElementById('summary-range').textContent='1-'+level.max;
       document.getElementById('summary-rate').textContent=rate+'%';
       document.getElementById('summary-collected').textContent=collected.size+'/'+level.max;
+      const summaryStreak=document.getElementById('summary-streak');
+      if(summaryStreak){summaryStreak.textContent=winStreak;}
       const nextRange=document.getElementById('next-range');
       if(nextRange){ nextRange.textContent=currentLevel<LEVELS.length?('1-'+LEVELS[currentLevel].max):'MAX'; }
       const currentRange=document.getElementById('current-range');
