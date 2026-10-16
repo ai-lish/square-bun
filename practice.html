@@ -69,7 +69,6 @@
       box-shadow: 0 3px 10px rgba(233,69,96,0.3);
     }
     .target-badge.disabled { background: #ddd; color: #999; box-shadow: none; }
-    .target-badge.gold-bg { background: var(--gold); box-shadow: 0 3px 10px rgba(245,166,35,0.4); }
     .btn-sb-dice {
       padding: 7px 14px; font-size: 12px; font-weight: 700;
       border: none; border-radius: 10px; cursor: pointer;
@@ -130,17 +129,11 @@
     .cards-grid.squarebun-mode .card-front { background: rgba(255, 152, 0, 0.15); }
     .cards-grid.squarebun-mode .card-front.selected { background: var(--gold) !important; }
     .card-front.selected { transform: scale(1.05); box-shadow: 0 6px 14px rgba(233,69,96,0.4); }
-    .card-front.square-bun-card { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); animation: sbPulse 1.5s infinite; }
-    .card-front.hint { background: rgba(0,200,83,0.12); border-color: var(--success); }
-    .card-front.hint::after { content: '✓'; position: absolute; top: 3px; right: 5px; font-size: 10px; color: var(--success); }
-    @keyframes sbPulse { 0%,100%{box-shadow:0 3px 10px rgba(233,69,96,0.3)} 50%{box-shadow:0 3px 20px rgba(233,69,96,0.6)} }
     @keyframes correctPop { 0%{transform:scale(1)} 50%{transform:scale(1.15)} 100%{transform:scale(1)} }
     @keyframes wrongShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
     .card-num { font-size: 24px; font-weight: 900; color: var(--primary); }
     .card-divs { font-size: 8px; color: var(--text-dim); margin-top: 2px; text-align: center; line-height: 1.2; padding: 0 3px; }
     .card-front.selected .card-divs { color: rgba(255,255,255,0.85); }
-    .card-front.square-bun-card .card-num { color: white; }
-    .card-front.square-bun-card.selected { background: var(--gold) !important; animation: none; box-shadow: 0 6px 14px rgba(245,166,35,0.5); }
     /* Factor reveal (card back) */
     .card-back-number { font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 2px; }
     .factor-rows { display: flex; flex-direction: column; gap: 2px; width: 100%; }
@@ -262,7 +255,6 @@
       .p-card { min-height: 110px; border-radius: 16px; }
       .card-num { font-size: 36px; }
       .card-divs { font-size: 11px; }
-      .card-front.hint::after { top: 6px; right: 8px; font-size: 12px; }
       .dice { width: 56px; height: 56px; border-radius: 14px; }
       .dice-slash { font-size: 22px; }
       .dice-zone { gap: 24px; padding: 16px 32px; }
@@ -310,7 +302,6 @@
       }
       .card-num { font-size: 44px; }
       .card-divs { font-size: 12px; }
-      .card-front.hint::after { top: 8px; right: 10px; font-size: 14px; }
       .dice { width: 64px; height: 64px; border-radius: 16px; }
       .dice-zone { gap: 30px; padding: 18px 40px; }
       .header { padding: 16px 36px; }
@@ -479,7 +470,6 @@
         const wrapper=document.createElement('div');
         let cls='p-card';
         if(!revealed[i]){cls+=' face-down';}
-        else{if(card.sq)cls+=' square-bun-card';}
         wrapper.className=cls;
 
         const inner=document.createElement('div');inner.className='p-card-inner';
@@ -504,11 +494,6 @@
         wrapper.appendChild(inner);
         grid.appendChild(wrapper);
       });
-      if(sbMode&&!showDivs){
-        document.querySelectorAll('.p-card').forEach((el,i)=>{
-          if(revealed[i]&&table[i].sq&&!selected.has(i))el.querySelector('.card-front').classList.add('hint');
-        });
-      }
     }
 
     function handleCardClick(i){
@@ -613,16 +598,8 @@
       const d1=document.getElementById('dice1'),d2=document.getElementById('dice2');
       d1.classList.add('rolling');d2.classList.add('rolling');
       setTimeout(()=>{renderDiceSVG(d1,dice[0]);renderDiceSVG(d2,dice[1]);d1.classList.remove('rolling');d2.classList.remove('rolling');},500);
-      const targets=getTargetSet();
       document.getElementById('target-badge').textContent=`可被 ${dice[0]} 或 ${dice[1]} 整除`;
       document.getElementById('target-badge').classList.remove('disabled');
-      // Check for square cards that match
-      const matchingSquares=table.filter((c,i)=>revealed[i]&&c.sq&&targets.has(c.n));
-      if(matchingSquares.length>0){
-        document.getElementById('target-badge').classList.add('gold-bg');
-      }else{
-        document.getElementById('target-badge').classList.remove('gold-bg');
-      }
       phase='dice-rolled';
       document.getElementById('btn-dice').disabled=true;document.getElementById('btn-dice').className='btn btn-ghost';
       document.getElementById('btn-sb').disabled=false;
@@ -630,7 +607,6 @@
       document.getElementById('cards-grid').classList.add('dice-rolled');
       setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`揀啱就核對，或直接核對跳過`,'');
       updateConfirmBtn();
-      setTimeout(highlightHintCards,600);
     }
 
     function triggerSquareBun(){
@@ -669,14 +645,7 @@
       }
     }
 
-    function highlightHintCards(){
-      if(phase!=='dice-rolled')return;
-      const targets=getTargetSet();
-      document.querySelectorAll('.p-card').forEach((el,i)=>{
-        if(!revealed[i])return;
-        if(targets.has(table[i].n))el.classList.add('hint');else el.classList.remove('hint');
-      });
-    }
+    function highlightHintCards(){}
 
     function getTargetSet(){
       const s=new Set();
