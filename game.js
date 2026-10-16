@@ -247,7 +247,6 @@
     }
 
     function setAnswerPending(pending){
-      if(!isGameStyleDesign())return;
       const gameScreen=document.getElementById('game-screen');
       if(gameScreen){
         if(pending)gameScreen.classList.add('answer-pending');

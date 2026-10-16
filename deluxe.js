@@ -314,7 +314,7 @@
     // --- COLLECTION (CARD GALLERY) SYSTEM ---
     function openCollection(filter = 'all') {
       const gameScreen = document.getElementById('game-screen');
-      if (usesGameStyle() && gameScreen && gameScreen.classList.contains('answer-pending')) return;
+      if (gameScreen && gameScreen.classList.contains('answer-pending')) return;
       const modal = document.getElementById('coll-modal');
       const content = document.getElementById('coll-content');
       if (!modal || !content) return;
