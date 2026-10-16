@@ -274,15 +274,28 @@
       const ni=revealed.findIndex(r=>!r);if(ni===-1)return;
       revealed[ni]=true;renderOpenDots();renderCards(false);
       if(revealed.every(Boolean)){
-        phase='open';
         document.getElementById('btn-open').disabled=true;document.getElementById('btn-open').className='btn btn-ghost';
+        if(sbMode){
+          // Keep the active phase while Square Bun is open; remember that the
+          // underlying round is now ready to roll when the mode is cancelled.
+          sbPrevPhase='open';
+          document.getElementById('btn-dice').disabled=true;document.getElementById('btn-dice').className='btn btn-ghost';
+          setStatus('平方包：選擇一張卡牌','');
+          updateConfirmBtn();
+          return;
+        }
+        phase='open';
         document.getElementById('btn-dice').disabled=false;document.getElementById('btn-dice').className='btn btn-green';
         document.getElementById('status-bar').textContent='可以擲骰，或直接用平方包！';document.getElementById('status-bar').className='status-bar gold';
       }else{
-        document.getElementById('btn-open').className='btn btn-green';
-        document.getElementById('btn-dice').className='btn btn-ghost';
-        document.getElementById('status-bar').textContent=`再揭 ${revealed.filter(r=>!r).length} 張卡`;
-        document.getElementById('status-bar').className='status-bar';
+        document.getElementById('btn-open').disabled=false;document.getElementById('btn-open').className='btn btn-green';
+        document.getElementById('btn-dice').disabled=true;document.getElementById('btn-dice').className='btn btn-ghost';
+        if(sbMode){
+          setStatus('平方包：選擇一張卡牌','');
+        }else{
+          document.getElementById('status-bar').textContent=`再揭 ${revealed.filter(r=>!r).length} 張卡`;
+          document.getElementById('status-bar').className='status-bar';
+        }
       }
     }
 
@@ -483,7 +496,7 @@
         document.getElementById('target-badge').classList.remove('gold-bg');
       }
       phase='dice-rolled';
-      document.getElementById('btn-dice').className='btn btn-ghost';
+      document.getElementById('btn-dice').disabled=true;document.getElementById('btn-dice').className='btn btn-ghost';
       document.getElementById('btn-sb').disabled=false;
       document.getElementById('cards-grid').classList.remove('squarebun-mode');
       document.getElementById('cards-grid').classList.add('dice-rolled');
@@ -503,6 +516,7 @@
         setSquareBunButtonLabel(true);
         sbPrevPhase=phase;
         phase='squarebun';
+        document.getElementById('btn-dice').disabled=true;document.getElementById('btn-dice').className='btn btn-ghost';
         grid.classList.remove('dice-rolled');
         grid.classList.add('squarebun-mode');
         setStatus('平方包：選擇一張卡牌','');
@@ -513,9 +527,17 @@
         phase=sbPrevPhase;
         grid.classList.remove('squarebun-mode');
         if(phase==='dice-rolled')grid.classList.add('dice-rolled');
-        setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`請選擇卡牌`,'');
         selected.clear();
         sbMode=false;
+        const canOpen=revealed.some(r=>!r);
+        document.getElementById('btn-open').disabled=!canOpen;
+        document.getElementById('btn-open').className=canOpen?'btn btn-green':'btn btn-ghost';
+        const canRoll=phase==='open';
+        document.getElementById('btn-dice').disabled=!canRoll;
+        document.getElementById('btn-dice').className=canRoll?'btn btn-green':'btn btn-ghost';
+        if(phase==='open')setStatus('可以擲骰，或直接用平方包！','gold');
+        else if(phase==='closed')setStatus('請按「開卡」揭開卡牌','');
+        else setStatus('揀啱就核對，或直接核對跳過','');
         updateConfirmBtn();
       }
     }
