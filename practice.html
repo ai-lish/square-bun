@@ -691,6 +691,7 @@
       wrongCards=[];correctCards=[];
 
       if(phase==='squarebun'){
+        if(selected.size===0)return;
         const selectedIdx=Array.from(selected)[0];
         const isSquare=table[selectedIdx].sq;
         wrongCards=isSquare?[]:[selectedIdx];
