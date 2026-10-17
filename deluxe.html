@@ -356,7 +356,6 @@
     .dice-slash { color: var(--dim); font: 18px 'Lilita One', sans-serif; }
     .target-badge { grid-column: 2; grid-row: 1; color: var(--cream); font-size: 12px; font-weight: 900; line-height: 1.2; }
     .target-badge.disabled { color: var(--dim); }
-    .target-badge.gold-bg { color: var(--gold); }
     .target-detail { grid-column: 2; grid-row: 2; min-width: 0; color: var(--cream); font-size: 14px; font-weight: 900; }
     .target-detail strong { color: var(--gold); font: 20px 'Lilita One', sans-serif; }
     .btn-sb-dice {
@@ -445,7 +444,6 @@
     .cards-grid.dice-rolled .card-front { background: var(--cream); }
     .cards-grid.dice-rolled .card-front.selected { background: var(--orange); }
     .cards-grid.squarebun-mode .card-front { background: var(--felt-edge); }
-    .cards-grid.squarebun-mode .p-card.square-bun-card .card-front { background: var(--gold); }
     .card-front.selected {
       z-index: 1;
       transform: translateY(-8px);
@@ -469,13 +467,6 @@
       justify-content: center;
     }
     .card-selected-mark .icon { width: 15px; height: 15px; stroke-width: 3; }
-    .card-front.square-bun-card { background: var(--gold); }
-    .card-front.hint { border-color: var(--teal); box-shadow: inset 0 0 0 2px var(--teal); }
-    .hint-mark { display: none; position: absolute; bottom: 7px; right: 8px; color: var(--teal); }
-    .card-front.hint .hint-mark, .p-card.hint .hint-mark { display: inline-flex; }
-    .p-card.hint .card-front { border-color: var(--teal); box-shadow: inset 0 0 0 2px var(--teal); }
-    .hint-mark .icon { width: 17px; height: 17px; fill: currentColor; stroke-width: 1.5; }
-    .card-front.selected .hint-mark { display: none; }
     .card-shortcut {
       display: none;
       position: absolute;
@@ -495,9 +486,6 @@
     .card-num { color: var(--ink); font-size: clamp(35px, 11vw, 52px); line-height: 1; }
     .card-divs { margin-top: 4px; padding: 0 4px; color: var(--dim); font-size: 9px; text-align: center; line-height: 1.2; }
     .card-front.selected .card-divs { color: var(--ink); }
-    .card-front.square-bun-card .card-num { color: var(--ink); }
-    @keyframes sbPulse { 0%,100%{box-shadow:0 4px 0 var(--ink)} 50%{box-shadow:0 7px 0 var(--ink)} }
-    .p-card.square-bun-card:not(.face-down) .card-front { animation: sbPulse 1.5s infinite; }
     .p-card.adding { animation: cardAdd 0.3s ease-out; }
     @keyframes cardAdd { from{opacity:0;transform:translateY(12px) scale(.94)} to{opacity:1;transform:translateY(0) scale(1)} }
 
@@ -668,6 +656,11 @@
       padding: 2px;
       scrollbar-color: var(--dim) var(--ink);
     }
+    #game-screen.answer-pending #coll-btn {
+      visibility: hidden;
+      pointer-events: none;
+    }
+    #game-screen.answer-pending .desktop-sidebar > .desktop-panel:first-child { display: none; }
     .mini-card {
       min-width: 0;
       aspect-ratio: 1;
@@ -1378,8 +1371,8 @@
   <canvas id="particles-canvas"></canvas>
 
   <script>var CARD_RANGE=20;</script>
-  <script src="game.js?v=20261004-ui-game-style"></script>
-  <script src="deluxe.js?v=20261004-ui-game-style"></script>
+  <script src="game.js?v=20261016-no-hints"></script>
+  <script src="deluxe.js?v=20261016-no-hints"></script>
 
   <div class="summary-overlay" id="level-summary-overlay" style="display:none">
     <span class="confetti" style="left:5%;top:14%;transform:rotate(24deg)"></span>

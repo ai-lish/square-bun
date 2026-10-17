@@ -246,7 +246,22 @@
       if(modal)modal.classList.remove("show");
     }
 
+    function setAnswerPending(pending){
+      const gameScreen=document.getElementById('game-screen');
+      if(gameScreen){
+        if(pending)gameScreen.classList.add('answer-pending');
+        else gameScreen.classList.remove('answer-pending');
+      }
+      if(pending){
+        ['coll-modal','coll-detail-modal'].forEach(id=>{
+          const modal=document.getElementById(id);
+          if(modal)modal.classList.remove('show');
+        });
+      }
+    }
+
     function startRound(){
+      setAnswerPending(true);
       // Level progression: use currentLevel max instead of fixed DELUXE_RANGE
       const levelMax=LEVELS[currentLevel-1].max;
       const baseDeck=ALL_CARDS.filter(c=>c.n<=levelMax&&!penaltySet.has(c.n));
@@ -306,7 +321,6 @@
         const wrapper=document.createElement('div');
         let cls='p-card';
         if(!revealed[i]){cls+=' face-down';}
-        else{if(card.sq)cls+=' square-bun-card';}
         wrapper.className=cls;
 
         const inner=document.createElement('div');inner.className='p-card-inner';
@@ -336,13 +350,6 @@
           mark.innerHTML='<svg class="icon"><use href="#i-check"></use></svg>';
           front.appendChild(mark);
         }
-        if(isGameStyleDesign()&&revealed[i]){
-          const hintMark=document.createElement('span');
-          hintMark.className='hint-mark';
-          hintMark.setAttribute('aria-hidden','true');
-          hintMark.innerHTML='<svg class="icon"><use href="#i-star"></use></svg>';
-          front.appendChild(hintMark);
-        }
         if(isGameStyleDesign()){
           const shortcut=document.createElement('span');
           shortcut.className='card-shortcut';
@@ -356,11 +363,6 @@
         wrapper.appendChild(inner);
         grid.appendChild(wrapper);
       });
-      if(sbMode&&!showDivs){
-        document.querySelectorAll('.p-card').forEach((el,i)=>{
-          if(revealed[i]&&table[i].sq&&!selected.has(i))el.querySelector('.card-front').classList.add('hint');
-        });
-      }
     }
 
     function handleCardClick(i){
@@ -485,16 +487,8 @@
       const d1=document.getElementById('dice1'),d2=document.getElementById('dice2');
       d1.classList.add('rolling');d2.classList.add('rolling');
       setTimeout(()=>{renderDiceSVG(d1,dice[0]);renderDiceSVG(d2,dice[1]);d1.classList.remove('rolling');d2.classList.remove('rolling');},500);
-      const targets=getTargetSet();
       document.getElementById('target-badge').textContent=`可被 ${dice[0]} 或 ${dice[1]} 整除`;
       document.getElementById('target-badge').classList.remove('disabled');
-      // Check for square cards that match
-      const matchingSquares=table.filter((c,i)=>revealed[i]&&c.sq&&targets.has(c.n));
-      if(matchingSquares.length>0){
-        document.getElementById('target-badge').classList.add('gold-bg');
-      }else{
-        document.getElementById('target-badge').classList.remove('gold-bg');
-      }
       phase='dice-rolled';
       document.getElementById('btn-dice').disabled=true;document.getElementById('btn-dice').className='btn btn-ghost';
       document.getElementById('btn-sb').disabled=false;
@@ -502,7 +496,6 @@
       document.getElementById('cards-grid').classList.add('dice-rolled');
       setStatus(selected.size>0?`已選 ${selected.size}/${maxSelect} 張`:`揀啱就核對，或直接核對跳過`,'');
       updateConfirmBtn();
-      setTimeout(highlightHintCards,600);
     }
 
     function triggerSquareBun(){
@@ -542,14 +535,7 @@
       }
     }
 
-    function highlightHintCards(){
-      if(phase!=='dice-rolled')return;
-      const targets=getTargetSet();
-      document.querySelectorAll('.p-card').forEach((el,i)=>{
-        if(!revealed[i])return;
-        if(targets.has(table[i].n))el.classList.add('hint');else el.classList.remove('hint');
-      });
-    }
+    function highlightHintCards(){}
 
     function getTargetSet(){
       const s=new Set();
@@ -570,6 +556,7 @@
         const isSquare=table[selectedIdx].sq;
         wrongCards=isSquare?[]:[selectedIdx];
         correctCards=isSquare?[selectedIdx]:[];
+        setAnswerPending(false);
         phase='reveal';
         const cards=document.querySelectorAll('.p-card');
         cards[selectedIdx].classList.add('flipped');
@@ -617,6 +604,7 @@
           if(dice.some(d=>d!==null&&table[i].n%d===0))correctCards.push(i);
           else wrongCards.push(i);
         });
+        setAnswerPending(false);
         phase='reveal';
         // Flip selected cards to show factor backs
         const cards=document.querySelectorAll('.p-card');
@@ -724,6 +712,7 @@
         deck=shuffle([...baseDeck]);
         while(table.length<cardCount&&deck.length>0){table.push(deck.pop());revealed.push(false);}
       }
+      setAnswerPending(true);
       updateLevelBadge();
       saveProgress();
       phase='closed';dice=[null,null];

@@ -200,7 +200,6 @@
       box-shadow: 0 3px 10px rgba(233,69,96,0.3);
     }
     .target-badge.disabled { background: #ddd; color: #999; box-shadow: none; }
-    .target-badge.gold-bg { background: var(--gold); box-shadow: 0 3px 10px rgba(245,166,35,0.4); }
     .btn-sb-dice {
       padding: 7px 14px; font-size: 12px; font-weight: 700;
       border: none; border-radius: 10px; cursor: pointer;
@@ -261,17 +260,11 @@
     .cards-grid.squarebun-mode .card-front { background: rgba(255, 152, 0, 0.15); }
     .cards-grid.squarebun-mode .card-front.selected { background: var(--gold) !important; }
     .card-front.selected { transform: scale(1.05); box-shadow: 0 6px 14px rgba(233,69,96,0.4); }
-    .card-front.square-bun-card { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); animation: sbPulse 1.5s infinite; }
-    .card-front.hint { background: rgba(0,200,83,0.12); border-color: var(--success); }
-    .card-front.hint::after { content: '✓'; position: absolute; top: 3px; right: 5px; font-size: 10px; color: var(--success); }
-    @keyframes sbPulse { 0%,100%{box-shadow:0 3px 10px rgba(233,69,96,0.3)} 50%{box-shadow:0 3px 20px rgba(233,69,96,0.6)} }
     @keyframes correctPop { 0%{transform:scale(1)} 50%{transform:scale(1.15)} 100%{transform:scale(1)} }
     @keyframes wrongShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
     .card-num { font-size: 24px; font-weight: 900; color: var(--primary); }
     .card-divs { font-size: 8px; color: var(--text-dim); margin-top: 2px; text-align: center; line-height: 1.2; padding: 0 3px; }
     .card-front.selected .card-divs { color: rgba(255,255,255,0.85); }
-    .card-front.square-bun-card .card-num { color: white; }
-    .card-front.square-bun-card.selected { background: var(--gold) !important; animation: none; box-shadow: 0 6px 14px rgba(245,166,35,0.5); }
     /* Factor reveal (card back) */
     .card-back-number { font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 2px; }
     .factor-rows { display: flex; flex-direction: column; gap: 2px; width: 100%; }
@@ -281,6 +274,7 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 7px; font-weight: 900;
     }
+    #game-screen.answer-pending #coll-btn { visibility: hidden; pointer-events: none; }
     .factor-circle.green { background: #00c853; color: white; }
     .factor-circle.orange { background: #ff9800; color: white; }
     .factor-circle.red { background: #f44336; color: white; }
@@ -393,7 +387,6 @@
       .p-card { min-height: 110px; border-radius: 16px; }
       .card-num { font-size: 36px; }
       .card-divs { font-size: 11px; }
-      .card-front.hint::after { top: 6px; right: 8px; font-size: 12px; }
       .dice { width: 56px; height: 56px; border-radius: 14px; }
       .dice-slash { font-size: 22px; }
       .dice-zone { gap: 24px; padding: 16px 32px; }
@@ -441,7 +434,6 @@
       }
       .card-num { font-size: 44px; }
       .card-divs { font-size: 12px; }
-      .card-front.hint::after { top: 8px; right: 10px; font-size: 14px; }
       .dice { width: 64px; height: 64px; border-radius: 16px; }
       .dice-zone { gap: 30px; padding: 18px 40px; }
       .header { padding: 16px 36px; }
@@ -570,8 +562,8 @@
   <canvas id="particles-canvas"></canvas>
 
   
-  <script src="game.js"></script>
-  <script src="deluxe.js"></script>
+  <script src="game.js?v=20261016-no-hints"></script>
+  <script src="deluxe.js?v=20261016-no-hints"></script>
 
 </body>
 </html>
